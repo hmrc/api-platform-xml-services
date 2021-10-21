@@ -23,6 +23,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(publishingSettings,
     scoverageSettings)
+  .settings(unmanagedResourceDirectories in Compile += baseDirectory.value / "resources")
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)

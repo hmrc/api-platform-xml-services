@@ -5,9 +5,12 @@ import sbt._
 
 object AppDependencies {
 
+  lazy val enumeratumVersion = "1.6.2"
+
   val compile = Seq(
     "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % "5.16.0",
-    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-28"         % "0.55.0"
+    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-28"         % "0.55.0",
+    "com.beachape"            %% "enumeratum-play-json"       % enumeratumVersion,
   )
 
   val test = Seq(
