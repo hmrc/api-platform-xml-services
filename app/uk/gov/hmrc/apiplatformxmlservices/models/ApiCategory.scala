@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json._
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 
 sealed abstract class ApiCategory(displayName: String, filter: String) extends EnumEntry
