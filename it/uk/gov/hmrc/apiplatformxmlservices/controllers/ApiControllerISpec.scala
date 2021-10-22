@@ -20,13 +20,10 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
-import play.api.test.Helpers._
-import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, ServerBaseISpec}
+import play.api.test.Helpers.{NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
-
-import java.util.UUID
+import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, ServerBaseISpec}
 
 class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with AwaitTestSupport {
 
