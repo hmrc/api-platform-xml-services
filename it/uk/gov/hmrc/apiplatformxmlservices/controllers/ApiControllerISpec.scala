@@ -84,5 +84,5 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with A
         result.status mustBe NOT_FOUND
       }
     }
-    }
+  }
 }

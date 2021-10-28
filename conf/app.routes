@@ -1,5 +1,4 @@
 # microservice specific routes
 
-GET        /hello-world             uk.gov.hmrc.apiplatformxmlservices.controllers.MicroserviceHelloWorldController.hello
 GET        /xml/apis                uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getAll
 GET        /xml/api/:name           uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApi(name: String)
