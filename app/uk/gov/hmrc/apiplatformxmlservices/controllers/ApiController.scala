@@ -31,4 +31,11 @@ class ApiController @Inject() (cc: ControllerComponents)
   def getAll(): Action[AnyContent] = Action.async { implicit request =>
     Future.successful(Ok(Json.toJson(XmlApi.xmlApis)))
   }
+
+  def getApi(name: String): Action[AnyContent] = Action.async { implicit request =>
+    XmlApi.xmlApis.find(_.name == name) match {
+      case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
+      case _ => Future.successful(NotFound(s"XML API with name $name not found."))
+    }
+  }
 }
