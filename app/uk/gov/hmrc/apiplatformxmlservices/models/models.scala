@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.models
 import scala.io.Source
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import java.{util => ju}
 
 case class XmlApi(name: String, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
 
@@ -27,3 +28,9 @@ object XmlApi {
   def xmlApis: Seq[XmlApi] = 
     Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[Seq[XmlApi]]
 }
+
+case class OrganisationId(value: ju.UUID) extends AnyVal
+
+case class VendorId(value: Long) extends AnyVal
+
+case class Organisation(organisationId: OrganisationId, vendorId: VendorId, name: String)
