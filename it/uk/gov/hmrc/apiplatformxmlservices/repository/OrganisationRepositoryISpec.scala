@@ -61,11 +61,12 @@ class OrganisationRepositoryISpec
 
   trait Setup {
     def getUuid() = UUID.randomUUID()
+    val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
   }
 
   "create Organisation" should {
     "return a Right" in new Setup {
-      val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
+      
       val result = await(repo.create(organisationToPersist))
 
       result match {
@@ -75,7 +76,6 @@ class OrganisationRepositoryISpec
     }
 
     "return a Left" in new Setup {
-      val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
       await(repo.create(organisationToPersist))
       val result = await(repo.create(organisationToPersist))
 
@@ -83,6 +83,70 @@ class OrganisationRepositoryISpec
         case Left(e: Exception) => succeed
         case Right(_)           => fail
       }
+    }
+  }
+
+  "findByOrgId" should {
+    "return an Organisation when organisationId exists" in new Setup {
+      await(repo.create(organisationToPersist))
+
+      val result = await(repo.findByOrgId(organisationToPersist.organisationId))
+      result shouldBe Some(organisationToPersist)
+
+    }
+
+    "return None when organisationId does not exist" in new Setup {
+      val result = await(repo.findByOrgId(OrganisationId(getUuid)))
+      result shouldBe None
+
+    }
+  }
+
+  "findByVendorId" should {
+    "return an Organisation when vendorId exists" in new Setup {
+      await(repo.create(organisationToPersist))
+
+      val result = await(repo.findByVendorId(organisationToPersist.vendorId))
+      result shouldBe Some(organisationToPersist)
+
+    }
+
+    "return None when vendorId does not exist" in new Setup {
+      val result = await(repo.findByVendorId(VendorId(1234)))
+      result shouldBe None
+
+    }
+  }
+
+  "deleteByOrgId" should {
+    "return true when organisation to be deleted exists" in new Setup {
+        
+      await(repo.create(organisationToPersist))
+
+      val result = await(repo.deleteByOrgId(organisationToPersist.organisationId))
+      result shouldBe true
+    }
+
+    "return false when organisation to be deleted doesn't exist" in new Setup {
+        
+      val result = await(repo.deleteByOrgId(organisationToPersist.organisationId))
+      result shouldBe false
+    }
+  }
+
+  "update" should {
+    "return an Organisation when update successful" in new Setup {
+      await(repo.create(organisationToPersist))
+
+      val result = await(repo.findByVendorId(organisationToPersist.vendorId))
+      result shouldBe Some(organisationToPersist)
+
+    }
+
+    "return None when vendorId does not exist" in new Setup {
+      val result = await(repo.findByVendorId(VendorId(1234)))
+      result shouldBe None
+
     }
   }
 }

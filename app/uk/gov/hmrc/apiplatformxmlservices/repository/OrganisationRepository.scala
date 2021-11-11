@@ -24,7 +24,9 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
 import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model._
+import org.mongodb.scala.model.Filters._
 import com.mongodb.client.result.InsertOneResult
+import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
 
 @Singleton
 class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
@@ -39,13 +41,21 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       replaceIndexes = false
     ) {
 
-//  def findById(organisationId: OrganisationId): Future[Option[Organisation]] = {
-//    collection.find(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(_.headOption)
-//      .recover {
-//        case e: Exception =>
-//          None
-//      }
-//  }
+ def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
+   collection.find(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(_.headOption)
+     .recover {
+       case e: Exception =>
+         None
+     }
+ }
+
+  def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] = {
+   collection.find(equal("vendorId", Codecs.toBson(vendorId))).toFuture().map(_.headOption)
+     .recover {
+       case e: Exception =>
+         None
+     }
+ }
   
   def create(organisation: Organisation): Future[Either[Exception, Boolean]] = {
       collection.insertOne(organisation).toFuture
@@ -54,4 +64,16 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
           case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
         }
   }
+
+  def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
+    collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(x => x.getDeletedCount == 1)
+  }
+
+  def update(organisation: Organisation): Future[Organisation] = {
+    
+    collection.findOneAndReplace(equal("organisationId", Codecs.toBson(organisation.organisationId)), organisation).toFuture
+  }
+
+  
+  
 }
