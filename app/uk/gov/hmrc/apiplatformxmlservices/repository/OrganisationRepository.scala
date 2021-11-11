@@ -24,6 +24,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
 import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model._
+import com.mongodb.client.result.InsertOneResult
 
 @Singleton
 class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
@@ -46,9 +47,9 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 //      }
 //  }
   
-  def create(organisation: Organisation) = {
-      collection.insertOne(organisation)
-        .map(x => Right(x))
+  def create(organisation: Organisation): Future[Either[Exception, Boolean]] = {
+      collection.insertOne(organisation).toFuture
+        .map(x => Right(x.wasAcknowledged()))
         .recover{
           case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
         }

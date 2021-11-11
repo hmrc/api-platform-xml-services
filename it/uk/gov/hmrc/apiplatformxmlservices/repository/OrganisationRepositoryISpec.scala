@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
-
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{Assertion, BeforeAndAfterEach}
@@ -26,13 +25,19 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.apiplatformxmlservices.models.Organisation
 import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
+import java.util.UUID
+import org.scalatest.matchers.should.Matchers
 
-class OrganisationRepositoryISpec extends AnyWordSpec
-  with MongoApp[Organisation]
-  with GuiceOneAppPerSuite
-  with ScalaFutures
-  with BeforeAndAfterEach
-  with AwaitTestSupport {
+class OrganisationRepositoryISpec
+    extends AnyWordSpec
+    with MongoApp[Organisation]
+    with GuiceOneAppPerSuite
+    with ScalaFutures
+    with BeforeAndAfterEach
+    with AwaitTestSupport
+    with Matchers {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
   val indexNameToDrop = "please_delete_me__let_me_go"
@@ -54,4 +59,30 @@ class OrganisationRepositoryISpec extends AnyWordSpec
     await(repo.ensureIndexes)
   }
 
+  trait Setup {
+    def getUuid() = UUID.randomUUID()
+  }
+
+  "create Organisation" should {
+    "return a Right" in new Setup {
+      val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
+      val result = await(repo.create(organisationToPersist))
+
+      result match {
+        case Left(e: Exception) => fail
+        case Right(x: Boolean)  => x shouldBe true
+      }
+    }
+
+    "return a Left" in new Setup {
+      val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
+      await(repo.create(organisationToPersist))
+      val result = await(repo.create(organisationToPersist))
+
+      result match {
+        case Left(e: Exception) => succeed
+        case Right(_)           => fail
+      }
+    }
+  }
 }
