@@ -16,19 +16,18 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{Assertion, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.apiplatformxmlservices.models.Organisation
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
+
 import java.util.UUID
-import org.scalatest.matchers.should.Matchers
 
 class OrganisationRepositoryISpec
     extends AnyWordSpec
@@ -40,14 +39,10 @@ class OrganisationRepositoryISpec
     with Matchers {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
-  val indexNameToDrop = "please_delete_me__let_me_go"
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
-      .configure(
-        "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}",
-        "mongodb.oldIndexesToDrop" -> Seq(indexNameToDrop, "text_index_1_0")
-      )
+      .configure("mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}")
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -62,28 +57,6 @@ class OrganisationRepositoryISpec
   trait Setup {
     def getUuid() = UUID.randomUUID()
     val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
-  }
-
-  "create Organisation" should {
-    "return a Right" in new Setup {
-      
-      val result = await(repo.create(organisationToPersist))
-
-      result match {
-        case Left(e: Exception) => fail
-        case Right(x: Boolean)  => x shouldBe true
-      }
-    }
-
-    "return a Left" in new Setup {
-      await(repo.create(organisationToPersist))
-      val result = await(repo.create(organisationToPersist))
-
-      result match {
-        case Left(e: Exception) => succeed
-        case Right(_)           => fail
-      }
-    }
   }
 
   "findByOrgId" should {
@@ -137,16 +110,38 @@ class OrganisationRepositoryISpec
   "update" should {
     "return an Organisation when update successful" in new Setup {
       await(repo.create(organisationToPersist))
+      val updatedOrganisation = organisationToPersist.copy(name = "New organisation name")
 
-      val result = await(repo.findByVendorId(organisationToPersist.vendorId))
-      result shouldBe Some(organisationToPersist)
+      val result = await(repo.update(updatedOrganisation))
+      result shouldBe true
 
     }
 
-    "return None when vendorId does not exist" in new Setup {
-      val result = await(repo.findByVendorId(VendorId(1234)))
-      result shouldBe None
+    "return false when organisation does not exist" in new Setup {
+      val result = await(repo.update(organisationToPersist))
+      result shouldBe false
 
+    }
+  }
+
+  "create Organisation" should {
+    "return a Right if organisation doesn't already exist" in new Setup {
+      val result = await(repo.create(organisationToPersist))
+
+      result match {
+        case Left(e: Exception) => fail
+        case Right(x: Boolean)  => x shouldBe true
+      }
+    }
+
+    "return a Left when try to create and organisation with the same id" in new Setup {
+      await(repo.create(organisationToPersist))
+      val result = await(repo.create(organisationToPersist))
+
+      result match {
+        case Left(e: Exception) => succeed
+        case Right(_)           => fail
+      }
     }
   }
 }
