@@ -108,7 +108,7 @@ class OrganisationRepositoryISpec
   }
 
   "update" should {
-    "return an Organisation when update successful" in new Setup {
+    "return true when update successful" in new Setup {
       await(repo.create(organisationToPersist))
       val updatedOrganisation = organisationToPersist.copy(name = "New organisation name")
 
@@ -134,7 +134,7 @@ class OrganisationRepositoryISpec
       }
     }
 
-    "return a Left when try to create and organisation with the same id" in new Setup {
+    "return a Left when try to create an organisation with an existing id" in new Setup {
       await(repo.create(organisationToPersist))
       val result = await(repo.create(organisationToPersist))
 

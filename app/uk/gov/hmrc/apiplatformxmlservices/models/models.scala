@@ -25,7 +25,7 @@ case class XmlApi(name: String, context: String, description: String, categories
 
 object XmlApi {
 
-  def xmlApis: Seq[XmlApi] = 
+  def xmlApis: Seq[XmlApi] =
     Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[Seq[XmlApi]]
 }
 

@@ -38,6 +38,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   trait Setup {
     val inTest = new OrganisationService(mockOrganisationRepo)
+
     def getUuid() = UUID.randomUUID()
     val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
   }
@@ -51,6 +52,57 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         case Left(e: Exception) => fail
         case Right(x: Boolean)  => x shouldBe true
       }
+
+      verify(mockOrganisationRepo).create(organisationToPersist)
+    }
+  }
+
+  "update" should {
+    "return true when update successful" in new Setup {
+      when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(true))
+      val updatedOrganisation = organisationToPersist.copy(name = "New organisation name")
+
+      val result = await(inTest.update(updatedOrganisation))
+      result shouldBe true
+
+      verify(mockOrganisationRepo).update(updatedOrganisation)
+
+    }
+  }
+
+  "deleteByOrgId" should {
+    "return an true when delete successful" in new Setup {
+      when(mockOrganisationRepo.deleteByOrgId(*[OrganisationId])).thenReturn(Future.successful(true))
+
+      val result = await(inTest.deleteByOrgId(organisationToPersist.organisationId))
+      result shouldBe true
+
+      verify(mockOrganisationRepo).deleteByOrgId(organisationToPersist.organisationId)
+
+    }
+  }
+
+  "findByOrgId" should {
+    "return an Organisation when organisationId exists" in new Setup {
+      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationToPersist)))
+
+      val result = await(inTest.findByOrgId(organisationToPersist.organisationId))
+      result shouldBe Some(organisationToPersist)
+
+      verify(mockOrganisationRepo).findByOrgId(organisationToPersist.organisationId)
+
+    }
+  }
+
+  "findByVendorId" should {
+    "return an Organisation when vendorId exists" in new Setup {
+      when(mockOrganisationRepo.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisationToPersist)))
+
+      val result = await(inTest.findByVendorId(organisationToPersist.vendorId))
+      result shouldBe Some(organisationToPersist)
+
+      verify(mockOrganisationRepo).findByVendorId(organisationToPersist.vendorId)
+
     }
   }
 

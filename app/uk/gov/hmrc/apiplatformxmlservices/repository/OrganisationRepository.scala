@@ -60,7 +60,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
-    collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(x => x.getDeletedCount == 1)
+    collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture()
+      .map(x => x.getDeletedCount == 1)
   }
 
   def update(organisation: Organisation): Future[Boolean] = {
