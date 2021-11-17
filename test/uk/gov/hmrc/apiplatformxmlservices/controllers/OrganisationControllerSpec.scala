@@ -17,7 +17,9 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.libs.json.Json
@@ -32,9 +34,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OrganisationControllerSpec extends WordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
-
-  private val fakeRequest = FakeRequest("GET", "/organisations")
+class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   private val mockOrgService = mock[OrganisationService]
 
@@ -49,23 +49,14 @@ class OrganisationControllerSpec extends WordSpec with Matchers with MockitoSuga
   }
 
   trait Setup {
+    val createOrganisationRequest = CreateOrganisationRequest(organisationName = "Organisation Name")
+    val fakeRequest = FakeRequest("GET", "/organisations")
+    val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
     val jsonMediaType = "application/json"
     def getUuid() = UUID.randomUUID()
 
     val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = "Organisation Name")
-    val organisationIdValue = organisation.organisationId.value
-    val vendorIdValue = organisation.vendorId.value
-    val orgAsJsonString = Json.toJson(organisation).toString
-    val invalidOrgString = """{
-                             |    "organisationId": "dd5bda96-46da-11ec-81d3-0242ac130003",
-                             |    "vendorId": INVALID_VENDOR_ID,
-                             |    "name": "Organisation Name 3"
-                             |}""".stripMargin
-
-
-    val fakeDeleteRequest = FakeRequest("DELETE", s"/organisations/${organisationIdValue}")
-
   }
 
   "GET /organisations/:organisationId" should {
@@ -93,6 +84,21 @@ class OrganisationControllerSpec extends WordSpec with Matchers with MockitoSuga
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(None))
       val result: Future[Result] = controller.findByVendorId(VendorId(9000))(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
+    }
+  }
+
+  "POST /organisations/" should {
+    "return 200" in new Setup {
+      when(mockOrgService.create(*)).thenReturn(Future.successful(Right(true)))
+      val result: Future[Result] = controller.create()(createRequest)
+      status(result) shouldBe Status.OK
+    }
+
+    "return 400" in new Setup {
+      when(mockOrgService.create(*)).thenReturn(Future.successful(Right(false)))
+      val result: Future[Result] = controller.create()(createRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentAsString(result) shouldBe "Could not create Organisation with name Organisation Name"
     }
   }
 

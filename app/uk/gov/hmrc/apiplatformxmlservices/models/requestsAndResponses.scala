@@ -16,17 +16,4 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json.Json
-
-object JsonFormatters {
-
-  implicit val formatXmlApi = Json.format[XmlApi]
-
-  implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
-  implicit val formatVendorId = Json.valueFormat[VendorId]
-  implicit val formatOrganisation = Json.format[Organisation]
-
-  implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
-
-
-}
+case class CreateOrganisationRequest(organisationName: String)

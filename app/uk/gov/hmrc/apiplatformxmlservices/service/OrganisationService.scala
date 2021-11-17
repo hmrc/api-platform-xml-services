@@ -23,10 +23,19 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class OrganisationService @Inject()(organisationRepository: OrganisationRepository) {
+class OrganisationService @Inject()(organisationRepository: OrganisationRepository,
+                                    uuidService: UuidService,
+                                    vendorIdService: VendorIdService) {
 
-  def create(organisation: Organisation): Future[Either[Exception, Boolean]] =
-    organisationRepository.create(organisation)
+  def create(organisationName: String): Future[Either[Exception, Boolean]] = {
+
+    organisationRepository.create(
+      Organisation(
+        organisationId = getOrganisationId,
+        name = organisationName,
+        vendorId = vendorIdService.getNextVendorId())
+    )
+  }
 
   def update(organisation: Organisation): Future[Boolean] =
     organisationRepository.update(organisation)
@@ -39,5 +48,7 @@ class OrganisationService @Inject()(organisationRepository: OrganisationReposito
 
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] =
     organisationRepository.findByVendorId(vendorId)
+
+  private def getOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 
 }

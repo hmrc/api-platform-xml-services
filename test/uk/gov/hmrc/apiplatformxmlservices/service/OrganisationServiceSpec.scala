@@ -30,6 +30,8 @@ import scala.concurrent.Future
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
   val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
+  val mockUuidService: UuidService = mock[UuidService]
+  val mockVendorIdService: VendorIdService = mock[VendorIdService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -37,22 +39,30 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   }
 
   trait Setup {
-    val inTest = new OrganisationService(mockOrganisationRepo)
+    val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService)
+
+    val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
+    val vendorId = VendorId(9000)
 
     def getUuid() = UUID.randomUUID()
-    val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
+    val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name = "Organisation Name")
+
   }
 
   "createOrganisation" should {
     "return Right" in new Setup {
+      when(mockUuidService.newUuid).thenReturn(uuid)
+      when(mockVendorIdService.getNextVendorId).thenReturn(vendorId)
       when(mockOrganisationRepo.create(*)).thenReturn(Future.successful(Right(true)))
 
-      val result = await(inTest.create(organisationToPersist))
+      val result = await(inTest.create(organisationToPersist.name))
       result match {
         case Left(e: Exception) => fail
         case Right(x: Boolean)  => x shouldBe true
       }
 
+      verify(mockUuidService).newUuid
+      verify(mockVendorIdService).getNextVendorId
       verify(mockOrganisationRepo).create(organisationToPersist)
     }
   }

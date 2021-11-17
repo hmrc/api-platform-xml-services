@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models
+package uk.gov.hmrc.apiplatformxmlservices.service
 
-import play.api.libs.json.Json
+import java.util.UUID
+import javax.inject.Singleton
 
-object JsonFormatters {
+// Turning coverage off as this is wrapping the Java UUID.randomUUID method.
+// $COVERAGE-OFF$
+@Singleton
+class UuidService {
 
-  implicit val formatXmlApi = Json.format[XmlApi]
-
-  implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
-  implicit val formatVendorId = Json.valueFormat[VendorId]
-  implicit val formatOrganisation = Json.format[Organisation]
-
-  implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
-
+  def newUuid() : UUID = UUID.randomUUID
 
 }
+// $COVERAGE-ON$

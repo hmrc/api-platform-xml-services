@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models
+package uk.gov.hmrc.apiplatformxmlservices.service
 
-import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
 
-object JsonFormatters {
+import javax.inject.Singleton
 
-  implicit val formatXmlApi = Json.format[XmlApi]
+@Singleton
+class VendorIdService {
 
-  implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
-  implicit val formatVendorId = Json.valueFormat[VendorId]
-  implicit val formatOrganisation = Json.format[Organisation]
-
-  implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
-
+  def getNextVendorId()  : VendorId = {
+    VendorId(9000)
+  }
 
 }

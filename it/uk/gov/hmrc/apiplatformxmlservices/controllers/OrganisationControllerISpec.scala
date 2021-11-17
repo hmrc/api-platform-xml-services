@@ -30,7 +30,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
 
-class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with AwaitTestSupport with MongoApp[Organisation] {
+class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with MongoApp[Organisation] {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
@@ -97,11 +97,16 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     val organisationIdValue = organisation.organisationId.value
     val vendorIdValue = organisation.vendorId.value
     val orgAsJsonString = Json.toJson(organisation).toString
-    val invalidOrgString = """{
-                             |    "organisationId": "dd5bda96-46da-11ec-81d3-0242ac130003",
-                             |    "vendorId": INVALID_VENDOR_ID,
-                             |    "name": "Organisation Name 3"
-                             |}""".stripMargin
+    val invalidOrgString =
+      """{
+        |    "organisationId": "dd5bda96-46da-11ec-81d3-0242ac130003",
+        |    "vendorId": INVALID_VENDOR_ID,
+        |    "name": "Organisation Name 3"
+        |}""".stripMargin
+    val createOrganisationRequestAsString =
+      """{
+        |    "organisationName": "Organisation Name"
+        |}""".stripMargin
   }
 
   "OrganisationController" when {
@@ -171,7 +176,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "POST /organisations" should {
 
       "respond with 200 if Organisation was created" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations", orgAsJsonString)
+        val result = callPostEndpoint(s"$url/organisations", createOrganisationRequestAsString)
         result.status mustBe OK
       }
       "respond with 400 if request body is not json" in new Setup {
@@ -179,17 +184,13 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         result.status mustBe BAD_REQUEST
         result.body contains "Invalid Json: Unrecognized token 'INVALID'"
       }
-      "respond with 400 if request body is invalid" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations", invalidOrgString)
-        result.status mustBe BAD_REQUEST
-        result.body contains "Invalid Json: Unrecognized token 'INVALID_VENDOR_ID'"
-      }
-      "respond with 400 if Organisation already exists" in new Setup {
-        await(orgRepo.create(organisation))
-        val result = callPostEndpoint(s"$url/organisations", orgAsJsonString)
-        result.status mustBe BAD_REQUEST
-        result.body mustBe s"Could not create Organisation with name ${organisation.name} and ID ${organisation.organisationId.value}"
-      }
+//      TODO: Do we allow duplicate Organisation names?
+//      "respond with 400 if Organisation already exists" in new Setup {
+//        await(orgRepo.create(organisation))
+//        val result = callPostEndpoint(s"$url/organisations", orgAsJsonString)
+//        result.status mustBe BAD_REQUEST
+//        result.body mustBe s"Could not create Organisation with name ${organisation.name} and ID ${organisation.organisationId.value}"
+//      }
     }
 
     "PUT /organisations" should {
@@ -212,7 +213,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       "respond with 404 if Organisation does not exist" in new Setup {
         val result = callPutEndpoint(s"$url/organisations", orgAsJsonString)
         result.status mustBe NOT_FOUND
-        result.body mustBe s"Could not find Organisation with name ${organisation.name} and ID ${organisation.organisationId.value}"
+        result.body mustBe s"Could not find Organisation with ID ${organisation.organisationId.value}"
       }
     }
   }

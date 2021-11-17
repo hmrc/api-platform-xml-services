@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{CreateOrganisationRequest, Organisation, OrganisationId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class OrganisationController @Inject()(organisationService: OrganisationService,
@@ -55,10 +54,10 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
   }
 
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-      val organisation = request.body.as[Organisation]
-      organisationService.create(organisation).map {
+      val createOrganisationRequest = request.body.as[CreateOrganisationRequest]
+      organisationService.create(createOrganisationRequest.organisationName).map {
         case Right(true) => Ok
-        case _ => BadRequest(s"Could not create Organisation with name ${organisation.name} and ID ${organisation.organisationId.value}")
+        case _ => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName}")
       }
   }
 
@@ -66,7 +65,7 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
       val organisation = request.body.as[Organisation]
       organisationService.update(organisation).map {
         case true => Ok
-        case _ => NotFound(s"Could not find Organisation with name ${organisation.name} and ID ${organisation.organisationId.value}")
+        case _ => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
   }
 }
