@@ -21,9 +21,9 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
+import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK, CREATED}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{CreateOrganisationRequest, Organisation, OrganisationId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp, ServerBaseISpec}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -94,6 +94,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     def getUuid() = UUID.randomUUID()
 
     val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = "Organisation Name")
+    val createOrganisationRequest = CreateOrganisationRequest(organisationName = "Organisation Name")
     val organisationIdValue = organisation.organisationId.value
     val vendorIdValue = organisation.vendorId.value
     val orgAsJsonString = Json.toJson(organisation).toString
@@ -103,10 +104,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         |    "vendorId": INVALID_VENDOR_ID,
         |    "name": "Organisation Name 3"
         |}""".stripMargin
-    val createOrganisationRequestAsString =
-      """{
-        |    "organisationName": "Organisation Name"
-        |}""".stripMargin
+    val createOrganisationRequestAsString = Json.toJson(createOrganisationRequest).toString
   }
 
   "OrganisationController" when {
@@ -177,20 +175,16 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
       "respond with 200 if Organisation was created" in new Setup {
         val result = callPostEndpoint(s"$url/organisations", createOrganisationRequestAsString)
-        result.status mustBe OK
+        result.status mustBe CREATED
+        val createdOrganisation = Json.parse(result.body).as[Organisation]
+        createdOrganisation.name mustBe createOrganisationRequest.organisationName
       }
+
       "respond with 400 if request body is not json" in new Setup {
         val result = callPostEndpoint(s"$url/organisations", "INVALID BODY")
         result.status mustBe BAD_REQUEST
         result.body contains "Invalid Json: Unrecognized token 'INVALID'"
       }
-//      TODO: Do we allow duplicate Organisation names?
-//      "respond with 400 if Organisation already exists" in new Setup {
-//        await(orgRepo.create(organisation))
-//        val result = callPostEndpoint(s"$url/organisations", orgAsJsonString)
-//        result.status mustBe BAD_REQUEST
-//        result.body mustBe s"Could not create Organisation with name ${organisation.name} and ID ${organisation.organisationId.value}"
-//      }
     }
 
     "PUT /organisations" should {

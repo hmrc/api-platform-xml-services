@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.repository
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
+import org.mongodb.scala.model.Updates.{set, setOnInsert}
 import org.mongodb.scala.model._
 import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
@@ -57,6 +58,29 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
         .recover{
           case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
         }
+  }
+
+  def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
+    val query = equal("organisationId", Codecs.toBson(organisation.organisationId))
+
+    val setOnInsertOperations = List(
+      setOnInsert("organisationId", Codecs.toBson(organisation.organisationId)),
+      setOnInsert("vendorId", Codecs.toBson(organisation.vendorId))
+    )
+
+    val setOnUpdate = List(set("name", organisation.name))
+
+    val allOps = setOnInsertOperations ++ setOnUpdate
+
+    collection.findOneAndUpdate(
+      filter = query,
+      update = Updates.combine(allOps: _*),
+      options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+    ).toFuture
+      .map(x => Right(x))
+      .recover{
+        case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
+      }
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {

@@ -56,7 +56,7 @@ class OrganisationRepositoryISpec
 
   trait Setup {
     def getUuid() = UUID.randomUUID()
-    val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(20001), name = "Organisation Name")
+    val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = "Organisation Name")
   }
 
   "findByOrgId" should {
@@ -120,6 +120,45 @@ class OrganisationRepositoryISpec
     "return false when organisation does not exist" in new Setup {
       val result = await(repo.update(organisationToPersist))
       result shouldBe false
+
+    }
+  }
+
+  "createOrUpdate" should {
+    "return Organisation when create successful" in new Setup {
+
+      await(repo.createOrUpdate(organisationToPersist)) match {
+        case Right(organisation: Organisation) => organisation shouldBe organisationToPersist
+        case _ => fail
+      }
+
+    }
+
+
+      "return Left when vendor Id already exists" in new Setup {
+        await(repo.create(organisationToPersist))
+
+        val updatedOrganisation = organisationToPersist.copy(name = "New organisation name", organisationId = OrganisationId(getUuid()), vendorId = VendorId(9000))
+
+        await(repo.createOrUpdate(updatedOrganisation)) match {
+          case Right(_) => fail
+          case Left(e: Exception) => e.getMessage contains "E11000 duplicate key error"
+        }
+    }
+
+    "return Right and update organisation name if Organisation Id already exists but vendor Id does not" in new Setup {
+      await(repo.create(organisationToPersist))
+
+      val updatedOrganisation = organisationToPersist.copy(name = "New organisation name", vendorId = VendorId(9001))
+
+      await(repo.createOrUpdate(updatedOrganisation)) match {
+        case Right(persistedOrg: Organisation) => {
+          persistedOrg.name shouldBe updatedOrganisation.name
+          persistedOrg.organisationId shouldBe organisationToPersist.organisationId
+          persistedOrg.vendorId shouldBe organisationToPersist.vendorId
+        }
+        case Left(_) => fail
+      }
 
     }
   }

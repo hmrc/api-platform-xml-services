@@ -27,9 +27,9 @@ class OrganisationService @Inject()(organisationRepository: OrganisationReposito
                                     uuidService: UuidService,
                                     vendorIdService: VendorIdService) {
 
-  def create(organisationName: String): Future[Either[Exception, Boolean]] = {
+  def create(organisationName: String): Future[Either[Exception, Organisation]] = {
 
-    organisationRepository.create(
+    organisationRepository.createOrUpdate(
       Organisation(
         organisationId = getOrganisationId,
         name = organisationName,

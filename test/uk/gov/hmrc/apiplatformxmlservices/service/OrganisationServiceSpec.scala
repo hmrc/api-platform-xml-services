@@ -53,17 +53,16 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return Right" in new Setup {
       when(mockUuidService.newUuid).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId).thenReturn(vendorId)
-      when(mockOrganisationRepo.create(*)).thenReturn(Future.successful(Right(true)))
+      when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organisationToPersist)))
 
-      val result = await(inTest.create(organisationToPersist.name))
-      result match {
+      await(inTest.create(organisationToPersist.name)) match {
         case Left(e: Exception) => fail
-        case Right(x: Boolean)  => x shouldBe true
+        case Right(x: Organisation)  => x shouldBe organisationToPersist
       }
 
       verify(mockUuidService).newUuid
       verify(mockVendorIdService).getNextVendorId
-      verify(mockOrganisationRepo).create(organisationToPersist)
+      verify(mockOrganisationRepo).createOrUpdate(organisationToPersist)
     }
   }
 

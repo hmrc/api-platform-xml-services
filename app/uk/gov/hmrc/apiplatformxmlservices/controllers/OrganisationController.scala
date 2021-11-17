@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
+import org.mongodb.scala.MongoCommandException
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
@@ -56,8 +57,9 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
       val createOrganisationRequest = request.body.as[CreateOrganisationRequest]
       organisationService.create(createOrganisationRequest.organisationName).map {
-        case Right(true) => Ok
-        case _ => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName}")
+        case Right(organisation) => Created(Json.toJson(organisation))
+        case Left(e: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
+        case Left(e: Exception) => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
       }
   }
 

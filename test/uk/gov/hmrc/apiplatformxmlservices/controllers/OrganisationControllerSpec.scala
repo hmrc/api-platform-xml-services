@@ -17,6 +17,8 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import org.mockito.scalatest.MockitoSugar
+import org.mongodb.scala.{MongoCommandException, ServerAddress}
+import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.BeforeAndAfterEach
@@ -89,16 +91,24 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
   "POST /organisations/" should {
     "return 200" in new Setup {
-      when(mockOrgService.create(*)).thenReturn(Future.successful(Right(true)))
+      when(mockOrgService.create(*)).thenReturn(Future.successful(Right(organisation)))
       val result: Future[Result] = controller.create()(createRequest)
-      status(result) shouldBe Status.OK
+      status(result) shouldBe Status.CREATED
+      contentAsJson(result) shouldBe Json.toJson(organisation)
+    }
+
+    "return 409" in new Setup {
+      when(mockOrgService.create(*)).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument(),ServerAddress()))))
+      val result: Future[Result] = controller.create()(createRequest)
+      status(result) shouldBe Status.CONFLICT
+      contentAsString(result) shouldBe "Could not create Organisation with name Organisation Name - Duplicate ID"
     }
 
     "return 400" in new Setup {
-      when(mockOrgService.create(*)).thenReturn(Future.successful(Right(false)))
+      when(mockOrgService.create(*)).thenReturn(Future.successful(Left(new Exception("Failed"))))
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.BAD_REQUEST
-      contentAsString(result) shouldBe "Could not create Organisation with name Organisation Name"
+      contentAsString(result) shouldBe "Could not create Organisation with name Organisation Name - Failed"
     }
   }
 
