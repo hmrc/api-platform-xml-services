@@ -63,14 +63,6 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
 
   }
 
-  def create(organisation: Organisation): Future[Either[Exception, Boolean]] = {
-    collection.insertOne(organisation).toFuture
-      .map(x => Right(x.wasAcknowledged()))
-      .recover {
-        case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
-      }
-  }
-
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
     val query = equal("organisationId", Codecs.toBson(organisation.organisationId))
 
@@ -94,11 +86,6 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
       }
   }
 
-  def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
-    collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture()
-      .map(x => x.getDeletedCount == 1)
-  }
-
   def update(organisation: Organisation): Future[Boolean] = {
     val filter = equal("organisationId", Codecs.toBson(organisation.organisationId))
 
@@ -106,6 +93,19 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
       .map {
         case Some(_) => true
         case None => false
+      }
+  }
+
+  def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
+    collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture()
+      .map(x => x.getDeletedCount == 1)
+  }
+
+  def create(organisation: Organisation): Future[Either[Exception, Boolean]] = {
+    collection.insertOne(organisation).toFuture
+      .map(x => Right(x.wasAcknowledged()))
+      .recover {
+        case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
       }
   }
 
