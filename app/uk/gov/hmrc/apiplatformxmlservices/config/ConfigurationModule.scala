@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models
+package uk.gov.hmrc.apiplatformxmlservices.config
 
-import play.api.libs.json.Json
+import com.google.inject.AbstractModule
+import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 
-object JsonFormatters {
+class ConfigurationModule extends AbstractModule {
 
-  implicit val formatXmlApi = Json.format[XmlApi]
-
-  implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
-  implicit val formatVendorId = Json.valueFormat[VendorId]
-  implicit val formatOrganisation = Json.format[Organisation]
-
-  implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
-
+  override def configure(): Unit = {
+  bind(classOf[VendorIdService.Config]).toProvider(classOf[VendorIdServiceConfigProvider])
+  }
 
 }

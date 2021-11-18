@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models
+package uk.gov.hmrc.apiplatformxmlservices.repository
 
-import scala.io.Source
-import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import play.api.libs.json._
+import uk.gov.hmrc.apiplatformxmlservices.models.Organisation
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
+import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
 
-case class XmlApi(name: String, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
+object MongoFormatters {
 
-object XmlApi {
-
-  def xmlApis: Seq[XmlApi] = 
-    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[Seq[XmlApi]]
+  implicit val organisationIdFormats: Format[OrganisationId] = Json.valueFormat[OrganisationId]
+  implicit val vendorIdFormats: Format[VendorId] = Json.valueFormat[VendorId]
+  implicit val organisationFormats: OFormat[Organisation] = Json.format[Organisation]
 }
