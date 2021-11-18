@@ -57,6 +57,23 @@ class OrganisationRepositoryISpec
   trait Setup {
     def getUuid() = UUID.randomUUID()
     val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = "Organisation Name")
+    val organisationToPersist2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9001), name = "Organisation Name 2")
+  }
+
+  "findOrgWithMaxVendorId" should {
+    "return Organisation with max vendorId when there are 2 organisations" in new Setup {
+      await(repo.create(organisationToPersist))
+      await(repo.create(organisationToPersist2))
+
+      val result = await(repo.findOrgWithMaxVendorId)
+      result shouldBe Some(organisationToPersist2)
+    }
+
+    "return None no Organisations exist" in new Setup {
+
+      val result = await(repo.findOrgWithMaxVendorId)
+      result shouldBe None
+    }
   }
 
   "findByOrgId" should {

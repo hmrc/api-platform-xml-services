@@ -23,6 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -36,6 +37,8 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockOrganisationRepo)
+    reset(mockUuidService)
+    reset(mockVendorIdService)
   }
 
   trait Setup {
@@ -50,9 +53,9 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   }
 
   "createOrganisation" should {
-    "return Right" in new Setup {
+    "return Right when vendorIdService returns a vendorId" in new Setup {
       when(mockUuidService.newUuid).thenReturn(uuid)
-      when(mockVendorIdService.getNextVendorId).thenReturn(vendorId)
+      when(mockVendorIdService.getNextVendorId).thenReturn(Future.successful(Some(vendorId)))
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organisationToPersist)))
 
       await(inTest.create(organisationToPersist.name)) match {
@@ -63,6 +66,19 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       verify(mockUuidService).newUuid
       verify(mockVendorIdService).getNextVendorId
       verify(mockOrganisationRepo).createOrUpdate(organisationToPersist)
+    }
+
+    "return Left when vendorIdService does not return a vendorId" in new Setup {
+      when(mockVendorIdService.getNextVendorId).thenReturn(Future.successful(None))
+
+      await(inTest.create(organisationToPersist.name)) match {
+        case Left(e: Exception) => e.getMessage shouldBe "Could not get max vendorId"
+        case Right(_)  => fail
+      }
+
+      verify(mockVendorIdService).getNextVendorId
+      verifyZeroInteractions(mockUuidService)
+      verifyZeroInteractions(mockOrganisationRepo)
     }
   }
 

@@ -20,21 +20,31 @@ import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, 
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class OrganisationService @Inject()(organisationRepository: OrganisationRepository,
                                     uuidService: UuidService,
-                                    vendorIdService: VendorIdService) {
+                                    vendorIdService: VendorIdService)
+                                   (implicit val ec: ExecutionContext){
 
   def create(organisationName: String): Future[Either[Exception, Organisation]] = {
 
-    organisationRepository.createOrUpdate(
-      Organisation(
-        organisationId = getOrganisationId,
-        name = organisationName,
-        vendorId = vendorIdService.getNextVendorId())
-    )
+    def createOrganisation(organisationName: String, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
+      organisationRepository.createOrUpdate(
+        Organisation(
+          organisationId = getOrganisationId,
+          name = organisationName,
+          vendorId = vendorId
+        )
+      )
+    }
+
+    vendorIdService.getNextVendorId flatMap {
+      case Some(vendorId: VendorId) => createOrganisation(organisationName, vendorId)
+      case _ => Future.successful(Left(new Exception("Could not get max vendorId")))
+    }
+
   }
 
   def update(organisation: Organisation): Future[Boolean] =

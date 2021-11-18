@@ -21,7 +21,7 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK, CREATED}
+import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK, CREATED, CONFLICT}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.{CreateOrganisationRequest, Organisation, OrganisationId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
@@ -44,6 +44,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
+        "organisation.vendorId.startingValue" -> 9000,
         "microservice.services.auth.port" -> wireMockPort,
         "metrics.enabled" -> true,
         "auditing.enabled" -> false,
@@ -173,11 +174,13 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
     "POST /organisations" should {
 
-      "respond with 200 if Organisation was created" in new Setup {
+      "respond with 201 if Organisation was created" in new Setup {
         val result = callPostEndpoint(s"$url/organisations", createOrganisationRequestAsString)
+
         result.status mustBe CREATED
         val createdOrganisation = Json.parse(result.body).as[Organisation]
         createdOrganisation.name mustBe createOrganisationRequest.organisationName
+        createdOrganisation.vendorId mustBe VendorId(9000)
       }
 
       "respond with 400 if request body is not json" in new Setup {

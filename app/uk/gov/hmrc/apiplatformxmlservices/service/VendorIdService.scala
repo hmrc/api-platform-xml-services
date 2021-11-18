@@ -17,14 +17,35 @@
 package uk.gov.hmrc.apiplatformxmlservices.service
 
 import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
+import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
+import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class VendorIdService {
+class VendorIdService @Inject()(organisationRepository: OrganisationRepository,
+                                config: Config)(implicit val ec: ExecutionContext) {
 
-  def getNextVendorId()  : VendorId = {
-    VendorId(9000)
+  def getNextVendorId(): Future[Option[VendorId]] = {
+
+    organisationRepository.findOrgWithMaxVendorId.map {
+      case Some(organisation) => Some(calculateNextVendorId(organisation.vendorId))
+      case None => Some(VendorId(config.startingVendorId))
+    }.recover{
+      case (_: Exception) => None
+    }
   }
 
+  private def calculateNextVendorId(maxVendorId: VendorId) : VendorId = {
+    if(maxVendorId.value < config.startingVendorId) VendorId(config.startingVendorId)
+    else VendorId(maxVendorId.value + 1)
+  }
 }
+
+object VendorIdService {
+  case class Config(startingVendorId: Long)
+}
+
+
+

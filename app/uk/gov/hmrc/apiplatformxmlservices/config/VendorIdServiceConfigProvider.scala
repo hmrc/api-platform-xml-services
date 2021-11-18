@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.config
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Provider, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()
-  (
-    config: Configuration
-  , servicesConfig: ServicesConfig
-  ) {
+class VendorIdServiceConfigProvider @Inject()(config: Configuration,
+                          servicesConfig: ServicesConfig) extends Provider[VendorIdService.Config] {
+
+  override def get(): VendorIdService.Config = {
+    lazy val startingVendorId = servicesConfig.getInt("organisation.vendorId.startingValue")
+    VendorIdService.Config(startingVendorId)
+  }
 
 }
