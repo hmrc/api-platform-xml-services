@@ -66,7 +66,8 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
       val organisation = request.body.as[Organisation]
       organisationService.update(organisation).map {
-        case true => Ok
+        case Right(true) => Ok
+        case Left(e: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
         case _ => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
   }

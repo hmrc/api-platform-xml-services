@@ -84,11 +84,11 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "update" should {
     "return true when update successful" in new Setup {
-      when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(true))
+      when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(true)))
       val updatedOrganisation = organisationToPersist.copy(name = "New organisation name")
 
       val result = await(inTest.update(updatedOrganisation))
-      result shouldBe true
+      result shouldBe Right(true)
 
       verify(mockOrganisationRepo).update(updatedOrganisation)
 

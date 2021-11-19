@@ -95,6 +95,8 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     def getUuid() = UUID.randomUUID()
 
     val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = "Organisation Name")
+    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = "Organisation Name2")
+    val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = "Updated Organisation Name")
     val createOrganisationRequest = CreateOrganisationRequest(organisationName = "Organisation Name")
     val organisationIdValue = organisation.organisationId.value
     val vendorIdValue = organisation.vendorId.value
@@ -127,7 +129,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
       "respond with 404 when invalid path" in {
         val result = callGetEndpoint(s"$url/organisations")
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
       }
 
       "respond with 400 when invalid organisationId" in {
@@ -136,23 +138,23 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
     }
 
-    "GET /organisations/vendor/:vendorId" should {
+    "GET /organisations?vendorId" should {
 
       "respond with 200 and return Organisation" in new Setup {
         await(orgRepo.create(organisation))
-        val result = callGetEndpoint(s"$url/organisations/vendor/${vendorIdValue}")
+        val result = callGetEndpoint(s"$url/organisations?vendorId=${vendorIdValue}")
         result.status mustBe OK
         result.body mustBe Json.toJson(organisation).toString
       }
 
       "respond with 404 when VendorId not found" in new Setup {
-        val result = callGetEndpoint(s"$url/organisations/vendor/${vendorIdValue}")
+        val result = callGetEndpoint(s"$url/organisations?vendorId=${vendorIdValue}")
         result.status mustBe NOT_FOUND
         result.body mustBe s"XML Organisation with vendorId ${vendorIdValue} not found."
       }
 
       "respond with 400 when invalid vendorId" in {
-        val result = callGetEndpoint(s"$url/organisations/vendor/INVALID-LONG")
+        val result = callGetEndpoint(s"$url/organisations?vendorId=INVALID-LONG")
         result.status mustBe BAD_REQUEST
       }
     }
@@ -197,6 +199,14 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         val result = callPutEndpoint(s"$url/organisations", orgAsJsonString)
         result.status mustBe OK
       }
+
+      "respond with 409 if attempt to update Organisation with another Organisations VendorId" in new Setup {
+        await(orgRepo.create(organisation))
+        await(orgRepo.create(organisation2))
+        val result = callPutEndpoint(s"$url/organisations", Json.toJson(updatedOrgWithDuplicate).toString)
+        result.status mustBe CONFLICT
+      }
+
       "respond with 400 if request body is not json" in new Setup {
         val result = callPutEndpoint(s"$url/organisations", "INVALID BODY")
         result.status mustBe BAD_REQUEST

@@ -4,7 +4,7 @@ GET        /xml/apis                                uk.gov.hmrc.apiplatformxmlse
 GET        /xml/api/:name                           uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApi(name: String)
 
 GET        /organisations/:organisationId           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByOrgId(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
-GET        /organisations/vendor/:vendorId          uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByVendorId(vendorId: uk.gov.hmrc.apiplatformxmlservices.models.VendorId)
+GET        /organisations                           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByVendorId(vendorId: uk.gov.hmrc.apiplatformxmlservices.models.VendorId)
 POST       /organisations                           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.create
 PUT        /organisations                           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.update
 DELETE     /organisations/:organisationId           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.deleteByOrgId(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)

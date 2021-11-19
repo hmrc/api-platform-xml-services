@@ -129,16 +129,30 @@ class OrganisationRepositoryISpec
       await(repo.create(organisationToPersist))
       val updatedOrganisation = organisationToPersist.copy(name = "New organisation name")
 
-      val result = await(repo.update(updatedOrganisation))
-      result shouldBe true
-
+      await(repo.update(updatedOrganisation)) match {
+        case Right(x: Boolean) => x shouldBe true
+        case _ => fail
+      }
     }
 
     "return false when organisation does not exist" in new Setup {
-      val result = await(repo.update(organisationToPersist))
-      result shouldBe false
-
+      await(repo.update(organisationToPersist)) match {
+        case Right(x: Boolean) => x shouldBe false
+        case _ => fail
+      }
     }
+
+    "return Left when try to update with another organisation's VendorId" in new Setup {
+      await(repo.create(organisationToPersist))
+      await(repo.create(organisationToPersist2))
+      val updatedOrganisation = organisationToPersist.copy(name = "New organisation name", vendorId = organisationToPersist2.vendorId)
+
+      await(repo.update(updatedOrganisation)) match {
+        case Left(e: Exception) => e.getMessage contains "duplicate key"
+        case _ => fail
+      }
+    }
+
   }
 
   "createOrUpdate" should {

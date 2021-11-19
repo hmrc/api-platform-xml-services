@@ -86,14 +86,16 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
       }
   }
 
-  def update(organisation: Organisation): Future[Boolean] = {
+  def update(organisation: Organisation): Future[Either[Exception, Boolean]] = {
     val filter = equal("organisationId", Codecs.toBson(organisation.organisationId))
 
     collection.findOneAndReplace(filter, organisation, FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)).toFutureOption()
       .map {
-        case Some(_) => true
-        case None => false
-      }
+        case Some(_) => Right(true)
+        case None => Right(false)
+      }.recover {
+      case e: Exception => Left(e)
+    }
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {

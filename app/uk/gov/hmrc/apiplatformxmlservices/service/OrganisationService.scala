@@ -47,7 +47,7 @@ class OrganisationService @Inject()(organisationRepository: OrganisationReposito
 
   }
 
-  def update(organisation: Organisation): Future[Boolean] =
+  def update(organisation: Organisation): Future[Either[Exception, Boolean]] =
     organisationRepository.update(organisation)
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] =
