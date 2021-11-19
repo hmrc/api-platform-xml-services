@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import play.api.mvc.PathBindable
+import play.api.mvc.{PathBindable, QueryStringBindable}
 import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, VendorId}
 
 import java.util.UUID
@@ -48,14 +48,18 @@ package object binders {
       .map(VendorId(_))
   }
 
-  implicit def vendorIdPathBinder(implicit textBinder: PathBindable[String]): PathBindable[VendorId] = new PathBindable[VendorId] {
-    override def bind(key: String, value: String): Either[String, VendorId] = {
-      textBinder.bind(key, value).flatMap(vendorIdFromString)
-    }
+  implicit def vendorIdQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[VendorId] =
+    new QueryStringBindable[VendorId] {
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, VendorId]] = {
+        textBinder.bind(key, params).map {
+          case Right(vendorId) => vendorIdFromString(vendorId)
+          case Left(_) => Left("Unable to bind vendorId")
+        }
+      }
 
-    override def unbind(key: String, vendorId: VendorId): String = {
-      textBinder.unbind(key, vendorId.value.toString)
+      override def unbind(key: String, vendorId: VendorId): String = {
+        textBinder.unbind(key, vendorId.value.toString)
+      }
     }
-  }
 
 }
