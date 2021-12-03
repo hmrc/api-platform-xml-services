@@ -9,6 +9,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     majorVersion                     := 0,
     scalaVersion                     := "2.12.13",
+    PlayKeys.playDefaultPort         := 11116,
     routesImport                     += "uk.gov.hmrc.apiplatformxmlservices.controllers.binders._",
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
   )

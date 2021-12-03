@@ -1,7 +1,7 @@
 # microservice specific routes
 
 GET        /xml/apis                                uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getAll
-GET        /xml/api/:name                           uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApi(name: String)
+GET        /xml/api                                 uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApiByServiceName(serviceName: String)
 
 GET        /organisations/:organisationId           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByOrgId(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
 GET        /organisations                           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByVendorId(vendorId: uk.gov.hmrc.apiplatformxmlservices.models.VendorId)
