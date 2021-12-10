@@ -26,6 +26,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @Singleton
 class OrganisationController @Inject()(organisationService: OrganisationService,
@@ -40,11 +41,15 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
     }
   }
 
-  def findByVendorId(vendorId: VendorId): Action[AnyContent] = Action.async {
-    organisationService.findByVendorId(vendorId) map {
-      case Some(organisation: Organisation) => Ok(Json.toJson(organisation))
-      case _ => NotFound(s"XML Organisation with vendorId ${vendorId.value} not found.")
+  def findByParams(vendorId: Option[VendorId]): Action[AnyContent] = Action.async { request =>
+    vendorId match {
+      case Some(v: VendorId) => organisationService.findByVendorId(v) map {
+                                case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
+                                case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
+                              }
+      case None => organisationService.findAll().map(x => Ok(Json.toJson(x)))          
     }
+    
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {

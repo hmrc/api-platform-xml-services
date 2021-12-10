@@ -53,6 +53,11 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
       .toFuture().map(_.headOption)
   }
 
+  def findAll(): Future[List[Organisation]] = {
+    collection.find().toFuture().map(_.toList)
+
+  }
+
   def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
     collection.find(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(_.headOption)
 
