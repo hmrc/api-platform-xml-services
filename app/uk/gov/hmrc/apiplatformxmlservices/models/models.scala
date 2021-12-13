@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import java.{util => ju}
 
-case class XmlApi(name: String, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
+case class XmlApi(name: String, serviceName: String, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
 
 object XmlApi {
 
