@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+
 
 @Singleton
 class OrganisationController @Inject()(organisationService: OrganisationService,
@@ -47,7 +47,7 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
                                 case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
                                 case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
                               }
-      case None => organisationService.findAll().map(x => Ok(Json.toJson(x)))          
+      case None => organisationService.findAll().map(x => Ok(Json.toJson(x)))
     }
     
   }
@@ -60,19 +60,24 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
   }
 
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+
+    //TODO - the parsing of the request needs better error handling
       val createOrganisationRequest = request.body.as[CreateOrganisationRequest]
       organisationService.create(createOrganisationRequest.organisationName).map {
         case Right(organisation) => Created(Json.toJson(organisation))
-        case Left(e: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
+        //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
+        case Left(_: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
         case Left(e: Exception) => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
       }
   }
 
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+    //TODO - the parsing of the request needs better error handling
       val organisation = request.body.as[Organisation]
       organisationService.update(organisation).map {
         case Right(true) => Ok
-        case Left(e: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
+       //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
+        case Left(_: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
         case _ => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
   }
