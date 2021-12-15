@@ -35,7 +35,6 @@ import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import java.{util => ju}
 
 class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 

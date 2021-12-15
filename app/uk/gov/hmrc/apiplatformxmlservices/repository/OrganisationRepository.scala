@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
-import com.mongodb.client.model.Projections.{excludeId, fields, include}
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
