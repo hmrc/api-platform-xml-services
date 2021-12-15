@@ -60,6 +60,23 @@ class OrganisationRepositoryISpec
     val organisationToPersist2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9001), name = "Organisation Name 2")
   }
 
+  "findAll" should {
+    "return a List of all Organisations" in new Setup {
+      await(repo.create(organisationToPersist))
+      await(repo.create(organisationToPersist2))
+
+      val result = await(repo.findAll)
+      result shouldBe List(organisationToPersist, organisationToPersist2)
+
+    }
+
+    "return an empty List when no organisations exist" in new Setup {
+      val result = await(repo.findAll)
+      result shouldBe List.empty
+
+    }
+  }
+
   "findOrgWithMaxVendorId" should {
     "return Organisation with max vendorId when there are 2 organisations" in new Setup {
       await(repo.create(organisationToPersist))

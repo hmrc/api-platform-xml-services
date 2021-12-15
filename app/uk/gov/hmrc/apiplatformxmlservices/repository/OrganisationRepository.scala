@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
-import com.mongodb.client.model.Projections.{excludeId, fields, include}
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
@@ -51,6 +50,11 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
       )
       .limit(1)
       .toFuture().map(_.headOption)
+  }
+
+  def findAll(): Future[List[Organisation]] = {
+    collection.find().toFuture().map(_.toList)
+
   }
 
   def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {

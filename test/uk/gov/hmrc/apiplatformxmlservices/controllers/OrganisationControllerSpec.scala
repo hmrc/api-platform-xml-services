@@ -75,16 +75,26 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     }
   }
 
-  "GET /organisations/:vendorId" should {
+  "GET /organisations?vendorId=[some[vendorId]]" should {
     "return 200" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisation)))
-      val result: Future[Result] = controller.findByVendorId(organisation.vendorId)(fakeRequest)
+      val result: Future[Result] = controller.findByParams(Some(organisation.vendorId))(fakeRequest)
       status(result) shouldBe Status.OK
+      verify(mockOrgService).findByVendorId(*[VendorId])
+      verify(mockOrgService, times(0)).findAll
+    }
+
+    "return 200 with all organisations" in new Setup {
+      when(mockOrgService.findAll()).thenReturn(Future.successful(List(organisation)))
+      val result: Future[Result] = controller.findByParams(None)(fakeRequest)
+      status(result) shouldBe Status.OK
+      verify(mockOrgService, times(0)).findByVendorId(*[VendorId])
+      verify(mockOrgService, times(1)).findAll
     }
 
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(None))
-      val result: Future[Result] = controller.findByVendorId(VendorId(9000))(fakeRequest)
+      val result: Future[Result] = controller.findByParams(Some(VendorId(9000)))(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }

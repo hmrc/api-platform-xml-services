@@ -127,11 +127,6 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         result.body mustBe s"XML Organisation with organisationId ${organisationIdValue} not found."
       }
 
-      "respond with 404 when invalid path" in {
-        val result = callGetEndpoint(s"$url/organisations")
-        result.status mustBe BAD_REQUEST
-      }
-
       "respond with 400 when invalid organisationId" in {
         val result = callGetEndpoint(s"$url/organisations/2233-3322-2222")
         result.status mustBe BAD_REQUEST
@@ -140,11 +135,19 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
     "GET /organisations?vendorId" should {
 
-      "respond with 200 and return Organisation" in new Setup {
+      "respond with 200 and return the Organisation that matches the vendorId" in new Setup {
         await(orgRepo.create(organisation))
         val result = callGetEndpoint(s"$url/organisations?vendorId=${vendorIdValue}")
         result.status mustBe OK
-        result.body mustBe Json.toJson(organisation).toString
+        result.body mustBe Json.toJson(List(organisation)).toString
+      }
+
+      "respond with 200 and return all Organisations when no vendorId is provided" in new Setup {
+        await(orgRepo.create(organisation))
+        await(orgRepo.create(organisation2))
+        val result = callGetEndpoint(s"$url/organisations")
+        result.status mustBe OK
+        result.body mustBe Json.toJson(List(organisation, organisation2)).toString
       }
 
       "respond with 404 when VendorId not found" in new Setup {

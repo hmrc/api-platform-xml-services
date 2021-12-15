@@ -17,7 +17,6 @@
 package uk.gov.hmrc.apiplatformxmlservices.support
 
 import org.scalatest.{BeforeAndAfterEach, Suite, TestSuite}
-import uk.gov.hmrc.apiplatformxmlservices.models.Organisation
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 

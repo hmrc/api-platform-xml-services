@@ -131,5 +131,17 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
   }
 
+  "findAll" should {
+    "return a List of Organisations when at least one exists" in new Setup {
+      when(mockOrganisationRepo.findAll()).thenReturn(Future.successful(List(organisationToPersist)))
+
+      val result = await(inTest.findAll)
+      result shouldBe List(organisationToPersist)
+
+      verify(mockOrganisationRepo).findAll
+
+    }
+  }
+
 
 }

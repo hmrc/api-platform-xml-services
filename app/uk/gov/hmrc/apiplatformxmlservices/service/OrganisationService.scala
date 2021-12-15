@@ -59,6 +59,9 @@ class OrganisationService @Inject()(organisationRepository: OrganisationReposito
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] =
     organisationRepository.findByVendorId(vendorId)
 
+  def findAll(): Future[List[Organisation]] =
+    organisationRepository.findAll
+
   private def getOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 
 }
