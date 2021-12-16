@@ -1,0 +1,7 @@
+# organistion routes
+
+GET        /:organisationId           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByOrgId(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
+GET        /                          uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByParams(vendorId: Option[uk.gov.hmrc.apiplatformxmlservices.models.VendorId], organistionName: Option[uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName])
+POST       /                          uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.create
+PUT        /                          uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.update
+DELETE     /:organisationId           uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.deleteByOrgId(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)

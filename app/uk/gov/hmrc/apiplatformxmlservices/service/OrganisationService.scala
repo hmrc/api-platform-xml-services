@@ -16,21 +16,22 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class OrganisationService @Inject()(organisationRepository: OrganisationRepository,
-                                    uuidService: UuidService,
-                                    vendorIdService: VendorIdService)
-                                   (implicit val ec: ExecutionContext){
+class OrganisationService @Inject() (
+    organisationRepository: OrganisationRepository,
+    uuidService: UuidService,
+    vendorIdService: VendorIdService
+  )(implicit val ec: ExecutionContext) {
 
-  def create(organisationName: String): Future[Either[Exception, Organisation]] = {
+  def create(organisationName: OrganisationName): Future[Either[Exception, Organisation]] = {
 
-    def createOrganisation(organisationName: String, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
+    def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
       organisationRepository.createOrUpdate(
         Organisation(
           organisationId = getOrganisationId,
@@ -42,7 +43,7 @@ class OrganisationService @Inject()(organisationRepository: OrganisationReposito
 
     vendorIdService.getNextVendorId flatMap {
       case Some(vendorId: VendorId) => createOrganisation(organisationName, vendorId)
-      case _ => Future.successful(Left(new Exception("Could not get max vendorId")))
+      case _                        => Future.successful(Left(new Exception("Could not get max vendorId")))
     }
 
   }
@@ -58,6 +59,9 @@ class OrganisationService @Inject()(organisationRepository: OrganisationReposito
 
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] =
     organisationRepository.findByVendorId(vendorId)
+
+  def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] =
+    organisationRepository.findByOrganisationName(organisationName)
 
   def findAll(): Future[List[Organisation]] =
     organisationRepository.findAll

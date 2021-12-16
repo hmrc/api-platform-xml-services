@@ -29,6 +29,7 @@ import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp, S
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
 
 class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with MongoApp[Organisation] {
 
@@ -94,10 +95,10 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
     def getUuid() = UUID.randomUUID()
 
-    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = "Organisation Name")
-    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = "Organisation Name2")
-    val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = "Updated Organisation Name")
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = "Organisation Name")
+    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name =  OrganisationName("Organisation Name"))
+    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name =  OrganisationName("Organisation Name2"))
+    val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
+    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"))
     val organisationIdValue = organisation.organisationId.value
     val vendorIdValue = organisation.vendorId.value
     val orgAsJsonString = Json.toJson(organisation).toString

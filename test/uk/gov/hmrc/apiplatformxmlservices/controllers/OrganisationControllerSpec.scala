@@ -51,14 +51,14 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
   }
 
   trait Setup {
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = "Organisation Name")
+    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"))
     val fakeRequest = FakeRequest("GET", "/organisations")
     val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
     val jsonMediaType = "application/json"
     def getUuid() = UUID.randomUUID()
 
-    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = "Organisation Name")
+    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name =  OrganisationName("Organisation Name"))
   }
 
   "GET /organisations/:organisationId" should {
@@ -86,7 +86,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     "return 200 with all organisations" in new Setup {
       when(mockOrgService.findAll()).thenReturn(Future.successful(List(organisation)))
-      val result: Future[Result] = controller.findByParams(None)(fakeRequest)
+      val result: Future[Result] = controller.findByParams()(fakeRequest)
       status(result) shouldBe Status.OK
       verify(mockOrgService, times(0)).findByVendorId(*[VendorId])
       verify(mockOrgService, times(1)).findAll
@@ -101,24 +101,24 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
   "POST /organisations/" should {
     "return 200" in new Setup {
-      when(mockOrgService.create(*)).thenReturn(Future.successful(Right(organisation)))
+      when(mockOrgService.create(any[OrganisationName])).thenReturn(Future.successful(Right(organisation)))
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.CREATED
       contentAsJson(result) shouldBe Json.toJson(organisation)
     }
 
     "return 409" in new Setup {
-      when(mockOrgService.create(*)).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument(),ServerAddress()))))
+      when(mockOrgService.create(any[OrganisationName])).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument(),ServerAddress()))))
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.CONFLICT
-      contentAsString(result) shouldBe "Could not create Organisation with name Organisation Name - Duplicate ID"
+      contentAsString(result) shouldBe "Could not create Organisation with name OrganisationName(Organisation Name) - Duplicate ID"
     }
 
     "return 400" in new Setup {
-      when(mockOrgService.create(*)).thenReturn(Future.successful(Left(new Exception("Failed"))))
+      when(mockOrgService.create(any[OrganisationName])).thenReturn(Future.successful(Left(new Exception("Failed"))))
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.BAD_REQUEST
-      contentAsString(result) shouldBe "Could not create Organisation with name Organisation Name - Failed"
+      contentAsString(result) shouldBe "Could not create Organisation with name OrganisationName(Organisation Name) - Failed"
     }
   }
 
