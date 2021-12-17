@@ -146,7 +146,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
       "respond 200 and return matches when valid organisation name provided" in new Setup {
         await(orgRepo.create(organisation))
-        val result = callGetEndpoint(s"$url/organisations?organistionName=${organisation.name}")
+        val result = callGetEndpoint(s"$url/organisations?organisationName=${organisation.name}")
         result.status mustBe OK
         result.body mustBe Json.toJson(List(organisation)).toString
       }
@@ -167,7 +167,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
       "respond 200 and empty list when OrganisationName not found" in new Setup {
         await(orgRepo.create(organisation2))
-        val result = callGetEndpoint(s"$url/organisations?organistionName=unknown")
+        val result = callGetEndpoint(s"$url/organisations?organisationName=unknown")
         result.status mustBe OK
         result.body mustBe "[]"
       }
