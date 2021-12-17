@@ -21,7 +21,7 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK, CREATED, CONFLICT}
+import play.api.test.Helpers.{BAD_REQUEST, CONFLICT, CREATED, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.{CreateOrganisationRequest, Organisation, OrganisationId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
@@ -95,13 +95,14 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
     def getUuid() = UUID.randomUUID()
 
-    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name =  OrganisationName("Organisation Name"))
-    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name =  OrganisationName("Organisation Name2"))
+    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
+    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
     val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
     val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"))
     val organisationIdValue = organisation.organisationId.value
     val vendorIdValue = organisation.vendorId.value
     val orgAsJsonString = Json.toJson(organisation).toString
+
     val invalidOrgString =
       """{
         |    "organisationId": "dd5bda96-46da-11ec-81d3-0242ac130003",
@@ -134,11 +135,18 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
     }
 
-    "GET /organisations?vendorId" should {
+    "GET /organisations with query parameters" should {
 
-      "respond with 200 and return the Organisation that matches the vendorId" in new Setup {
+      "respond 200 and return matches when valid vendorID provided" in new Setup {
         await(orgRepo.create(organisation))
-        val result = callGetEndpoint(s"$url/organisations?vendorId=${vendorIdValue}")
+        val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue")
+        result.status mustBe OK
+        result.body mustBe Json.toJson(List(organisation)).toString
+      }
+
+      "respond 200 and return matches when valid organisation name provided" in new Setup {
+        await(orgRepo.create(organisation))
+        val result = callGetEndpoint(s"$url/organisations?organistionName=${organisation.name}")
         result.status mustBe OK
         result.body mustBe Json.toJson(List(organisation)).toString
       }
@@ -155,6 +163,13 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         val result = callGetEndpoint(s"$url/organisations?vendorId=${vendorIdValue}")
         result.status mustBe NOT_FOUND
         result.body mustBe s"XML Organisation with vendorId ${vendorIdValue} not found."
+      }
+
+      "respond 200 and empty list when OrganisationName not found" in new Setup {
+        await(orgRepo.create(organisation2))
+        val result = callGetEndpoint(s"$url/organisations?organistionName=unknown")
+        result.status mustBe OK
+        result.body mustBe "[]"
       }
 
       "respond with 400 when invalid vendorId" in {
