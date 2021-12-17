@@ -27,6 +27,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.util.UUID
 import scala.concurrent.Future
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
@@ -48,7 +49,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     val vendorId = VendorId(9000)
 
     def getUuid() = UUID.randomUUID()
-    val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name = "Organisation Name")
+    val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name =  OrganisationName("Organisation Name"))
 
   }
 
@@ -59,8 +60,8 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organisationToPersist)))
 
       await(inTest.create(organisationToPersist.name)) match {
-        case Left(e: Exception) => fail
-        case Right(x: Organisation)  => x shouldBe organisationToPersist
+        case Left(e: Exception)     => fail
+        case Right(x: Organisation) => x shouldBe organisationToPersist
       }
 
       verify(mockUuidService).newUuid
@@ -73,7 +74,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
       await(inTest.create(organisationToPersist.name)) match {
         case Left(e: Exception) => e.getMessage shouldBe "Could not get max vendorId"
-        case Right(_)  => fail
+        case Right(_)           => fail
       }
 
       verify(mockVendorIdService).getNextVendorId
@@ -85,7 +86,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   "update" should {
     "return true when update successful" in new Setup {
       when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(true)))
-      val updatedOrganisation = organisationToPersist.copy(name = "New organisation name")
+      val updatedOrganisation = organisationToPersist.copy(name =  OrganisationName("New Organisation Name"))
 
       val result = await(inTest.update(updatedOrganisation))
       result shouldBe Right(true)
@@ -143,5 +144,17 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
   }
 
+  "findByOrganisationName" should {
+    "return a List of Organisations when at least one exists" in new Setup {
+      val orgName = OrganisationName("orgname")
+      when(mockOrganisationRepo.findByOrganisationName(eqTo(orgName))).thenReturn(Future.successful(List(organisationToPersist)))
+
+      val result = await(inTest.findByOrganisationName(orgName))
+      result shouldBe List(organisationToPersist)
+
+      verify(mockOrganisationRepo).findByOrganisationName(eqTo(orgName))
+
+    }
+  }
 
 }

@@ -16,4 +16,4 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-case class CreateOrganisationRequest(organisationName: String)
+case class CreateOrganisationRequest(organisationName: OrganisationName)

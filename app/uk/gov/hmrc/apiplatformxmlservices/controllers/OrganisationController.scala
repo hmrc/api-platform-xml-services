@@ -26,6 +26,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
 
 
 @Singleton
@@ -41,13 +42,18 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
     }
   }
 
-  def findByParams(vendorId: Option[VendorId]): Action[AnyContent] = Action.async { request =>
-    vendorId match {
-      case Some(v: VendorId) => organisationService.findByVendorId(v) map {
+  def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None): Action[AnyContent] = Action.async { request =>
+    (vendorId, organisationName) match {
+      case (Some(v: VendorId), None) => println("**** finding by vendor id")
+        organisationService.findByVendorId(v) map {
                                 case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
                                 case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
                               }
-      case None => organisationService.findAll().map(x => Ok(Json.toJson(x)))
+      case (None, Some(orgName: OrganisationName))  =>  println("**** finding by org name")
+        organisationService.findByOrganisationName(orgName)
+                                                        .map(x => Ok(Json.toJson(x)))
+      case _ => println("**** finding by ALL")
+        organisationService.findAll().map(x => Ok(Json.toJson(x)))
     }
     
   }

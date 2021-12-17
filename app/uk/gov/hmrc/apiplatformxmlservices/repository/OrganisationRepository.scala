@@ -28,19 +28,23 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import com.mongodb.BasicDBObject
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
+import com.mongodb.ExplainVerbosity
 
 @Singleton
-class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[Organisation](
-    collectionName = "organisations",
-    mongoComponent = mongo,
-    domainFormat = organisationFormats,
-    indexes = Seq(
-      IndexModel(ascending("organisationId"), IndexOptions().name("organisationId_index").background(true).unique(true)),
-      IndexModel(ascending("vendorId"), IndexOptions().name("vendorId_index").background(true).unique(true))
-    ),
-    replaceIndexes = false
-  ) {
+class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[Organisation](
+      collectionName = "organisations",
+      mongoComponent = mongo,
+      domainFormat = organisationFormats,
+      indexes = Seq(
+        IndexModel(ascending("organisationId"), IndexOptions().name("organisationId_index").background(true).unique(true)),
+        IndexModel(ascending("vendorId"), IndexOptions().name("vendorId_index").background(true).unique(true)),
+        IndexModel(ascending("name"), IndexOptions().name("organisationName_index").background(true).unique(false))
+      ),
+      replaceIndexes = true
+    ) {
 
   def findOrgWithMaxVendorId(): Future[Option[Organisation]] = {
     collection
@@ -67,6 +71,18 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
 
   }
 
+  def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
+
+    println(s"*****${organisationName.value}")
+    collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
+      .sort(Sorts.ascending("name"))
+      .toFuture()
+      .map(_.toList)
+
+  }
+  // db.users.find({ name: /<full_or_partial_text>/i}) case insensitive
+  // { collection.find({ name of field: new RegExp(search_text, 'i') }
+
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
     val query = equal("organisationId", Codecs.toBson(organisation.organisationId))
 
@@ -75,7 +91,7 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
       setOnInsert("vendorId", Codecs.toBson(organisation.vendorId))
     )
 
-    val setOnUpdate = List(set("name", organisation.name))
+    val setOnUpdate = List(set("name", Codecs.toBson(organisation.name)))
 
     val allOps = setOnInsertOperations ++ setOnUpdate
 
@@ -86,7 +102,7 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
     ).toFuture
       .map(x => Right(x))
       .recover {
-        case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
+        case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name.value} - ${e.getMessage}"))
       }
   }
 
@@ -96,10 +112,10 @@ class OrganisationRepository @Inject()(mongo: MongoComponent)(implicit ec: Execu
     collection.findOneAndReplace(filter, organisation, FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)).toFutureOption()
       .map {
         case Some(_) => Right(true)
-        case None => Right(false)
+        case None    => Right(false)
       }.recover {
-      case e: Exception => Left(e)
-    }
+        case e: Exception => Left(e)
+      }
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
