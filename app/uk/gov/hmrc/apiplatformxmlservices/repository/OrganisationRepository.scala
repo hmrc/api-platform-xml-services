@@ -30,6 +30,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import com.mongodb.BasicDBObject
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
+import com.mongodb.ExplainVerbosity
 
 @Singleton
 class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
@@ -40,11 +41,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       indexes = Seq(
         IndexModel(ascending("organisationId"), IndexOptions().name("organisationId_index").background(true).unique(true)),
         IndexModel(ascending("vendorId"), IndexOptions().name("vendorId_index").background(true).unique(true)),
-        IndexModel(
-          Indexes.text("$**"),
-          IndexOptions().weights(new BasicDBObject().append("name", 50))
-            .name("organisationName_text_index").background(true)
-        )
+        IndexModel(ascending("name"), IndexOptions().name("organisationName_index").background(true).unique(false))
       ),
       replaceIndexes = true
     ) {
@@ -76,12 +73,15 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
 
-      collection.find(Filters.text(organisationName.value))
-                       .projection(Projections.metaTextScore("score"))
-                       .sort(Sorts.ascending("name"))
-                        .toFuture()
-                     .map(_.toList)
+    println(s"*****${organisationName.value}")
+    collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
+      .sort(Sorts.ascending("name"))
+      .toFuture()
+      .map(_.toList)
+
   }
+  // db.users.find({ name: /<full_or_partial_text>/i}) case insensitive
+  // { collection.find({ name of field: new RegExp(search_text, 'i') }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
     val query = equal("organisationId", Codecs.toBson(organisation.organisationId))

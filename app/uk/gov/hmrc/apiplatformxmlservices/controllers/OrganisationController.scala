@@ -44,13 +44,16 @@ class OrganisationController @Inject()(organisationService: OrganisationService,
 
   def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None): Action[AnyContent] = Action.async { request =>
     (vendorId, organisationName) match {
-      case (Some(v: VendorId), None) => organisationService.findByVendorId(v) map {
+      case (Some(v: VendorId), None) => println("**** finding by vendor id")
+        organisationService.findByVendorId(v) map {
                                 case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
                                 case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
                               }
-      case (None, Some(orgName: OrganisationName))  =>  organisationService.findByOrganisationName(orgName)
+      case (None, Some(orgName: OrganisationName))  =>  println("**** finding by org name")
+        organisationService.findByOrganisationName(orgName)
                                                         .map(x => Ok(Json.toJson(x)))
-      case _ => organisationService.findAll().map(x => Ok(Json.toJson(x)))
+      case _ => println("**** finding by ALL")
+        organisationService.findAll().map(x => Ok(Json.toJson(x)))
     }
     
   }

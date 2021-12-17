@@ -146,7 +146,9 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
       "respond 200 and return matches when valid organisation name provided" in new Setup {
         await(orgRepo.create(organisation))
-        val result = callGetEndpoint(s"$url/organisations?organisationName=${organisation.name}")
+        await(orgRepo.create(organisation2))
+
+        val result = callGetEndpoint(s"$url/organisations?organisationName=I am the")
         result.status mustBe OK
         result.body mustBe Json.toJson(List(organisation)).toString
       }
