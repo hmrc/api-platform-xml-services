@@ -32,7 +32,7 @@ class ApiController @Inject() (cc: ControllerComponents)
     Future.successful(Ok(Json.toJson(XmlApi.xmlApis)))
   }
 
-  @deprecated("usie getApiByServiceName")
+  @deprecated("use getApiByServiceName")
   def getApi(name: String): Action[AnyContent] = Action.async { implicit request =>
     XmlApi.xmlApis.find(_.name == name) match {
       case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
