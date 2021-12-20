@@ -19,18 +19,22 @@ package uk.gov.hmrc.apiplatformxmlservices.repository
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
-import org.mongodb.scala.model.Updates.{set, setOnInsert}
+import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.Updates.setOnInsert
 import org.mongodb.scala.model._
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.Organisation
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
+import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.mongo.play.json.Codecs
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import com.mongodb.BasicDBObject
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
-import com.mongodb.ExplainVerbosity
+import javax.inject.Inject
+import javax.inject.Singleton
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @Singleton
 class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
@@ -72,16 +76,12 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
-
-    println(s"*****${organisationName.value}")
     collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
       .sort(Sorts.ascending("name"))
       .toFuture()
       .map(_.toList)
 
   }
-  // db.users.find({ name: /<full_or_partial_text>/i}) case insensitive
-  // { collection.find({ name of field: new RegExp(search_text, 'i') }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
     val query = equal("organisationId", Codecs.toBson(organisation.organisationId))

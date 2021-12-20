@@ -28,63 +28,55 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
 
-
 @Singleton
-class OrganisationController @Inject()(organisationService: OrganisationService,
-                                       cc: ControllerComponents)
-                                      (implicit val ec: ExecutionContext)
-    extends BackendController(cc) {
+class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {
 
   def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.findByOrgId(organisationId) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(organisation))
-      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _                                => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
   def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None): Action[AnyContent] = Action.async { request =>
     (vendorId, organisationName) match {
-      case (Some(v: VendorId), None) => println("**** finding by vendor id")
-        organisationService.findByVendorId(v) map {
-                                case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
-                                case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
-                              }
-      case (None, Some(orgName: OrganisationName))  =>  println("**** finding by org name")
-        organisationService.findByOrganisationName(orgName)
-                                                        .map(x => Ok(Json.toJson(x)))
-      case _ => println("**** finding by ALL")
-        organisationService.findAll().map(x => Ok(Json.toJson(x)))
+      case (Some(v: VendorId), None)            => organisationService.findByVendorId(v) map {
+          case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
+          case _                                => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
+        }
+      case (None, Some(orgName: OrganisationName)) => organisationService.findByOrganisationName(orgName)
+          .map(x => Ok(Json.toJson(x)))
+      case _                                       => organisationService.findAll().map(x => Ok(Json.toJson(x)))
     }
-    
+
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
-      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _    => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-
     //TODO - the parsing of the request needs better error handling
-      val createOrganisationRequest = request.body.as[CreateOrganisationRequest]
-      organisationService.create(createOrganisationRequest.organisationName).map {
-        case Right(organisation) => Created(Json.toJson(organisation))
-        //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
-        case Left(_: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
-        case Left(e: Exception) => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
-      }
+    val createOrganisationRequest = request.body.as[CreateOrganisationRequest]
+    organisationService.create(createOrganisationRequest.organisationName).map {
+      case Right(organisation)            => Created(Json.toJson(organisation))
+      //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
+      case Left(_: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
+      case Left(e: Exception)             => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
+    }
   }
 
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     //TODO - the parsing of the request needs better error handling
-      val organisation = request.body.as[Organisation]
-      organisationService.update(organisation).map {
-        case Right(true) => Ok
-       //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
-        case Left(_: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
-        case _ => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
-      }
+    val organisation = request.body.as[Organisation]
+    organisationService.update(organisation).map {
+      case Right(true)                    => Ok
+      //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
+      case Left(_: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
+      case _                              => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
+    }
   }
 }
