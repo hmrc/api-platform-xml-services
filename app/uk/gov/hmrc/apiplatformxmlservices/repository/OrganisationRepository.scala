@@ -77,10 +77,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
     collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
-      .sort(Sorts.ascending("name"))
       .toFuture()
-      .map(_.toList)
-
+      .map(_.toList.sortBy(_.name.value))
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {

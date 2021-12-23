@@ -23,12 +23,12 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
+import java.util.UUID.randomUUID
 
 class OrganisationRepositoryISpec
     extends AnyWordSpec
@@ -81,13 +81,11 @@ class OrganisationRepositoryISpec
 
       val result = await(repo.findAll)
       result shouldBe List(organisationToPersist, organisationToPersist2)
-
     }
 
     "return an empty List when no organisations exist" in new Setup {
       val result = await(repo.findAll)
       result shouldBe List.empty
-
     }
   }
 
@@ -155,6 +153,28 @@ class OrganisationRepositoryISpec
       results.isEmpty shouldBe true
     }
 
+    "return organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
+      val orgOne = Organisation(OrganisationId(randomUUID()), VendorId(1111L), OrganisationName("1 Trading"))
+      val orgTwo = Organisation(OrganisationId(randomUUID()), VendorId(1112L), OrganisationName("Global Trans Inc"))
+      val orgThree = Organisation(OrganisationId(randomUUID()), VendorId(1113L), OrganisationName("23rd Street Inc"))
+      val orgFour = Organisation(OrganisationId(randomUUID()), VendorId(1114L), OrganisationName("! Exclamation Trading"))
+      val orgFive = Organisation(OrganisationId(randomUUID()), VendorId(1115L), OrganisationName("$ Dollar and Co"))
+      val orgSix = Organisation(OrganisationId(randomUUID()), VendorId(1116L), OrganisationName("Zone 5 Corp"))
+      val orgSeven = Organisation(OrganisationId(randomUUID()), VendorId(1117L), OrganisationName("Criterion Games"))
+
+      await(repo.create(orgOne))
+      await(repo.create(orgTwo))
+      await(repo.create(orgThree))
+      await(repo.create(orgFour))
+      await(repo.create(orgFive))
+      await(repo.create(orgSix))
+      await(repo.create(orgSeven))
+
+      val expectedResult: List[Organisation] = List(orgOne, orgTwo, orgThree, orgFour, orgFive, orgSix, orgSeven).sortBy(_.name.value)
+      val actualResult: List[Organisation] = await(repo.findByOrganisationName(OrganisationName("")))
+
+      actualResult shouldBe expectedResult
+    }
   }
 
   "deleteByOrgId" should {
