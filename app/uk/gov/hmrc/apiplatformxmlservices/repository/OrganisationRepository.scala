@@ -61,7 +61,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def findAll(): Future[List[Organisation]] = {
-    collection.find().toFuture().map(_.toList)
+    collection.find().toFuture().map(_.toList.sortBy(_.name.value))
 
   }
 
