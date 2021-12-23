@@ -72,15 +72,35 @@ class OrganisationRepositoryISpec
       await(repo.create(org5))
       await(repo.create(org6))
     }
+
+    def createUnsortedListOfOrganisations(): List[Organisation] = {
+      val orgOne = Organisation(OrganisationId(randomUUID()), VendorId(1111L), OrganisationName("1 Trading"))
+      val orgTwo = Organisation(OrganisationId(randomUUID()), VendorId(1112L), OrganisationName("Global Trans Inc"))
+      val orgThree = Organisation(OrganisationId(randomUUID()), VendorId(1113L), OrganisationName("23rd Street Inc"))
+      val orgFour = Organisation(OrganisationId(randomUUID()), VendorId(1114L), OrganisationName("! Exclamation Trading"))
+      val orgFive = Organisation(OrganisationId(randomUUID()), VendorId(1115L), OrganisationName("$ Dollar and Co"))
+      val orgSix = Organisation(OrganisationId(randomUUID()), VendorId(1116L), OrganisationName("Zone 5 Corp"))
+      val orgSeven = Organisation(OrganisationId(randomUUID()), VendorId(1117L), OrganisationName("Criterion Games"))
+
+      await(repo.create(orgOne))
+      await(repo.create(orgTwo))
+      await(repo.create(orgThree))
+      await(repo.create(orgFour))
+      await(repo.create(orgFive))
+      await(repo.create(orgSix))
+      await(repo.create(orgSeven))
+
+      List(orgOne, orgTwo, orgThree, orgFour, orgFive, orgSix, orgSeven)
+    }
   }
 
   "findAll" should {
-    "return a List of all Organisations" in new Setup {
-      await(repo.create(organisationToPersist))
-      await(repo.create(organisationToPersist2))
+    "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
 
-      val result = await(repo.findAll)
-      result shouldBe List(organisationToPersist, organisationToPersist2)
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sortBy(_.name.value)
+      val actualResult: List[Organisation] = await(repo.findAll)
+
+      actualResult shouldBe expectedResult
     }
 
     "return an empty List when no organisations exist" in new Setup {
@@ -154,23 +174,8 @@ class OrganisationRepositoryISpec
     }
 
     "return organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
-      val orgOne = Organisation(OrganisationId(randomUUID()), VendorId(1111L), OrganisationName("1 Trading"))
-      val orgTwo = Organisation(OrganisationId(randomUUID()), VendorId(1112L), OrganisationName("Global Trans Inc"))
-      val orgThree = Organisation(OrganisationId(randomUUID()), VendorId(1113L), OrganisationName("23rd Street Inc"))
-      val orgFour = Organisation(OrganisationId(randomUUID()), VendorId(1114L), OrganisationName("! Exclamation Trading"))
-      val orgFive = Organisation(OrganisationId(randomUUID()), VendorId(1115L), OrganisationName("$ Dollar and Co"))
-      val orgSix = Organisation(OrganisationId(randomUUID()), VendorId(1116L), OrganisationName("Zone 5 Corp"))
-      val orgSeven = Organisation(OrganisationId(randomUUID()), VendorId(1117L), OrganisationName("Criterion Games"))
 
-      await(repo.create(orgOne))
-      await(repo.create(orgTwo))
-      await(repo.create(orgThree))
-      await(repo.create(orgFour))
-      await(repo.create(orgFive))
-      await(repo.create(orgSix))
-      await(repo.create(orgSeven))
-
-      val expectedResult: List[Organisation] = List(orgOne, orgTwo, orgThree, orgFour, orgFive, orgSix, orgSeven).sortBy(_.name.value)
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sortBy(_.name.value)
       val actualResult: List[Organisation] = await(repo.findByOrganisationName(OrganisationName("")))
 
       actualResult shouldBe expectedResult
