@@ -46,6 +46,7 @@ class OrganisationRepositoryISpec
       .configure("mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}")
 
   override implicit lazy val app: Application = appBuilder.build()
+  implicit val caseInsensitive: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
 
   def repo: OrganisationRepository = app.injector.instanceOf[OrganisationRepository]
 
@@ -81,6 +82,9 @@ class OrganisationRepositoryISpec
       val orgFive = Organisation(OrganisationId(randomUUID()), VendorId(1115L), OrganisationName("$ Dollar and Co"))
       val orgSix = Organisation(OrganisationId(randomUUID()), VendorId(1116L), OrganisationName("Zone 5 Corp"))
       val orgSeven = Organisation(OrganisationId(randomUUID()), VendorId(1117L), OrganisationName("Criterion Games"))
+      val orgEight = Organisation(OrganisationId(randomUUID()), VendorId(1118L), OrganisationName("abcl corp"))
+      val orgNine = Organisation(OrganisationId(randomUUID()), VendorId(1119L), OrganisationName("exile dog inc"))
+      val orgTen = Organisation(OrganisationId(randomUUID()), VendorId(1120L), OrganisationName("yo yachets"))
 
       await(repo.create(orgOne))
       await(repo.create(orgTwo))
@@ -89,15 +93,17 @@ class OrganisationRepositoryISpec
       await(repo.create(orgFive))
       await(repo.create(orgSix))
       await(repo.create(orgSeven))
+      await(repo.create(orgEight))
+      await(repo.create(orgNine))
+      await(repo.create(orgTen))
 
-      List(orgOne, orgTwo, orgThree, orgFour, orgFive, orgSix, orgSeven)
+      List(orgOne, orgTwo, orgThree, orgFour, orgFive, orgSix, orgSeven, orgEight, orgNine, orgTen)
     }
   }
 
   "findAll" should {
     "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
-
-      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sortBy(_.name.value)
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitive)
       val actualResult: List[Organisation] = await(repo.findAll)
 
       actualResult shouldBe expectedResult
@@ -105,6 +111,7 @@ class OrganisationRepositoryISpec
 
     "return an empty List when no organisations exist" in new Setup {
       val result = await(repo.findAll)
+
       result shouldBe List.empty
     }
   }
@@ -115,12 +122,13 @@ class OrganisationRepositoryISpec
       await(repo.create(organisationToPersist2))
 
       val result = await(repo.findOrgWithMaxVendorId)
+
       result shouldBe Some(organisationToPersist2)
     }
 
     "return None no Organisations exist" in new Setup {
-
       val result = await(repo.findOrgWithMaxVendorId)
+
       result shouldBe None
     }
   }
@@ -130,14 +138,14 @@ class OrganisationRepositoryISpec
       await(repo.create(organisationToPersist))
 
       val result = await(repo.findByOrgId(organisationToPersist.organisationId))
-      result shouldBe Some(organisationToPersist)
 
+      result shouldBe Some(organisationToPersist)
     }
 
     "return None when organisationId does not exist" in new Setup {
       val result = await(repo.findByOrgId(OrganisationId(getUuid)))
-      result shouldBe None
 
+      result shouldBe None
     }
   }
 
@@ -146,14 +154,14 @@ class OrganisationRepositoryISpec
       await(repo.create(organisationToPersist))
 
       val result = await(repo.findByVendorId(organisationToPersist.vendorId))
-      result shouldBe Some(organisationToPersist)
 
+      result shouldBe Some(organisationToPersist)
     }
 
     "return None when vendorId does not exist" in new Setup {
       val result = await(repo.findByVendorId(VendorId(1234)))
-      result shouldBe None
 
+      result shouldBe None
     }
   }
 
@@ -163,6 +171,7 @@ class OrganisationRepositoryISpec
       createOrganisations()
 
       val results: List[Organisation] = await(repo.findByOrganisationName(OrganisationName("DEF")))
+
       results should contain allOf (org3, org4)
     }
 
@@ -170,12 +179,12 @@ class OrganisationRepositoryISpec
       createOrganisations()
 
       val results: List[Organisation] = await(repo.findByOrganisationName(OrganisationName("UNKNOWN")))
+
       results.isEmpty shouldBe true
     }
 
     "return organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
-
-      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sortBy(_.name.value)
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitive)
       val actualResult: List[Organisation] = await(repo.findByOrganisationName(OrganisationName("")))
 
       actualResult shouldBe expectedResult
@@ -184,16 +193,16 @@ class OrganisationRepositoryISpec
 
   "deleteByOrgId" should {
     "return true when organisation to be deleted exists" in new Setup {
-
       await(repo.create(organisationToPersist))
 
       val result = await(repo.deleteByOrgId(organisationToPersist.organisationId))
+
       result shouldBe true
     }
 
     "return false when organisation to be deleted doesn't exist" in new Setup {
-
       val result = await(repo.deleteByOrgId(organisationToPersist.organisationId))
+
       result shouldBe false
     }
   }
@@ -231,12 +240,10 @@ class OrganisationRepositoryISpec
 
   "createOrUpdate" should {
     "return Organisation when create successful" in new Setup {
-
       await(repo.createOrUpdate(organisationToPersist)) match {
         case Right(organisation: Organisation) => organisation shouldBe organisationToPersist
         case _                                 => fail
       }
-
     }
 
     "return Left when vendor Id already exists" in new Setup {
@@ -263,7 +270,6 @@ class OrganisationRepositoryISpec
         }
         case Left(_)                           => fail
       }
-
     }
   }
 
