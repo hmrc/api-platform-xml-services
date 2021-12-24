@@ -19,22 +19,16 @@ package uk.gov.hmrc.apiplatformxmlservices.repository
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
-import org.mongodb.scala.model.Updates.set
-import org.mongodb.scala.model.Updates.setOnInsert
+import org.mongodb.scala.model.Updates.{set, setOnInsert}
 import org.mongodb.scala.model._
-import uk.gov.hmrc.apiplatformxmlservices.models.Organisation
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
-import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.Codecs
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import java.util.UUID.randomUUID
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
@@ -50,6 +44,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       replaceIndexes = true
     ) {
 
+  implicit val caseInsensitive: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
+
   def findOrgWithMaxVendorId(): Future[Option[Organisation]] = {
     collection
       .find()
@@ -61,8 +57,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def findAll(): Future[List[Organisation]] = {
-    collection.find().toFuture().map(_.toList.sortBy(_.name.value))
-
+    collection.find().toFuture().map(_.toList.sorted(caseInsensitive))
   }
 
   def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
@@ -78,7 +73,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
     collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
       .toFuture()
-      .map(_.toList.sortBy(_.name.value))
+      .map(_.toList.sorted(caseInsensitive))
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
