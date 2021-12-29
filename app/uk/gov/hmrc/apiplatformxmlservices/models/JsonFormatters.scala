@@ -29,6 +29,7 @@ object JsonFormatters {
 
   implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
 
-  implicit val findUserIdRequestWrites = Json.writes[FindUserIdRequest]
-  implicit val findUserIdResponseReads = Json.reads[FindUserIdResponse]
+  implicit val formatUserId = Json.valueFormat[UserId]
+  implicit val formatFindUserIdRequest = Json.format[FindUserIdRequest]
+  implicit val formatFindUserIdResponse = Json.format[FindUserIdResponse]
 }
