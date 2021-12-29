@@ -16,4 +16,14 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
+import java.{util => ju}
+
 case class CreateOrganisationRequest(organisationName: OrganisationName)
+
+case class UserId(value: ju.UUID)
+
+case class FindUserIdRequest(email: String)
+
+case class FindUserIdResponse(userId: UserId)
+
+case class CoreUserDetails(email: String, id: UserId)

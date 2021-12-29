@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.config
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.apiplatformxmlservices.connectors
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class ConfigurationModule extends AbstractModule {
+import javax.inject.{Inject, Provider, Singleton}
 
-  override def configure(): Unit = {
-    bind(classOf[VendorIdService.Config]).toProvider(classOf[VendorIdServiceConfigProvider])
-    bind(classOf[ThirdPartyDeveloperConnector.Config]).toProvider(classOf[ThirdPartyDeveloperConnectorProvider])
+@Singleton
+class ThirdPartyDeveloperConnectorProvider @Inject() (servicesConfig: ServicesConfig) extends Provider[ThirdPartyDeveloperConnector.Config] {
+
+  override def get(): ThirdPartyDeveloperConnector.Config = {
+    ThirdPartyDeveloperConnector.Config(servicesConfig.getString("third-party-developer"))
   }
-
 }

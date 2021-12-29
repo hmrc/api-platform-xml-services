@@ -26,7 +26,6 @@ import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -62,12 +61,10 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
   def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
     collection.find(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(_.headOption)
-
   }
 
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] = {
     collection.find(equal("vendorId", Codecs.toBson(vendorId))).toFuture().map(_.headOption)
-
   }
 
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
