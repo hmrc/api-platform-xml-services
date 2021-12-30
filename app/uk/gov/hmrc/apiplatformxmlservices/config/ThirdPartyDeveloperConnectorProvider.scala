@@ -25,6 +25,6 @@ import javax.inject.{Inject, Provider, Singleton}
 class ThirdPartyDeveloperConnectorProvider @Inject() (servicesConfig: ServicesConfig) extends Provider[ThirdPartyDeveloperConnector.Config] {
 
   override def get(): ThirdPartyDeveloperConnector.Config = {
-    ThirdPartyDeveloperConnector.Config(servicesConfig.getString("third-party-developer"))
+    ThirdPartyDeveloperConnector.Config(servicesConfig.baseUrl("third-party-developer"))
   }
 }

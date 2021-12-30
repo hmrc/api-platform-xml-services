@@ -22,8 +22,6 @@ case class CreateOrganisationRequest(organisationName: OrganisationName)
 
 case class UserId(value: ju.UUID)
 
-case class FindUserIdRequest(email: String)
+case class GetOrCreateUserIdRequest(email: String)
 
-case class FindUserIdResponse(userId: UserId)
-
-case class CoreUserDetails(email: String, id: UserId)
+case class UserIdResponse(userId: UserId)

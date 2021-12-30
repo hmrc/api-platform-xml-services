@@ -33,21 +33,25 @@ package uk.gov.hmrc.apiplatformxmlservices.connectors
  */
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector.Config
-import uk.gov.hmrc.apiplatformxmlservices.models.{CoreUserDetails, FindUserIdRequest, FindUserIdResponse}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.http.{HttpClient, _}
-
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+import play.api.Logging
 
 @Singleton
-class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) {
+class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext)  extends Logging {
 
-  def findUserId(email: String)(implicit hc: HeaderCarrier): Future[Option[CoreUserDetails]] = {
-    http.POST[FindUserIdRequest, Option[FindUserIdResponse]](s"${config.thirdPartyDeveloperUrl}/developers/find-user-id", FindUserIdRequest(email))
+  def getOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserIdResponse]] = {
+    http.POST[GetOrCreateUserIdRequest, Option[UserIdResponse]](s"${config.thirdPartyDeveloperUrl}/developers/user-id", GetOrCreateUserIdRequest(email))
       .map {
-        case Some(response) => Some(CoreUserDetails(email, response.userId))
-        case None           => None
+        case Some(response) => Right(UserIdResponse(response.userId))
+        case _ => Left(new NotFoundException("Not found"))
+      }.recover {
+        case NonFatal(e) => logger.error(e.getMessage)
+          Left(e)
       }
   }
 }
