@@ -59,6 +59,14 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
+  // def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+  //   val getOrCreateUserIdRequest = request.body.as[GetOrCreateUserIdRequest]
+  //   organisationService.getOrCreateUserId(organisationId, getOrCreateUserIdRequest).map {
+  //     case Right(coreUserDetail)            => Ok(Json.toJson(coreUserDetail))
+  //     case Left(_) => BadRequest(s"Could not add team member ${getOrCreateUserIdRequest.email}")
+  //   }
+  // }
+
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     //TODO - the parsing of the request needs better error handling
     val createOrganisationRequest = request.body.as[CreateOrganisationRequest]
@@ -69,7 +77,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       case Left(e: Exception)             => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
     }
   }
-
+  
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     //TODO - the parsing of the request needs better error handling
     val organisation = request.body.as[Organisation]

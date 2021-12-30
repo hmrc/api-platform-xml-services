@@ -32,6 +32,8 @@ import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnecto
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models.UserIdResponse
+import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
@@ -169,12 +171,14 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return UserIdResponse when successful" in new Setup {
       val userId = UserId(UUID.randomUUID())
       val email = "foo@bar.com"
-      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(email))(*)).thenReturn(Future.successful(Right(UserIdResponse(userId))))
+      val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
+      val coreUserDetail = CoreUserDetail(userId, email)
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Right(coreUserDetail)))
       
-      val result = await(inTest.getOrCreateUserId(email))
+      val result = await(inTest.getOrCreateUserId(getOrCreateUserIdRequest))
       
       result.map(u => u.userId shouldBe userId)
-      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(email))(*)
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)
     }
   }
 }

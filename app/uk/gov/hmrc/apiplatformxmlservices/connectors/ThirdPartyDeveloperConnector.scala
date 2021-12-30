@@ -44,10 +44,10 @@ import play.api.Logging
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext)  extends Logging {
 
-  def getOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserIdResponse]] = {
-    http.POST[GetOrCreateUserIdRequest, Option[UserIdResponse]](s"${config.thirdPartyDeveloperUrl}/developers/user-id", GetOrCreateUserIdRequest(email))
+  def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, CoreUserDetail]] = {
+    http.POST[GetOrCreateUserIdRequest, Option[UserIdResponse]](s"${config.thirdPartyDeveloperUrl}/developers/user-id", getOrCreateUserIdRequest)
       .map {
-        case Some(response) => Right(UserIdResponse(response.userId))
+        case Some(response) => Right(CoreUserDetail(response.userId, getOrCreateUserIdRequest.email))
         case _ => Left(new NotFoundException("Not found"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)

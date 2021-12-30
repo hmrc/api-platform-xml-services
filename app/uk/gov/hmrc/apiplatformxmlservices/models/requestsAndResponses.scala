@@ -25,3 +25,5 @@ case class UserId(value: ju.UUID)
 case class GetOrCreateUserIdRequest(email: String)
 
 case class UserIdResponse(userId: UserId)
+
+case class CoreUserDetail(userId: UserId, email: String)

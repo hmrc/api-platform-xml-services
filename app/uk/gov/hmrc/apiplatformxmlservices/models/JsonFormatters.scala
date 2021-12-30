@@ -22,14 +22,16 @@ object JsonFormatters {
 
   implicit val formatXmlApi = Json.format[XmlApi]
 
+  implicit val formatUserId = Json.valueFormat[UserId]
   implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
   implicit val formatVendorId = Json.valueFormat[VendorId]
   implicit val formatOrganisationName = Json.valueFormat[OrganisationName]
+  implicit val formatCollaborator = Json.format[Collaborator]
   implicit val formatOrganisation = Json.format[Organisation]
 
   implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
-
-  implicit val formatUserId = Json.valueFormat[UserId]
+  
   implicit val formatGetOrCreateUserIdRequest = Json.format[GetOrCreateUserIdRequest]
   implicit val formatUserIdResponse = Json.format[UserIdResponse]
+  implicit val formatCoreUserDetail = Json.format[CoreUserDetail]
 }

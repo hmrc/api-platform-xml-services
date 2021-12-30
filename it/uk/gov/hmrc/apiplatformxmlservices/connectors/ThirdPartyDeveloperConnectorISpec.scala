@@ -30,8 +30,8 @@ import uk.gov.hmrc.http.NotFoundException
 import uk.gov.hmrc.http.Upstream5xxResponse
 
 import java.{util => ju}
-import uk.gov.hmrc.apiplatformxmlservices.models.UserIdResponse
 import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
 
 class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport {
 
@@ -54,10 +54,11 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    
+
     val email = "foo@bar.com"
     val userId: UserId = UserId(ju.UUID.randomUUID())
-    
+    val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
+
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
   }
 
@@ -69,12 +70,12 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
           .willReturn(
             aResponse()
               .withStatus(OK)
-              .withBody(Json.toJson(UserIdResponse(userId)).toString)
+              .withBody(Json.toJson(CoreUserDetail(userId, email)).toString)
               .withHeader("Content-Type", "application/json")
           )
       )
 
-      val result = await(underTest.getOrCreateUserId(email))
+      val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result.map(x => x.userId mustBe userId)
 
@@ -92,7 +93,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
           )
       )
 
-      val result = await(underTest.getOrCreateUserId(email))
+      val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
         case Left(e: NotFoundException) => e.message mustBe ("Not found")
@@ -113,7 +114,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
           )
       )
 
-      val result = await(underTest.getOrCreateUserId(email))
+      val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
         case Left(e: Upstream5xxResponse) => succeed

@@ -51,10 +51,41 @@ class OrganisationService @Inject() (
 
   }
 
-  def getOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserIdResponse]] = {
-    thirdPartyDeveloperConnector.getOrCreateUserId(email)
+  def addCollaborator(organisationId: OrganisationId, getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier) {
+    thirdPartyDeveloperConnector.getOrCreateUserId(getOrCreateUserIdRequest) match {
+      case Left(e) => Left(e)
+      case Right(userDetails: CoreUserDetail) =>
+    }
+
+    for {
+      organisation <- organisationRepository.findByOrgId(organisationId)
+      modifiedOrganisation = addCollaboratorToOrg(eitherThrowableOrUserDetails, organisation)
+      updatedOrganisation <- organisationRepository.update(modifiedOrganisation)
+
+    } yield updatedOrganisation
+
+    // def addCollaboratorToOrg(eitherThrowableOrUserDetails: Either[Throwable, CoreUserDetail], organisation: Option[Organisation]): Organisation = {
+
+    //   eitherThrowableOrUserDetails match {
+    //     case Left
+    //   }
+
+    // // organisation.map(org => org.copy(collaborators = org.collaborators ++ Collaborator(userDetails.userId)))
+    // }
   }
-  
+
+
+private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[AddCollaboratorResult, CoreUserDetail]] = {
+
+}
+
+  private def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier): Future[Either[AddCollaboratorResult, CoreUserDetail]] = {
+    thirdPartyDeveloperConnector.getOrCreateUserId(getOrCreateUserIdRequest) match {
+      case Right(x: CoreUserDetail) => Right(x)
+      case Left(e: Throwable) => Left(GetOrCreateUserIdFailedResult(e.message))   
+        }
+  }
+
   def update(organisation: Organisation): Future[Either[Exception, Boolean]] =
     organisationRepository.update(organisation)
 
@@ -74,5 +105,10 @@ class OrganisationService @Inject() (
     organisationRepository.findAll
 
   private def getOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
+
+
+  sealed trait AddCollaboratorResult
+
+  case class GetOrCreateUserIdFailedResult(message: String) extends AddCollaboratorResult
 
 }

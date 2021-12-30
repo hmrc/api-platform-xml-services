@@ -35,4 +35,6 @@ case class VendorId(value: Long) extends AnyVal
 
 case class OrganisationName(value: String) extends AnyVal
 
-case class Organisation(organisationId: OrganisationId, vendorId: VendorId, name: OrganisationName)
+case class Collaborator(userId: UserId)
+
+case class Organisation(organisationId: OrganisationId, vendorId: VendorId, name: OrganisationName, collaborators: List[Collaborator] = List.empty)
