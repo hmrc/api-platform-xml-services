@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
+import cats.data.EitherT
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
@@ -51,42 +52,49 @@ class OrganisationService @Inject() (
 
   }
 
-  def addCollaborator(organisationId: OrganisationId, getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier) {
-    thirdPartyDeveloperConnector.getOrCreateUserId(getOrCreateUserIdRequest) match {
-      case Left(e) => Left(e)
-      case Right(userDetails: CoreUserDetail) =>
+  def addCollaborator(organisationId: OrganisationId, email: String)
+                     (implicit hc: HeaderCarrier): Future[Either[AddCollaboratorResult, Organisation]] = {
+
+    (for {
+      organisation <- EitherT(handleFindByOrgId(organisationId))
+      coreUserDetail <- EitherT(handleGetOrCreateUserId(email))
+      modifiedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail, organisation))
+      updatedOrganisation <- EitherT(handleUpdateOrganisation(modifiedOrganisation))
+
+    } yield updatedOrganisation).value
+
+  }
+
+  private def handleUpdateOrganisation(organisation: Organisation): Future[Either[AddCollaboratorResult, Organisation]] = {
+    organisationRepository.update(organisation).map {
+      case Left(value)                       => Left(UpdateOrganisationFailedResult(value.getMessage))
+      case Right(org: Organisation) => Right(org)
     }
-
-    for {
-      organisation <- organisationRepository.findByOrgId(organisationId)
-      modifiedOrganisation = addCollaboratorToOrg(eitherThrowableOrUserDetails, organisation)
-      updatedOrganisation <- organisationRepository.update(modifiedOrganisation)
-
-    } yield updatedOrganisation
-
-    // def addCollaboratorToOrg(eitherThrowableOrUserDetails: Either[Throwable, CoreUserDetail], organisation: Option[Organisation]): Organisation = {
-
-    //   eitherThrowableOrUserDetails match {
-    //     case Left
-    //   }
-
-    // // organisation.map(org => org.copy(collaborators = org.collaborators ++ Collaborator(userDetails.userId)))
-    // }
   }
 
+  private def handleAddCollaboratorToOrg(coreUserDetail: CoreUserDetail, organisation: Organisation): Future[Either[AddCollaboratorResult, Organisation]] = {
+    Future.successful(Right(organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId))))
+  }
 
-private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[AddCollaboratorResult, CoreUserDetail]] = {
-
-}
-
-  private def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier): Future[Either[AddCollaboratorResult, CoreUserDetail]] = {
-    thirdPartyDeveloperConnector.getOrCreateUserId(getOrCreateUserIdRequest) match {
+  private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[AddCollaboratorResult, CoreUserDetail]] = {
+    thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(email)).map {
       case Right(x: CoreUserDetail) => Right(x)
-      case Left(e: Throwable) => Left(GetOrCreateUserIdFailedResult(e.message))   
-        }
+      case Left(e: Throwable)       => Left(GetOrCreateUserIdFailedResult(e.getMessage))
+    }
   }
 
-  def update(organisation: Organisation): Future[Either[Exception, Boolean]] =
+  private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[AddCollaboratorResult, Organisation]] = {
+    organisationRepository.findByOrgId(organisationId).map {
+      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
+      case Some(organisation: Organisation) => Right(organisation)
+    }
+  }
+
+  def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier) = {
+    thirdPartyDeveloperConnector.getOrCreateUserId(getOrCreateUserIdRequest)
+  }
+
+  def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
     organisationRepository.update(organisation)
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] =
@@ -107,8 +115,5 @@ private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[Add
   private def getOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 
 
-  sealed trait AddCollaboratorResult
-
-  case class GetOrCreateUserIdFailedResult(message: String) extends AddCollaboratorResult
 
 }

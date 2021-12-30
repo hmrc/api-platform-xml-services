@@ -82,7 +82,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     //TODO - the parsing of the request needs better error handling
     val organisation = request.body.as[Organisation]
     organisationService.update(organisation).map {
-      case Right(true)                    => Ok
+      case Right(_)                    => Ok
       //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
       case Left(_: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
       case _                              => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")

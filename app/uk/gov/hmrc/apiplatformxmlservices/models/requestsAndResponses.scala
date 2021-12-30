@@ -27,3 +27,8 @@ case class GetOrCreateUserIdRequest(email: String)
 case class UserIdResponse(userId: UserId)
 
 case class CoreUserDetail(userId: UserId, email: String)
+
+sealed trait AddCollaboratorResult
+case class GetOrganisationFailedResult(message: String) extends AddCollaboratorResult
+case class GetOrCreateUserIdFailedResult(message: String) extends AddCollaboratorResult
+case class UpdateOrganisationFailedResult(message: String) extends AddCollaboratorResult

@@ -123,26 +123,26 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     }
   }
 
-  "POST /organisations/:organisationId/collaborator" should {
-    val userId = UserId(UUID.randomUUID())
-    val email = "foo@bar.com"
-    val getOrCreateUserIdRequestObj = GetOrCreateUserIdRequest(email)
-    val coreUserDetail = CoreUserDetail(userId, email)
-    val getOrCreateUserIdRequest = FakeRequest("POST", "/organisations/:organisationId/collaborator").withBody(Json.toJson(getOrCreateUserIdRequestObj))
-
-    "return 200" in new Setup {
-      when(mockOrgService.getOrCreateUserId(*)(*)).thenReturn(Future.successful(Right(coreUserDetail)))
-      val result: Future[Result] = controller.addCollaborator()(getOrCreateUserIdRequest)
-      status(result) shouldBe Status.OK
-      contentAsJson(result) shouldBe Json.toJson(coreUserDetail)
-    }
-
-    "return 400" in new Setup {
-      when(mockOrgService.getOrCreateUserId(*)(*)).thenReturn(Future.successful(Left(new BadRequestException("Something went wrong"))))
-      val result: Future[Result] = controller.addCollaborator()(getOrCreateUserIdRequest)
-      status(result) shouldBe Status.BAD_REQUEST
-      contentAsString(result) shouldBe "Could not add team member foo@bar.com"
-    }
-  }
+//  "POST /organisations/:organisationId/collaborator" should {
+//    val userId = UserId(UUID.randomUUID())
+//    val email = "foo@bar.com"
+//    val getOrCreateUserIdRequestObj = GetOrCreateUserIdRequest(email)
+//    val coreUserDetail = CoreUserDetail(userId, email)
+//    val getOrCreateUserIdRequest = FakeRequest("POST", "/organisations/:organisationId/collaborator").withBody(Json.toJson(getOrCreateUserIdRequestObj))
+//
+//    "return 200" in new Setup {
+//      when(mockOrgService.getOrCreateUserId(*)(*)).thenReturn(Future.successful(Right(coreUserDetail)))
+//      val result: Future[Result] = controller.addCollaborator()(getOrCreateUserIdRequest)
+//      status(result) shouldBe Status.OK
+//      contentAsJson(result) shouldBe Json.toJson(coreUserDetail)
+//    }
+//
+//    "return 400" in new Setup {
+//      when(mockOrgService.getOrCreateUserId(*)(*)).thenReturn(Future.successful(Left(new BadRequestException("Something went wrong"))))
+//      val result: Future[Result] = controller.addCollaborator()(getOrCreateUserIdRequest)
+//      status(result) shouldBe Status.BAD_REQUEST
+//      contentAsString(result) shouldBe "Could not add team member foo@bar.com"
+//    }
+//  }
 
 }

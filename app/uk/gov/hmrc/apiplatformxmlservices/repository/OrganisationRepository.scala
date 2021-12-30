@@ -23,6 +23,7 @@ import org.mongodb.scala.model.Updates.{set, setOnInsert}
 import org.mongodb.scala.model._
 import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
+import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
@@ -81,7 +82,10 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       setOnInsert("vendorId", Codecs.toBson(organisation.vendorId))
     )
 
-    val setOnUpdate = List(set("name", Codecs.toBson(organisation.name)))
+    val setOnUpdate = List(
+      set("name", Codecs.toBson(organisation.name)),
+      set("collaborators", Codecs.toBson(organisation.collaborators))
+      )
 
     val allOps = setOnInsertOperations ++ setOnUpdate
 
@@ -96,13 +100,14 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       }
   }
 
-  def update(organisation: Organisation): Future[Either[Exception, Boolean]] = {
+  def update(organisation: Organisation): Future[Either[Exception, Organisation]] = {
+
     val filter = equal("organisationId", Codecs.toBson(organisation.organisationId))
 
     collection.findOneAndReplace(filter, organisation, FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)).toFutureOption()
       .map {
-        case Some(_) => Right(true)
-        case None    => Right(false)
+        case Some(org: Organisation) => Right(org)
+        case None => Left(new BadRequestException("Organisation does not exist"))
       }.recover {
         case e: Exception => Left(e)
       }
