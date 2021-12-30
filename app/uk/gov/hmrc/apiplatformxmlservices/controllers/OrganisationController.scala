@@ -59,16 +59,6 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
-  def getOrCreateUserId(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-    val getOrCreateUserIdRequest = request.body.as[GetOrCreateUserIdRequest]
-    organisationService.create(getOrCreateUserIdRequest.email).map {
-      case Right(organisation)            => Created(Json.toJson(organisation))
-      //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
-      case Left(_: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
-      case Left(e: Exception)             => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
-    }
-  }
-
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     //TODO - the parsing of the request needs better error handling
     val createOrganisationRequest = request.body.as[CreateOrganisationRequest]

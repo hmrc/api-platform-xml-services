@@ -28,22 +28,30 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import java.util.UUID
 import scala.concurrent.Future
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
+import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.apiplatformxmlservices.models.UserId
+import uk.gov.hmrc.apiplatformxmlservices.models.UserIdResponse
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
   val mockUuidService: UuidService = mock[UuidService]
   val mockVendorIdService: VendorIdService = mock[VendorIdService]
+  val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockOrganisationRepo)
     reset(mockUuidService)
     reset(mockVendorIdService)
+    reset(mockThirdPartyDeveloperConnector)
   }
 
   trait Setup {
-    val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService)
+    val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService, mockThirdPartyDeveloperConnector)
 
     val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId = VendorId(9000)
@@ -157,4 +165,16 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
   }
 
+  "getOrCreateUserId" should {
+    "return UserIdResponse when successful" in new Setup {
+      val userId = UserId(UUID.randomUUID())
+      val email = "foo@bar.com"
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(email))(*)).thenReturn(Future.successful(Right(UserIdResponse(userId))))
+      
+      val result = await(inTest.getOrCreateUserId(email))
+      
+      result.map(u => u.userId shouldBe userId)
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(email))(*)
+    }
+  }
 }

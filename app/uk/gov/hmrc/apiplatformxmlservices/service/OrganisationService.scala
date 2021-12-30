@@ -21,12 +21,15 @@ import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.http.HeaderCarrier
 
 @Singleton
 class OrganisationService @Inject() (
     organisationRepository: OrganisationRepository,
     uuidService: UuidService,
-    vendorIdService: VendorIdService
+    vendorIdService: VendorIdService,
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext) {
 
   def create(organisationName: OrganisationName): Future[Either[Exception, Organisation]] = {
@@ -48,6 +51,10 @@ class OrganisationService @Inject() (
 
   }
 
+  def getOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserIdResponse]] = {
+    thirdPartyDeveloperConnector.getOrCreateUserId(email)
+  }
+  
   def update(organisation: Organisation): Future[Either[Exception, Boolean]] =
     organisationRepository.update(organisation)
 
