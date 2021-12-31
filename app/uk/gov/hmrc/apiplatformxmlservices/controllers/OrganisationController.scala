@@ -20,14 +20,13 @@ import org.mongodb.scala.MongoCommandException
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.{CreateOrganisationRequest, Organisation, OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
-import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
 
 @Singleton
 class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {
@@ -59,13 +58,15 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
-  // def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-  //   val getOrCreateUserIdRequest = request.body.as[GetOrCreateUserIdRequest]
-  //   organisationService.getOrCreateUserId(organisationId, getOrCreateUserIdRequest).map {
-  //     case Right(coreUserDetail)            => Ok(Json.toJson(coreUserDetail))
-  //     case Left(_) => BadRequest(s"Could not add team member ${getOrCreateUserIdRequest.email}")
-  //   }
-  // }
+  def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+    val addCollaboratorRequest = request.body.as[AddCollaboratorRequest]
+    organisationService.addCollaborator(organisationId, addCollaboratorRequest.email).map {
+      case Right(organisation: Organisation)            => Ok(Json.toJson(organisation))
+      case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
+      case Left(result: GetOrCreateUserIdFailedResult) => BadRequest(s"${result.message}")
+      case Left(result: UpdateOrganisationFailedResult) => InternalServerError(s"${result.message}")
+    }
+  }
 
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     //TODO - the parsing of the request needs better error handling

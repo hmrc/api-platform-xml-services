@@ -29,6 +29,7 @@ import java.util.UUID
 import scala.concurrent.Future
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.http.InternalServerException
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
@@ -204,7 +205,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
     "return Left when Organisation exists but fails to get or create user" in new AddCollaboratorSetup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
-      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Left(new NotFoundException("Not found"))))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Left(new InternalServerException("Not found"))))
 
       await(inTest.addCollaborator(organisationId, email)) match {
         case Left(x: GetOrCreateUserIdFailedResult) => x.message shouldBe s"Not found"

@@ -26,12 +26,12 @@ import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.NotFoundException
 import uk.gov.hmrc.http.Upstream5xxResponse
 
 import java.{util => ju}
 import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
+import uk.gov.hmrc.http.InternalServerException
 
 class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport {
 
@@ -64,7 +64,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
   "getOrCreateUserId" should {
 
-    "return UserIdResponse when backend returns response" in new Setup {
+    "return Right when backend returns a user" in new Setup {
       stubFor(
         post(urlEqualTo("/developers/user-id"))
           .willReturn(
@@ -83,7 +83,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
         .withRequestBody(equalToJson(Json.toJson(GetOrCreateUserIdRequest(email)).toString())))
     }
 
-    "return Left when backend returns None" in new Setup {
+    "return Left when backend does not return a user" in new Setup {
       stubFor(
         post(urlEqualTo("/developers/user-id"))
           .willReturn(
@@ -96,7 +96,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
-        case Left(e: NotFoundException) => e.message mustBe ("Not found")
+        case Left(e: InternalServerException) => e.message mustBe ("Could not find or create user")
         case _                          => fail
       }
 
