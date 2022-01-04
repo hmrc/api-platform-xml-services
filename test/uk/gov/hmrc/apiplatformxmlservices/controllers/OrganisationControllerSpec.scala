@@ -65,7 +65,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     val email = "foo@bar.com"
     val coreUserDetail = CoreUserDetail(userId, email)
     val addCollaboratordRequestObj = AddCollaboratorRequest(email)
-    val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId))
+    val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
 
     val addCollaboratordRequest =
       FakeRequest("POST", s"/organisations/${organisation.organisationId.value.toString}/collaborator").withBody(Json.toJson(addCollaboratordRequestObj))

@@ -52,8 +52,7 @@ class OrganisationService @Inject() (
 
   }
 
-  def addCollaborator(organisationId: OrganisationId, email: String)
-                     (implicit hc: HeaderCarrier): Future[Either[AddCollaboratorResult, Organisation]] = {
+  def addCollaborator(organisationId: OrganisationId, email: String)(implicit hc: HeaderCarrier): Future[Either[AddCollaboratorResult, Organisation]] = {
 
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
@@ -67,13 +66,13 @@ class OrganisationService @Inject() (
 
   private def handleUpdateOrganisation(organisation: Organisation): Future[Either[AddCollaboratorResult, Organisation]] = {
     organisationRepository.update(organisation).map {
-      case Left(value)                       => Left(UpdateOrganisationFailedResult(value.getMessage))
+      case Left(value)              => Left(UpdateOrganisationFailedResult(value.getMessage))
       case Right(org: Organisation) => Right(org)
     }
   }
 
   private def handleAddCollaboratorToOrg(coreUserDetail: CoreUserDetail, organisation: Organisation): Future[Either[AddCollaboratorResult, Organisation]] = {
-    Future.successful(Right(organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId))))
+    Future.successful(Right(organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))))
   }
 
   private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[AddCollaboratorResult, CoreUserDetail]] = {
@@ -113,7 +112,4 @@ class OrganisationService @Inject() (
     organisationRepository.findAll
 
   private def getOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
-
-
-
 }
