@@ -42,17 +42,26 @@ import scala.util.control.NonFatal
 import play.api.Logging
 
 @Singleton
-class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext)  extends Logging {
+class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) extends Logging {
 
   def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, CoreUserDetail]] = {
     http.POST[GetOrCreateUserIdRequest, Option[UserIdResponse]](s"${config.thirdPartyDeveloperUrl}/developers/user-id", getOrCreateUserIdRequest)
       .map {
         case Some(response) => Right(CoreUserDetail(response.userId, getOrCreateUserIdRequest.email))
-        case _ => Left(new InternalServerException("Could not find or create user"))
+        case _              => Left(new InternalServerException("Could not find or create user"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)
       }
+  }
+
+  def deleteUser(deleteCollaboratorRequest: DeleteCollaboratorRequest)(implicit hc: HeaderCarrier): Future[DeleteUserResult] = {
+    http.POST[DeleteCollaboratorRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developers/delete", deleteCollaboratorRequest)
+    .map(_ => DeleteUserSuccessResult)
+    .recover {
+      case NonFatal(e) => logger.error(e.getMessage)
+          DeleteUserFailureResult
+    }
   }
 }
 

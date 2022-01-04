@@ -48,9 +48,8 @@ class OrganisationController @Inject() (organisationService: OrganisationService
           .map(x => Ok(Json.toJson(x)))
       case _                                       => organisationService.findAll().map(x => Ok(Json.toJson(x)))
     }
-
   }
-
+  
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent

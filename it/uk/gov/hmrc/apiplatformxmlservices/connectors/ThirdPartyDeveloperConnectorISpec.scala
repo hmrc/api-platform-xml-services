@@ -21,17 +21,20 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
+import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserFailureResult
+import uk.gov.hmrc.apiplatformxmlservices.models.DeleteCollaboratorRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserSuccessResult
+import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.http.Upstream5xxResponse
 
 import java.{util => ju}
-import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
-import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
-import uk.gov.hmrc.http.InternalServerException
 
 class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport {
 
@@ -58,6 +61,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     val email = "foo@bar.com"
     val userId: UserId = UserId(ju.UUID.randomUUID())
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
+    val deleteCollaboratorRequest = DeleteCollaboratorRequest(gatekeeperUserId = Some("John Doe"), emailAddress = email)
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
   }
@@ -97,7 +101,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Left(e: InternalServerException) => e.message mustBe ("Could not find or create user")
-        case _                          => fail
+        case _                                => fail
       }
 
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
@@ -124,5 +128,45 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
         .withRequestBody(equalToJson(Json.toJson(GetOrCreateUserIdRequest(email)).toString())))
     }
+  }
+
+  "deleteUser" should {
+
+    "return DeleteCollaboratorSuccessResult when backend returns a 204" in new Setup {
+      stubFor(
+        post(urlEqualTo("/developers/delete"))
+          .willReturn(
+            aResponse()
+              .withStatus(NO_CONTENT)
+              .withHeader("Content-Type", "application/json")
+          )
+      )
+
+      val result = await(underTest.deleteUser(deleteCollaboratorRequest))
+
+      result mustBe DeleteUserSuccessResult
+
+      verify(postRequestedFor(urlMatching(s"/developers/delete"))
+        .withRequestBody(equalToJson(Json.toJson(deleteCollaboratorRequest).toString())))
+    }
+
+    "return DeleteCollaboratorFailureResult when backend returns a 404" in new Setup {
+      stubFor(
+        post(urlEqualTo("/developers/delete"))
+          .willReturn(
+            aResponse()
+              .withStatus(NOT_FOUND)
+              .withHeader("Content-Type", "application/json")
+          )
+      )
+
+      val result = await(underTest.deleteUser(deleteCollaboratorRequest))
+
+      result mustBe DeleteUserFailureResult
+
+      verify(postRequestedFor(urlMatching(s"/developers/delete"))
+        .withRequestBody(equalToJson(Json.toJson(deleteCollaboratorRequest).toString())))
+    }
+
   }
 }
