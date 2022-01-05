@@ -30,8 +30,7 @@ class OrganisationService @Inject() (
     organisationRepository: OrganisationRepository,
     uuidService: UuidService,
     vendorIdService: VendorIdService,
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-  )(implicit val ec: ExecutionContext) {
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector)(implicit val ec: ExecutionContext) {
 
   def create(organisationName: OrganisationName): Future[Either[Exception, Organisation]] = {
 
@@ -49,34 +48,43 @@ class OrganisationService @Inject() (
       case Some(vendorId: VendorId) => createOrganisation(organisationName, vendorId)
       case _                        => Future.successful(Left(new Exception("Could not get max vendorId")))
     }
-
   }
 
-  def removeCollaborator(organisationId: OrganisationId, gatekeeperUserId: Option[String], emailAddress: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
+    organisationRepository.update(organisation)
+
+  def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] =
+    organisationRepository.deleteByOrgId(organisationId)
+
+  def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] =
+    organisationRepository.findByOrgId(organisationId)
+
+  def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] =
+    organisationRepository.findByVendorId(vendorId)
+
+  def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] =
+    organisationRepository.findByOrganisationName(organisationName)
+
+  def findAll(): Future[List[Organisation]] = organisationRepository.findAll
+
+  def removeCollaborator(
+      organisationId: OrganisationId,
+      gatekeeperUserId: Option[String],
+      emailAddress: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
+
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
-      hasCollaborator <- EitherT(validateCollaborator(organisation, emailAddress))
-      updatedOrganisation <- EitherT(handleUpdateOrganisation(organisation))
-
+      _ <- EitherT(validateCollaborator(organisation, emailAddress))
+      _ <- EitherT(handleDeleteUser(gatekeeperUserId, emailAddress))
+      updatedOrganisation <- EitherT(handleRemoveCollaboratorFromOrg(organisation, emailAddress))
     } yield updatedOrganisation).value
-  }
-
-  private def validateCollaborator(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    val x = organisation.collaborators.filter(_.email.equalsIgnoreCase(emailAddress)).nonEmpty
-    x match {
-      case true => Future.successful(Right(organisation))
-      case false => Future.successful(Left(ValidateCollaboratorFailureResult("Collaborator not found on Organisation")))
-    }
-    
   }
 
   def addCollaborator(organisationId: OrganisationId, email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
       coreUserDetail <- EitherT(handleGetOrCreateUserId(email))
-      modifiedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail, organisation))
-      updatedOrganisation <- EitherT(handleUpdateOrganisation(modifiedOrganisation))
-
+      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail, organisation))
     } yield updatedOrganisation).value
   }
 
@@ -88,7 +96,22 @@ class OrganisationService @Inject() (
   }
 
   private def handleAddCollaboratorToOrg(coreUserDetail: CoreUserDetail, organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    Future.successful(Right(organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))))
+    val updatedOrg = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
+    handleUpdateOrganisation(updatedOrg)
+  }
+
+  private def handleRemoveCollaboratorFromOrg(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+    val updatedOrg = organisation.copy(collaborators =
+      organisation.collaborators.filterNot(_.email.equalsIgnoreCase(emailAddress)))
+      handleUpdateOrganisation(updatedOrg)
+  }
+
+  private def validateCollaborator(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+    val x = organisation.collaborators.filter(_.email.equalsIgnoreCase(emailAddress)).nonEmpty
+    x match {
+      case true  => Future.successful(Right(organisation))
+      case false => Future.successful(Left(ValidateCollaboratorFailureResult("Collaborator not found on Organisation")))
+    }
   }
 
   private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, CoreUserDetail]] = {
@@ -111,32 +134,6 @@ class OrganisationService @Inject() (
       case DeleteUserFailureResult => Left(DeleteCollaboratorFailureResult("Failed to delete user"))
     }
   }
-
-  def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier) = {
-    thirdPartyDeveloperConnector.getOrCreateUserId(getOrCreateUserIdRequest)
-  }
-
-  def deleteUser(deleteUserRequest: DeleteUserRequest)(implicit hc: HeaderCarrier): Future[DeleteUserResult] = {
-    thirdPartyDeveloperConnector.deleteUser(deleteUserRequest)
-  }
-
-  def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
-    organisationRepository.update(organisation)
-
-  def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] =
-    organisationRepository.deleteByOrgId(organisationId)
-
-  def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] =
-    organisationRepository.findByOrgId(organisationId)
-
-  def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] =
-    organisationRepository.findByVendorId(vendorId)
-
-  def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] =
-    organisationRepository.findByOrganisationName(organisationName)
-
-  def findAll(): Future[List[Organisation]] =
-    organisationRepository.findAll
 
   private def getOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 }
