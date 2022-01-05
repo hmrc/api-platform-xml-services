@@ -40,16 +40,19 @@ class OrganisationController @Inject() (organisationService: OrganisationService
 
   def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None): Action[AnyContent] = Action.async { request =>
     (vendorId, organisationName) match {
-      case (Some(v: VendorId), None)            => organisationService.findByVendorId(v) map {
-          case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
-          case _                                => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
-        }
-      case (None, Some(orgName: OrganisationName)) => organisationService.findByOrganisationName(orgName)
-          .map(x => Ok(Json.toJson(x)))
+      case (Some(v: VendorId), None)               => handleFindOrganisationByVendorId(v)
+      case (None, Some(orgName: OrganisationName)) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))
       case _                                       => organisationService.findAll().map(x => Ok(Json.toJson(x)))
     }
   }
-  
+
+  private def handleFindOrganisationByVendorId(v: VendorId) = {
+    organisationService.findByVendorId(v) map {
+      case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
+      case _                                => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
+    }
+  }
+
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
@@ -61,8 +64,8 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     val addCollaboratorRequest = request.body.as[AddCollaboratorRequest]
     organisationService.addCollaborator(organisationId, addCollaboratorRequest.email).map {
       case Right(organisation: Organisation)            => Ok(Json.toJson(organisation))
-      case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
-      case Left(result: GetOrCreateUserIdFailedResult) => BadRequest(s"${result.message}")
+      case Left(result: GetOrganisationFailedResult)    => NotFound(s"${result.message}")
+      case Left(result: GetOrCreateUserIdFailedResult)  => BadRequest(s"${result.message}")
       case Left(result: UpdateOrganisationFailedResult) => InternalServerError(s"${result.message}")
     }
   }
@@ -77,12 +80,12 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       case Left(e: Exception)             => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
     }
   }
-  
+
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     //TODO - the parsing of the request needs better error handling
     val organisation = request.body.as[Organisation]
     organisationService.update(organisation).map {
-      case Right(_)                    => Ok
+      case Right(_)                       => Ok
       //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
       case Left(_: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
       case _                              => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")

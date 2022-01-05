@@ -82,16 +82,16 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     val organisation = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
 
     val userId = UserId(UUID.randomUUID())
-    val email = "foo@bar.com"
-    val email2 = "anotheruser@bar.com"
-    val collaborator1 = Collaborator(userId, email)
-    val collaborator2 = Collaborator(UserId(UUID.randomUUID()), email2)
-    val collaborators = List(collaborator1, collaborator2)
+    val emailOne = "foo@bar.com"
+    val emailTwo = "anotheruser@bar.com"
+    val collaboratorOne = Collaborator(userId, emailOne)
+    val collaboratorTwo = Collaborator(UserId(UUID.randomUUID()), emailTwo)
+    val collaborators = List(collaboratorOne, collaboratorTwo)
     val organisationWithCollaborators = organisation.copy(collaborators = collaborators)
     val gatekeeperUserId = Some("John Doe")
-    val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
-    val coreUserDetail = CoreUserDetail(userId, email)
-    val deleteUserRequest = DeleteUserRequest(gatekeeperUserId, email)
+    val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
+    val coreUserDetail = CoreUserDetail(userId, emailOne)
+    val deleteUserRequest = DeleteUserRequest(gatekeeperUserId, emailOne)
   }
 
   "createOrganisation" should {
@@ -202,7 +202,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return Left when Organisation does not exist" in new ManageCollaboratorSetup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
 
-      await(inTest.addCollaborator(organisationId, email)) match {
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
         case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: ${organisationId.value.toString}"
         case Right(_)                             => fail
       }
@@ -216,7 +216,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
       when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Left(new InternalServerException("Not found"))))
 
-      await(inTest.addCollaborator(organisationId, email)) match {
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
         case Left(x: GetOrCreateUserIdFailedResult) => x.message shouldBe s"Not found"
         case Right(_)                               => fail
       }
@@ -231,7 +231,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Right(coreUserDetail)))
       when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
-      await(inTest.addCollaborator(organisationId, email)) match {
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
         case Left(x: UpdateOrganisationFailedResult) => x.message shouldBe s"Organisation does not exist"
         case Right(_)                                => fail
       }
@@ -248,8 +248,8 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
       when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
 
-      await(inTest.addCollaborator(organisationId, email)) match {
-        case Right(organisation: Organisation) => organisation.collaborators should contain only collaborator1
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
+        case Right(organisation: Organisation) => organisation.collaborators should contain only collaboratorOne
         case Left(_) => fail
       }
 
@@ -263,7 +263,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       "return Left when Organisation does not exist" in new ManageCollaboratorSetup {
         when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
 
-        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, email)) match {
+        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, emailOne)) match {
           case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: ${organisationId.value.toString}"
           case Right(_)                             => fail
         }
@@ -276,7 +276,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       "return Left collaborator does not exist on Organisation" in new ManageCollaboratorSetup {
         when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
 
-        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, email)) match {
+        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, emailOne)) match {
           case Left(x: ValidateCollaboratorFailureResult) => x.message shouldBe s"Collaborator not found on Organisation"
           case Right(_)                                   => fail
         }
@@ -289,7 +289,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
         when(mockThirdPartyDeveloperConnector.deleteUser(eqTo(deleteUserRequest))(*)).thenReturn(Future.successful(DeleteUserFailureResult))
 
-        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, email)) match {
+        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, emailOne)) match {
           case Left(x: DeleteCollaboratorFailureResult) => x.message shouldBe s"Failed to delete user"
           case Right(_)                                 => fail
         }
@@ -304,7 +304,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         when(mockThirdPartyDeveloperConnector.deleteUser(eqTo(deleteUserRequest))(*)).thenReturn(Future.successful(DeleteUserSuccessResult))
         when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
-        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, email)) match {
+        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, emailOne)) match {
           case Left(x: UpdateOrganisationFailedResult) => x.message shouldBe s"Organisation does not exist"
           case Right(_)                                => fail
         }
@@ -318,12 +318,12 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       "return Right updated organisation" in new ManageCollaboratorSetup {
         when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
         when(mockThirdPartyDeveloperConnector.deleteUser(eqTo(deleteUserRequest))(*)).thenReturn(Future.successful(DeleteUserSuccessResult))
-        val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email.equalsIgnoreCase(email))
+        val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email.equalsIgnoreCase(emailOne))
         val updatedOrganisation = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
         when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
 
-        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, email)) match {
-          case Right(organisation: Organisation) => organisation.collaborators should contain only collaborator2
+        await(inTest.removeCollaborator(organisationId, gatekeeperUserId, emailOne)) match {
+          case Right(organisation: Organisation) => organisation.collaborators should contain only collaboratorTwo
           case Left(_)                           => fail
         }
 
