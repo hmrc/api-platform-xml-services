@@ -255,9 +255,9 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond with 400 if request body is not json" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations", "INVALID BODY")
+        val result = callPostEndpoint(s"$url/organisations", "{\"someinvalidkey\": \"something\"}")
         result.status mustBe BAD_REQUEST
-        result.body.contains("Unrecognized token 'INVALID'") mustBe true
+        result.body mustBe "Invalid CreateOrganisationRequest payload: List((/organisationName,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
       }
     }
 
@@ -277,9 +277,9 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond with 400 if request body is not json" in new Setup {
-        val result = callPutEndpoint(s"$url/organisations", "INVALID BODY")
+        val result = callPutEndpoint(s"$url/organisations", "{\"someinvalidkey\": \"something\"}")
         result.status mustBe BAD_REQUEST
-        result.body.contains("Invalid Json: Unrecognized token 'INVALID'") mustBe true
+        result.body mustBe "Invalid Organisation payload: List((/organisationId,List(JsonValidationError(List(error.path.missing),WrappedArray()))), (/vendorId,List(JsonValidationError(List(error.path.missing),WrappedArray()))), (/name,List(JsonValidationError(List(error.path.missing),WrappedArray()))), (/collaborators,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
       }
 
       "respond with 400 if request body is invalid" in new Setup {
@@ -298,9 +298,9 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "POST /organisations/:organisationId/collaborator" should {
 
       "respond with 400 if request body is not json" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/collaborator", "INVALID BODY")
+        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/collaborator", "{\"someinvalidkey\": \"something\"}")
         result.status mustBe BAD_REQUEST
-        result.body.contains("Unrecognized token 'INVALID'") mustBe true
+        result.body mustBe "Invalid AddCollaboratorRequest payload: List((/email,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
       }
 
       "respond with 404 if organisationId is not provided" in new Setup {
