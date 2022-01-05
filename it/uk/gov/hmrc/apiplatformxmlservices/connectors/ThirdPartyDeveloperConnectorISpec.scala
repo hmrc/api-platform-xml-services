@@ -23,7 +23,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
 import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserFailureResult
-import uk.gov.hmrc.apiplatformxmlservices.models.DeleteCollaboratorRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserSuccessResult
 import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
@@ -61,7 +61,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     val email = "foo@bar.com"
     val userId: UserId = UserId(ju.UUID.randomUUID())
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
-    val deleteCollaboratorRequest = DeleteCollaboratorRequest(gatekeeperUserId = Some("John Doe"), emailAddress = email)
+    val deleteUserRequest = DeleteUserRequest(gatekeeperUserId = Some("John Doe"), emailAddress = email)
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
   }
@@ -142,12 +142,12 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
           )
       )
 
-      val result = await(underTest.deleteUser(deleteCollaboratorRequest))
+      val result = await(underTest.deleteUser(deleteUserRequest))
 
       result mustBe DeleteUserSuccessResult
 
       verify(postRequestedFor(urlMatching(s"/developers/delete"))
-        .withRequestBody(equalToJson(Json.toJson(deleteCollaboratorRequest).toString())))
+        .withRequestBody(equalToJson(Json.toJson(deleteUserRequest).toString())))
     }
 
     "return DeleteCollaboratorFailureResult when backend returns a 404" in new Setup {
@@ -160,12 +160,12 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
           )
       )
 
-      val result = await(underTest.deleteUser(deleteCollaboratorRequest))
+      val result = await(underTest.deleteUser(deleteUserRequest))
 
       result mustBe DeleteUserFailureResult
 
       verify(postRequestedFor(urlMatching(s"/developers/delete"))
-        .withRequestBody(equalToJson(Json.toJson(deleteCollaboratorRequest).toString())))
+        .withRequestBody(equalToJson(Json.toJson(deleteUserRequest).toString())))
     }
 
   }

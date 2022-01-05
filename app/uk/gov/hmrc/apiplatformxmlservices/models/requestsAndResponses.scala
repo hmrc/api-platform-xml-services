@@ -30,13 +30,14 @@ case class CoreUserDetail(userId: UserId, email: String)
 
 case class AddCollaboratorRequest(email: String)
 
-case class DeleteCollaboratorRequest(gatekeeperUserId: Option[String], emailAddress: String)
+case class DeleteUserRequest(gatekeeperUserId: Option[String], emailAddress: String)
 
 sealed trait ManageCollaboratorResult
 case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult
 case class GetOrCreateUserIdFailedResult(message: String) extends ManageCollaboratorResult
 case class UpdateOrganisationFailedResult(message: String) extends ManageCollaboratorResult
 case class ValidateCollaboratorFailureResult(message: String) extends ManageCollaboratorResult
+case class DeleteCollaboratorFailureResult(message: String) extends ManageCollaboratorResult
 
 // Returned from ThirdPartyDeveloperConnector
 sealed trait DeleteUserResult

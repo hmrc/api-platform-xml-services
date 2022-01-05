@@ -105,8 +105,19 @@ class OrganisationService @Inject() (
     }
   }
 
+  private def handleDeleteUser(gatekeeperUserId: Option[String], email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Boolean]] = {
+    thirdPartyDeveloperConnector.deleteUser(DeleteUserRequest(gatekeeperUserId, email)).map {
+      case DeleteUserSuccessResult => Right(true)
+      case DeleteUserFailureResult => Left(DeleteCollaboratorFailureResult("Failed to delete user"))
+    }
+  }
+
   def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier) = {
     thirdPartyDeveloperConnector.getOrCreateUserId(getOrCreateUserIdRequest)
+  }
+
+  def deleteUser(deleteUserRequest: DeleteUserRequest)(implicit hc: HeaderCarrier): Future[DeleteUserResult] = {
+    thirdPartyDeveloperConnector.deleteUser(deleteUserRequest)
   }
 
   def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
