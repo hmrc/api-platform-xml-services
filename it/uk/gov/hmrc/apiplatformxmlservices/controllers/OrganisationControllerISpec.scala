@@ -129,8 +129,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         |}""".stripMargin
     val createOrganisationRequestAsString = Json.toJson(createOrganisationRequest).toString
     val addCollaboratorRequestAsString = Json.toJson(addCollaboratorRequest).toString
-  val removeCollaboratorRequestAsString = Json.toJson(removeCollaboratorRequest).toString
-
+    val removeCollaboratorRequestAsString = Json.toJson(removeCollaboratorRequest).toString
 
     def stubThirdPartyDeveloperConnectorWithoutBody(status: Int) = {
       stubFor(
@@ -365,26 +364,38 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     }
   }
 
+  "POST /organisations/:organisationId/remove-collaborator" should {
 
+    "respond with 200 if organisationId exists and delete successful" in new Setup {
+      await(orgRepo.create(organisationWithCollaborators))
+      stubThirdPartyDeveloperDelete(gatekeeperUserId, email, NO_CONTENT)
+      val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
+      result.status mustBe OK
+      result.body mustBe Json.toJson(organisation).toString()
+    }
 
-    "POST /organisations/:organisationId/remove-collaborator" should {
+    "respond with 404 if organisationId exists but collaborator is not associated" in new Setup {
+      await(orgRepo.create(organisation))
+      val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
+      result.status mustBe NOT_FOUND
+      result.body mustBe "Collaborator not found on Organisation"
+    }
 
-      "respond with 200 if organisationId exists and delete successful" in new Setup {
-        await(orgRepo.create(organisationWithCollaborators))
-        stubThirdPartyDeveloperDelete(gatekeeperUserId, email, NO_CONTENT)
-        val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
-        result.status mustBe OK
-        result.body mustBe Json.toJson(organisation).toString()
+    "respond with 500 if organisationId exists but delete fails" in new Setup {
+      await(orgRepo.create(organisationWithCollaborators))
+      stubThirdPartyDeveloperDelete(gatekeeperUserId, email, INTERNAL_SERVER_ERROR)
+      val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
+      result.status mustBe INTERNAL_SERVER_ERROR
+      result.body mustBe "Failed to delete user"
+    }
+
+    "respond with 400 if request body is not json" in new Setup {
+      val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/remove-collaborator", "{\"someinvalidkey\": \"something\"}")
+      result.status mustBe BAD_REQUEST
+      withClue(s"response body not as expected: ${result.body}") {
+        result.body.startsWith("Invalid RemoveCollaboratorRequest payload:") mustBe true
       }
     }
 
-      "respond with 400 if request body is not json" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/remove-collaborator", "{\"someinvalidkey\": \"something\"}")
-        result.status mustBe BAD_REQUEST
-        withClue(s"response body not as expected: ${result.body}") {
-          result.body.startsWith("Invalid RemoveCollaboratorRequest payload:") mustBe true
-        }
-      }
-
-    
+  }
 }

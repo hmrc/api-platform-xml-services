@@ -66,23 +66,26 @@ class OrganisationController @Inject() (organisationService: OrganisationService
 
   def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[AddCollaboratorRequest] { addCollaboratorRequest =>
-      organisationService.addCollaborator(organisationId, addCollaboratorRequest.email).map {
-        case Right(organisation: Organisation)            => Ok(Json.toJson(organisation))
-        case Left(result: GetOrganisationFailedResult)    => NotFound(s"${result.message}")
-        case Left(result: GetOrCreateUserIdFailedResult)  => BadRequest(s"${result.message}")
-        case Left(result: UpdateOrganisationFailedResult) => InternalServerError(s"${result.message}")
-      }
+      organisationService.addCollaborator(organisationId, addCollaboratorRequest.email)
+        .map(handleCollaboratorResult)
     }
   }
 
   def removeCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[RemoveCollaboratorRequest] { removeCollaboratorRequest =>
-      organisationService.removeCollaborator(organisationId, removeCollaboratorRequest).map {
-        case Right(organisation: Organisation)               => Ok(Json.toJson(organisation))
-        case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
-        case Left(result: DeleteCollaboratorFailureResult)   => InternalServerError(s"${result.message}")
-      }
+      organisationService.removeCollaborator(organisationId, removeCollaboratorRequest)
+        .map(handleCollaboratorResult)
+    }
+  }
 
+  private def handleCollaboratorResult(result: Either[ManageCollaboratorResult, Organisation]) = {
+    result match {
+      case Right(organisation: Organisation)               => Ok(Json.toJson(organisation))
+      case Left(result: GetOrganisationFailedResult)       => NotFound(s"${result.message}")
+      case Left(result: GetOrCreateUserIdFailedResult)     => BadRequest(s"${result.message}")
+      case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
+      case Left(result: DeleteCollaboratorFailureResult)   => InternalServerError(s"${result.message}")
+      case Left(result: UpdateOrganisationFailedResult)    => InternalServerError(s"${result.message}")
     }
   }
 
