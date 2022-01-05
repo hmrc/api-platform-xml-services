@@ -22,10 +22,8 @@ import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
-import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserFailureResult
-import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserRequest
-import uk.gov.hmrc.apiplatformxmlservices.models.DeleteUserSuccessResult
-import uk.gov.hmrc.apiplatformxmlservices.models.GetOrCreateUserIdRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport

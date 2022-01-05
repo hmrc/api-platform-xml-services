@@ -33,9 +33,10 @@ package uk.gov.hmrc.apiplatformxmlservices.connectors
  */
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector.Config
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 import uk.gov.hmrc.http.{HttpClient, _}
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal

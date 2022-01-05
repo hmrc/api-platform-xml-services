@@ -16,21 +16,12 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import java.{util => ju}
-
 case class CreateOrganisationRequest(organisationName: OrganisationName)
-
-case class UserId(value: ju.UUID)
-
-case class GetOrCreateUserIdRequest(email: String)
-
-case class UserIdResponse(userId: UserId)
 
 case class CoreUserDetail(userId: UserId, email: String)
 
 case class AddCollaboratorRequest(email: String)
-
-case class DeleteUserRequest(gatekeeperUserId: Option[String], emailAddress: String)
+case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 
 sealed trait ManageCollaboratorResult
 case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult
@@ -38,8 +29,3 @@ case class GetOrCreateUserIdFailedResult(message: String) extends ManageCollabor
 case class UpdateOrganisationFailedResult(message: String) extends ManageCollaboratorResult
 case class ValidateCollaboratorFailureResult(message: String) extends ManageCollaboratorResult
 case class DeleteCollaboratorFailureResult(message: String) extends ManageCollaboratorResult
-
-// Returned from ThirdPartyDeveloperConnector
-sealed trait DeleteUserResult
-case object DeleteUserSuccessResult extends DeleteUserResult
-case object DeleteUserFailureResult extends DeleteUserResult

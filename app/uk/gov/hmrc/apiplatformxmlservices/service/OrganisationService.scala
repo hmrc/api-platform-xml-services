@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 
 import cats.data.EitherT
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
 import javax.inject.{Inject, Singleton}
@@ -30,7 +31,8 @@ class OrganisationService @Inject() (
     organisationRepository: OrganisationRepository,
     uuidService: UuidService,
     vendorIdService: VendorIdService,
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector)(implicit val ec: ExecutionContext) {
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+  )(implicit val ec: ExecutionContext) {
 
   def create(organisationName: OrganisationName): Future[Either[Exception, Organisation]] = {
 
@@ -67,16 +69,12 @@ class OrganisationService @Inject() (
 
   def findAll(): Future[List[Organisation]] = organisationRepository.findAll
 
-  def removeCollaborator(
-      organisationId: OrganisationId,
-      gatekeeperUserId: Option[String],
-      emailAddress: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
-
+  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
-      _ <- EitherT(validateCollaborator(organisation, emailAddress))
-      _ <- EitherT(handleDeleteUser(gatekeeperUserId, emailAddress))
-      updatedOrganisation <- EitherT(handleRemoveCollaboratorFromOrg(organisation, emailAddress))
+      _ <- EitherT(organisationHasCollaborator(organisation, request.email))
+      _ <- EitherT(handleDeleteUser(request.gatekeeperUserId, request.email))
+      updatedOrganisation <- EitherT(handleRemoveCollaboratorFromOrg(organisation, request.email))
     } yield updatedOrganisation).value
   }
 
@@ -103,10 +101,10 @@ class OrganisationService @Inject() (
   private def handleRemoveCollaboratorFromOrg(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
     val updatedOrg = organisation.copy(collaborators =
       organisation.collaborators.filterNot(_.email.equalsIgnoreCase(emailAddress)))
-      handleUpdateOrganisation(updatedOrg)
+    handleUpdateOrganisation(updatedOrg)
   }
 
-  private def validateCollaborator(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  private def organisationHasCollaborator(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
     val x = organisation.collaborators.filter(_.email.equalsIgnoreCase(emailAddress)).nonEmpty
     x match {
       case true  => Future.successful(Right(organisation))
@@ -128,8 +126,8 @@ class OrganisationService @Inject() (
     }
   }
 
-  private def handleDeleteUser(gatekeeperUserId: Option[String], email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Boolean]] = {
-    thirdPartyDeveloperConnector.deleteUser(DeleteUserRequest(gatekeeperUserId, email)).map {
+  private def handleDeleteUser(gatekeeperUserId: String, email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Boolean]] = {
+    thirdPartyDeveloperConnector.deleteUser(DeleteUserRequest(Some(gatekeeperUserId), email)).map {
       case DeleteUserSuccessResult => Right(true)
       case DeleteUserFailureResult => Left(DeleteCollaboratorFailureResult("Failed to delete user"))
     }
