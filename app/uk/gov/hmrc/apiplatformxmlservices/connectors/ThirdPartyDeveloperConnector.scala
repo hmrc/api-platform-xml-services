@@ -57,7 +57,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
   }
 
   def deleteUser(deleteUserRequest: DeleteUserRequest)(implicit hc: HeaderCarrier): Future[DeleteUserResult] = {
-    http.POST[DeleteUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developers/delete", deleteUserRequest)
+    http.POST[DeleteUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developer/delete", deleteUserRequest)
     .map(_ => DeleteUserSuccessResult)
     .recover {
       case NonFatal(e) => logger.error(e.getMessage)

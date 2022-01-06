@@ -157,7 +157,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
     def stubThirdPartyDeveloperDelete(gatekeeperUserId: String, email: String, status: Int) = {
       stubFor(
-        post(urlEqualTo("/developers/delete"))
+        post(urlEqualTo("/developer/delete"))
           .willReturn(
             aResponse()
               .withStatus(status)

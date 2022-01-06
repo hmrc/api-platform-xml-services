@@ -132,7 +132,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
     "return DeleteCollaboratorSuccessResult when backend returns a 204" in new Setup {
       stubFor(
-        post(urlEqualTo("/developers/delete"))
+        post(urlEqualTo("/developer/delete"))
           .willReturn(
             aResponse()
               .withStatus(NO_CONTENT)
@@ -144,13 +144,13 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result mustBe DeleteUserSuccessResult
 
-      verify(postRequestedFor(urlMatching(s"/developers/delete"))
+      verify(postRequestedFor(urlMatching(s"/developer/delete"))
         .withRequestBody(equalToJson(Json.toJson(deleteUserRequest).toString())))
     }
 
     "return DeleteCollaboratorFailureResult when backend returns a 404" in new Setup {
       stubFor(
-        post(urlEqualTo("/developers/delete"))
+        post(urlEqualTo("/developer/delete"))
           .willReturn(
             aResponse()
               .withStatus(NOT_FOUND)
@@ -162,7 +162,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result mustBe DeleteUserFailureResult
 
-      verify(postRequestedFor(urlMatching(s"/developers/delete"))
+      verify(postRequestedFor(urlMatching(s"/developer/delete"))
         .withRequestBody(equalToJson(Json.toJson(deleteUserRequest).toString())))
     }
 
