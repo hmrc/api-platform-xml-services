@@ -26,20 +26,22 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.Future.successful
+
 @Singleton
-class OrganisationService @Inject() (
-    organisationRepository: OrganisationRepository,
-    uuidService: UuidService,
-    vendorIdService: VendorIdService,
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-  )(implicit val ec: ExecutionContext) {
+class OrganisationService @Inject()(
+                                     organisationRepository: OrganisationRepository,
+                                     uuidService: UuidService,
+                                     vendorIdService: VendorIdService,
+                                     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+                                   )(implicit val ec: ExecutionContext) {
 
   def create(organisationName: OrganisationName): Future[Either[Exception, Organisation]] = {
 
     def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
       organisationRepository.createOrUpdate(
         Organisation(
-          organisationId = getOrganisationId,
+          organisationId = generateOrganisationId,
           name = organisationName,
           vendorId = vendorId
         )
@@ -48,7 +50,7 @@ class OrganisationService @Inject() (
 
     vendorIdService.getNextVendorId flatMap {
       case Some(vendorId: VendorId) => createOrganisation(organisationName, vendorId)
-      case _                        => Future.successful(Left(new Exception("Could not get max vendorId")))
+      case _ => successful(Left(new Exception("Could not get max vendorId")))
     }
   }
 
@@ -72,8 +74,7 @@ class OrganisationService @Inject() (
   def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
-      _ <- EitherT(organisationHasCollaborator(organisation, request.email))
-      _ <- EitherT(handleDeleteUser(request.gatekeeperUserId, request.email))
+      _ <- EitherT(collaboratorCanBeDeleted(organisation, request.email))
       updatedOrganisation <- EitherT(handleRemoveCollaboratorFromOrg(organisation, request.email))
     } yield updatedOrganisation).value
   }
@@ -81,6 +82,7 @@ class OrganisationService @Inject() (
   def addCollaborator(organisationId: OrganisationId, email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
+      _ <- EitherT(collaboratorCanBeAdded(organisation, email))
       coreUserDetail <- EitherT(handleGetOrCreateUserId(email))
       updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail, organisation))
     } yield updatedOrganisation).value
@@ -88,7 +90,7 @@ class OrganisationService @Inject() (
 
   private def handleUpdateOrganisation(organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.createOrUpdate(organisation).map {
-      case Left(value)              => Left(UpdateOrganisationFailedResult(value.getMessage))
+      case Left(value) => Left(UpdateOrganisationFailedResult(value.getMessage))
       case Right(org: Organisation) => Right(org)
     }
   }
@@ -104,34 +106,34 @@ class OrganisationService @Inject() (
     handleUpdateOrganisation(updatedOrg)
   }
 
-  private def organisationHasCollaborator(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    val x = organisation.collaborators.filter(_.email.equalsIgnoreCase(emailAddress)).nonEmpty
-    x match {
-      case true  => Future.successful(Right(organisation))
-      case false => Future.successful(Left(ValidateCollaboratorFailureResult("Collaborator not found on Organisation")))
-    }
+  private def organisationHasCollaborator(organisation: Organisation, emailAddress: String): Boolean = {
+    organisation.collaborators.exists(_.email.equalsIgnoreCase(emailAddress))
   }
+
+  private def collaboratorCanBeDeleted(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+    if (organisationHasCollaborator(organisation, emailAddress)) successful(Right(organisation))
+    else successful(Left(ValidateCollaboratorFailureResult("Collaborator not found on Organisation")))
+  }
+
+  private def collaboratorCanBeAdded(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+    if (organisationHasCollaborator(organisation, emailAddress)) successful(Left(OrganisationAlreadyHasCollaboratorResult()))
+    else successful(Right(organisation))
+  }
+
 
   private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, CoreUserDetail]] = {
     thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(email)).map {
       case Right(x: CoreUserDetail) => Right(x)
-      case Left(e: Throwable)       => Left(GetOrCreateUserIdFailedResult(e.getMessage))
+      case Left(e: Throwable) => Left(GetOrCreateUserIdFailedResult(e.getMessage))
     }
   }
 
   private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.findByOrgId(organisationId).map {
-      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
+      case None => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
       case Some(organisation: Organisation) => Right(organisation)
     }
   }
 
-  private def handleDeleteUser(gatekeeperUserId: String, email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Boolean]] = {
-    thirdPartyDeveloperConnector.deleteUser(DeleteUserRequest(Some(gatekeeperUserId), email)).map {
-      case DeleteUserSuccessResult => Right(true)
-      case DeleteUserFailureResult => Left(DeleteCollaboratorFailureResult("Failed to delete user"))
-    }
-  }
-
-  private def getOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
+  private def generateOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 }

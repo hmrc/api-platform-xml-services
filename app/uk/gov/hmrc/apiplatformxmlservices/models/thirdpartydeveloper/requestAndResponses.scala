@@ -21,13 +21,4 @@ import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 
 case class GetOrCreateUserIdRequest(email: String)
 
-case class DeleteUserRequest(gatekeeperUserId: Option[String], emailAddress: String)
-
-// Returned from ThirdPartyDeveloperConnector
-sealed trait DeleteUserResult
-case object DeleteUserSuccessResult extends DeleteUserResult
-case object DeleteUserFailureResult extends DeleteUserResult
-
-
-
 case class UserIdResponse(userId: UserId)

@@ -84,7 +84,6 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       case Left(result: GetOrganisationFailedResult)       => NotFound(s"${result.message}")
       case Left(result: GetOrCreateUserIdFailedResult)     => BadRequest(s"${result.message}")
       case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
-      case Left(result: DeleteCollaboratorFailureResult)   => InternalServerError(s"${result.message}")
       case Left(result: UpdateOrganisationFailedResult)    => InternalServerError(s"${result.message}")
     }
   }
