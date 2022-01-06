@@ -20,9 +20,11 @@ import play.api.libs.json._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 
 object MongoFormatters {
-
+  implicit val formatServiceName = Json.valueFormat[ServiceName]
   implicit val organisationIdFormats: Format[OrganisationId] = Json.valueFormat[OrganisationId]
   implicit val vendorIdFormats: Format[VendorId] = Json.valueFormat[VendorId]
+  implicit val userIdFormats: Format[UserId] = Json.valueFormat[UserId]
   implicit val formatOrganisationName = Json.valueFormat[OrganisationName]
+  implicit val collaboratorFormats: OFormat[Collaborator] = Json.format[Collaborator]
   implicit val organisationFormats: OFormat[Organisation] = Json.format[Organisation]
 }

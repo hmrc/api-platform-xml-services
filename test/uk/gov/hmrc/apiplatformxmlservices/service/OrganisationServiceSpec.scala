@@ -20,37 +20,65 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
+import play.api.test.Helpers.await
+import play.api.test.Helpers.defaultAwaitTimeout
+import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.http.BadRequestException
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.InternalServerException
 
 import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
   val mockUuidService: UuidService = mock[UuidService]
   val mockVendorIdService: VendorIdService = mock[VendorIdService]
+  val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockOrganisationRepo)
     reset(mockUuidService)
     reset(mockVendorIdService)
+    reset(mockThirdPartyDeveloperConnector)
   }
 
   trait Setup {
-    val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService)
+    val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService, mockThirdPartyDeveloperConnector)
 
     val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId = VendorId(9000)
 
     def getUuid() = UUID.randomUUID()
-    val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name =  OrganisationName("Organisation Name"))
+    val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name = OrganisationName("Organisation Name"))
 
+  }
+
+  trait ManageCollaboratorSetup extends Setup {
+    val organisationId = OrganisationId(uuid)
+    val organisation = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
+
+    val userId = UserId(UUID.randomUUID())
+    val emailOne = "foo@bar.com"
+    val emailTwo = "anotheruser@bar.com"
+    val collaboratorOne = Collaborator(userId, emailOne)
+    val collaboratorTwo = Collaborator(UserId(UUID.randomUUID()), emailTwo)
+    val collaborators = List(collaboratorOne, collaboratorTwo)
+    val organisationWithCollaborators = organisation.copy(collaborators = collaborators)
+    val gatekeeperUserId = "John Doe"
+    val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
+    val coreUserDetail = CoreUserDetail(userId, emailOne)
+    val deleteUserRequest = DeleteUserRequest(Some(gatekeeperUserId), emailOne)
+
+    val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
   }
 
   "createOrganisation" should {
@@ -85,11 +113,11 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "update" should {
     "return true when update successful" in new Setup {
-      when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(true)))
-      val updatedOrganisation = organisationToPersist.copy(name =  OrganisationName("New Organisation Name"))
+      val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New Organisation Name"))
+      when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
 
       val result = await(inTest.update(updatedOrganisation))
-      result shouldBe Right(true)
+      result shouldBe Right(updatedOrganisation)
 
       verify(mockOrganisationRepo).update(updatedOrganisation)
 
@@ -157,4 +185,140 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
   }
 
+  "addCollaborator" should {
+    "return Left when Organisation does not exist" in new ManageCollaboratorSetup {
+      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
+
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
+        case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: ${organisationId.value.toString}"
+        case Right(_)                             => fail
+      }
+
+      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verifyZeroInteractions(mockThirdPartyDeveloperConnector)
+
+    }
+
+    "return Left when Organisation exists but fails to get or create user" in new ManageCollaboratorSetup {
+      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Left(new InternalServerException("Not found"))))
+
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
+        case Left(x: GetOrCreateUserIdFailedResult) => x.message shouldBe s"Not found"
+        case Right(_)                               => fail
+      }
+
+      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)
+
+    }
+
+    "return Left when Organisation exists and get User is successful but update Org fails" in new ManageCollaboratorSetup {
+      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Right(coreUserDetail)))
+      when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
+
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
+        case Left(x: UpdateOrganisationFailedResult) => x.message shouldBe s"Organisation does not exist"
+        case Right(_)                                => fail
+      }
+
+      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)
+      verify(mockOrganisationRepo).update(*)
+
+    }
+
+    "return Right when collaborator successfully added to organisation" in new ManageCollaboratorSetup {
+      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)).thenReturn(Future.successful(Right(coreUserDetail)))
+      val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
+      when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
+
+      await(inTest.addCollaborator(organisationId, emailOne)) match {
+        case Right(organisation: Organisation) => organisation.collaborators should contain only collaboratorOne
+        case Left(_)                           => fail
+      }
+
+      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(getOrCreateUserIdRequest))(*)
+      verify(mockOrganisationRepo).update(*)
+
+    }
+
+    "removeCollaborator" should {
+      "return Left when Organisation does not exist" in new ManageCollaboratorSetup {
+        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
+
+        await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
+          case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: ${organisationId.value.toString}"
+          case Right(_)                             => fail
+        }
+
+        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verifyZeroInteractions(mockThirdPartyDeveloperConnector)
+
+      }
+
+      "return Left collaborator does not exist on Organisation" in new ManageCollaboratorSetup {
+        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
+
+        await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
+          case Left(x: ValidateCollaboratorFailureResult) => x.message shouldBe s"Collaborator not found on Organisation"
+          case Right(_)                                   => fail
+        }
+
+        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verifyZeroInteractions(mockThirdPartyDeveloperConnector)
+      }
+
+      "return Left when delete user from TPD fails" in new ManageCollaboratorSetup {
+        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+        when(mockThirdPartyDeveloperConnector.deleteUser(eqTo(deleteUserRequest))(*)).thenReturn(Future.successful(DeleteUserFailureResult))
+
+        await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
+          case Left(x: DeleteCollaboratorFailureResult) => x.message shouldBe s"Failed to delete user"
+          case Right(_)                                 => fail
+        }
+
+        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verify(mockThirdPartyDeveloperConnector).deleteUser(eqTo(deleteUserRequest))(*)
+
+      }
+
+      "return Left update organisation fails" in new ManageCollaboratorSetup {
+        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+        when(mockThirdPartyDeveloperConnector.deleteUser(eqTo(deleteUserRequest))(*)).thenReturn(Future.successful(DeleteUserSuccessResult))
+        when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
+
+        await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
+          case Left(x: UpdateOrganisationFailedResult) => x.message shouldBe s"Organisation does not exist"
+          case Right(_)                                => fail
+        }
+
+        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verify(mockThirdPartyDeveloperConnector).deleteUser(eqTo(deleteUserRequest))(*)
+        verify(mockOrganisationRepo).update(*)
+
+      }
+
+      "return Right updated organisation" in new ManageCollaboratorSetup {
+        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+        when(mockThirdPartyDeveloperConnector.deleteUser(eqTo(deleteUserRequest))(*)).thenReturn(Future.successful(DeleteUserSuccessResult))
+        val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email.equalsIgnoreCase(emailOne))
+        val updatedOrganisation = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
+        when(mockOrganisationRepo.update(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
+
+        await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
+          case Right(organisation: Organisation) => organisation.collaborators should contain only collaboratorTwo
+          case Left(_)                           => fail
+        }
+
+        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verify(mockThirdPartyDeveloperConnector).deleteUser(eqTo(deleteUserRequest))(*)
+        verify(mockOrganisationRepo).update(*)
+
+      }
+    }
+  }
 }

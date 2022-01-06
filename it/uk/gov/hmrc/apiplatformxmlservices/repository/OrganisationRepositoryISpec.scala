@@ -208,20 +208,20 @@ class OrganisationRepositoryISpec
   }
 
   "update" should {
-    "return true when update successful" in new Setup {
+    "return Right with Organisation when update successful" in new Setup {
       await(repo.create(organisationToPersist))
       val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"))
 
       await(repo.update(updatedOrganisation)) match {
-        case Right(x: Boolean) => x shouldBe true
+        case Right(x: Organisation) => x shouldBe updatedOrganisation
         case _                 => fail
       }
     }
 
-    "return false when organisation does not exist" in new Setup {
+    "return Left when organisation does not exist" in new Setup {
       await(repo.update(organisationToPersist)) match {
-        case Right(x: Boolean) => x shouldBe false
-        case _                 => fail
+        case Right(x: Organisation) => fail
+        case Left(e)                 => e.getMessage shouldBe "Organisation does not exist"
       }
     }
 

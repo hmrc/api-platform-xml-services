@@ -21,7 +21,12 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import java.{util => ju}
 
-case class XmlApi(name: String, serviceName: String, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
+
+case class UserId(value: ju.UUID) 
+
+case class ServiceName(value: String) extends AnyVal
+
+case class XmlApi(name: String, serviceName: ServiceName, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
 
 object XmlApi {
 
@@ -35,4 +40,6 @@ case class VendorId(value: Long) extends AnyVal
 
 case class OrganisationName(value: String) extends AnyVal
 
-case class Organisation(organisationId: OrganisationId, vendorId: VendorId, name: OrganisationName)
+case class Collaborator(userId: UserId, email: String)
+
+case class Organisation(organisationId: OrganisationId, vendorId: VendorId, name: OrganisationName, collaborators: List[Collaborator] = List.empty, services: List[ServiceName] =List.empty)

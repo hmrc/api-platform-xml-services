@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.config
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.apiplatformxmlservices.connectors
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class ConfigurationModule extends AbstractModule {
+import javax.inject.{Inject, Provider, Singleton}
 
-  override def configure(): Unit = {
-    bind(classOf[VendorIdService.Config]).toProvider(classOf[VendorIdServiceConfigProvider])
-    bind(classOf[ThirdPartyDeveloperConnector.Config]).toProvider(classOf[ThirdPartyDeveloperConnectorProvider])
+@Singleton
+class ThirdPartyDeveloperConnectorProvider @Inject() (servicesConfig: ServicesConfig) extends Provider[ThirdPartyDeveloperConnector.Config] {
+
+  override def get(): ThirdPartyDeveloperConnector.Config = {
+    ThirdPartyDeveloperConnector.Config(servicesConfig.baseUrl("third-party-developer"))
   }
-
 }

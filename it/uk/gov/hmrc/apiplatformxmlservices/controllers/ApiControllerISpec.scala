@@ -87,7 +87,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with A
 
     "GET /xml/api?serviceName=charities-online" should {
       val apiName = "charities-online"
-      val charitiesOnlineApi = xmlApis.find(_.serviceName == apiName)
+      val charitiesOnlineApi = xmlApis.find(_.serviceName.value == apiName)
 
       "respond with 200 and return the API" in {
         val result = callGetEndpoint(s"$url/xml/api?serviceName=$apiName")

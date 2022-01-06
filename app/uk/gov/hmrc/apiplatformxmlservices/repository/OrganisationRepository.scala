@@ -23,10 +23,10 @@ import org.mongodb.scala.model.Updates.{set, setOnInsert}
 import org.mongodb.scala.model._
 import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
+import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -62,12 +62,10 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
   def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
     collection.find(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(_.headOption)
-
   }
 
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] = {
     collection.find(equal("vendorId", Codecs.toBson(vendorId))).toFuture().map(_.headOption)
-
   }
 
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
@@ -84,7 +82,11 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       setOnInsert("vendorId", Codecs.toBson(organisation.vendorId))
     )
 
-    val setOnUpdate = List(set("name", Codecs.toBson(organisation.name)))
+    val setOnUpdate = List(
+      set("name", Codecs.toBson(organisation.name)),
+      set("collaborators", Codecs.toBson(organisation.collaborators)),
+      set("services", Codecs.toBson(organisation.services))
+      )
 
     val allOps = setOnInsertOperations ++ setOnUpdate
 
@@ -99,13 +101,14 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       }
   }
 
-  def update(organisation: Organisation): Future[Either[Exception, Boolean]] = {
+  def update(organisation: Organisation): Future[Either[Exception, Organisation]] = {
+
     val filter = equal("organisationId", Codecs.toBson(organisation.organisationId))
 
     collection.findOneAndReplace(filter, organisation, FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)).toFutureOption()
       .map {
-        case Some(_) => Right(true)
-        case None    => Right(false)
+        case Some(org: Organisation) => Right(org)
+        case None => Left(new BadRequestException("Organisation does not exist"))
       }.recover {
         case e: Exception => Left(e)
       }

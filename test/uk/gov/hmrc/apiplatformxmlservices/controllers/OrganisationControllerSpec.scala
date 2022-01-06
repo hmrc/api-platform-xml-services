@@ -35,6 +35,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.http.BadRequestException
 
 class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
@@ -52,13 +53,23 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
   trait Setup {
     val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"))
+
     val fakeRequest = FakeRequest("GET", "/organisations")
     val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
     val jsonMediaType = "application/json"
     def getUuid() = UUID.randomUUID()
 
-    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name =  OrganisationName("Organisation Name"))
+    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
+    val userId = UserId(UUID.randomUUID())
+    val email = "foo@bar.com"
+    val coreUserDetail = CoreUserDetail(userId, email)
+    val addCollaboratordRequestObj = AddCollaboratorRequest(email)
+    val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
+
+    val addCollaboratordRequest =
+      FakeRequest("POST", s"/organisations/${organisation.organisationId.value.toString}/collaborator").withBody(Json.toJson(addCollaboratordRequestObj))
+
   }
 
   "GET /organisations/:organisationId" should {
@@ -108,7 +119,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     }
 
     "return 409" in new Setup {
-      when(mockOrgService.create(any[OrganisationName])).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument(),ServerAddress()))))
+      when(mockOrgService.create(any[OrganisationName])).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument(), ServerAddress()))))
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.CONFLICT
       contentAsString(result) shouldBe "Could not create Organisation with name OrganisationName(Organisation Name) - Duplicate ID"
@@ -119,6 +130,37 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.BAD_REQUEST
       contentAsString(result) shouldBe "Could not create Organisation with name OrganisationName(Organisation Name) - Failed"
+    }
+  }
+
+  "POST /organisations/:organisationId/collaborator" should {
+
+    "return 404 when fail to get organisation" in new Setup {
+      when(mockOrgService.addCollaborator(*[OrganisationId], *)(*)).thenReturn(Future.successful(Left(GetOrganisationFailedResult("Organisation does not exist"))))
+      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratordRequest)
+      status(result) shouldBe Status.NOT_FOUND
+      contentAsString(result) shouldBe "Organisation does not exist"
+    }
+
+     "return 400 when fail to get or create user" in new Setup {
+      when(mockOrgService.addCollaborator(*[OrganisationId], *)(*)).thenReturn(Future.successful(Left(GetOrCreateUserIdFailedResult("Could not find or create user"))))
+      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratordRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentAsString(result) shouldBe "Could not find or create user"
+    }
+
+    "return 500 when fail to update organisation" in new Setup {
+      when(mockOrgService.addCollaborator(*[OrganisationId], *)(*)).thenReturn(Future.successful(Left(UpdateOrganisationFailedResult("Organisation does not exist"))))
+      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratordRequest)
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      contentAsString(result) shouldBe "Organisation does not exist"
+    }
+
+    "return 200 when collaborator added" in new Setup {
+      when(mockOrgService.addCollaborator(*[OrganisationId], *)(*)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
+      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratordRequest)
+      status(result) shouldBe Status.OK
+      contentAsJson(result) shouldBe Json.toJson(organisationWithCollaborator)
     }
   }
 

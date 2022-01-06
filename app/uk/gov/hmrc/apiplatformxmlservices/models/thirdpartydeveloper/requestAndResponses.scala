@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.config
+package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.apiplatformxmlservices.connectors
-import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 
-class ConfigurationModule extends AbstractModule {
+import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 
-  override def configure(): Unit = {
-    bind(classOf[VendorIdService.Config]).toProvider(classOf[VendorIdServiceConfigProvider])
-    bind(classOf[ThirdPartyDeveloperConnector.Config]).toProvider(classOf[ThirdPartyDeveloperConnectorProvider])
-  }
+case class GetOrCreateUserIdRequest(email: String)
 
-}
+case class DeleteUserRequest(gatekeeperUserId: Option[String], emailAddress: String)
+
+// Returned from ThirdPartyDeveloperConnector
+sealed trait DeleteUserResult
+case object DeleteUserSuccessResult extends DeleteUserResult
+case object DeleteUserFailureResult extends DeleteUserResult
+
+
+
+case class UserIdResponse(userId: UserId)

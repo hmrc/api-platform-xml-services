@@ -20,14 +20,20 @@ import play.api.libs.json.Json
 
 object JsonFormatters {
 
+  implicit val formatServiceName = Json.valueFormat[ServiceName]
   implicit val formatXmlApi = Json.format[XmlApi]
 
+  implicit val formatUserId = Json.valueFormat[UserId]
   implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
   implicit val formatVendorId = Json.valueFormat[VendorId]
   implicit val formatOrganisationName = Json.valueFormat[OrganisationName]
+  implicit val formatCollaborator = Json.format[Collaborator]
   implicit val formatOrganisation = Json.format[Organisation]
 
   implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
 
+  implicit val formatCoreUserDetail = Json.format[CoreUserDetail]
+  implicit val formatAddCollaboratorRequest = Json.format[AddCollaboratorRequest]
+  implicit val formatRemovedCollaboratorRequest = Json.format[RemoveCollaboratorRequest]
 
 }
