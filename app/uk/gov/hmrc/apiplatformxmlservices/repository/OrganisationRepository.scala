@@ -84,7 +84,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
     val setOnUpdate = List(
       set("name", Codecs.toBson(organisation.name)),
-      set("collaborators", Codecs.toBson(organisation.collaborators))
+      set("collaborators", Codecs.toBson(organisation.collaborators)),
+      set("services", Codecs.toBson(organisation.services))
       )
 
     val allOps = setOnInsertOperations ++ setOnUpdate

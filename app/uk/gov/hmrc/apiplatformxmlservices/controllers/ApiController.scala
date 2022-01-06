@@ -23,6 +23,7 @@ import scala.concurrent.Future
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 
 @Singleton()
 class ApiController @Inject() (cc: ControllerComponents)
@@ -40,7 +41,7 @@ class ApiController @Inject() (cc: ControllerComponents)
     }
   }
 
-  def getApiByServiceName(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+  def getApiByServiceName(serviceName: ServiceName): Action[AnyContent] = Action.async { implicit request =>
     XmlApi.xmlApis.find(_.serviceName == serviceName) match {
       case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
       case _ => Future.successful(NotFound(s"XML API with serviceName $serviceName not found."))

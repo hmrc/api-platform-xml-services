@@ -21,6 +21,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, VendorId}
 
 import java.util.UUID
 import scala.util.Try
+import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 
 package object binders {
 
@@ -61,5 +62,22 @@ package object binders {
         textBinder.unbind(key, vendorId.value.toString)
       }
     }
+
+
+
+  implicit def serviceNameQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ServiceName] =
+    new QueryStringBindable[ServiceName] {
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ServiceName]] = {
+        textBinder.bind(key, params).map {
+          case Right(serviceName) => Right(ServiceName(serviceName))
+          case Left(_) => Left("Unable to bind serviceName")
+        }
+      }
+
+      override def unbind(key: String, serviceName: ServiceName): String = {
+        textBinder.unbind(key, serviceName.value.toString)
+      }
+    }
+
 
 }

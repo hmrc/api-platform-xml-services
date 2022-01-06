@@ -20,6 +20,7 @@ import play.api.libs.json.Json
 
 object JsonFormatters {
 
+  implicit val formatServiceName = Json.valueFormat[ServiceName]
   implicit val formatXmlApi = Json.format[XmlApi]
 
   implicit val formatUserId = Json.valueFormat[UserId]
