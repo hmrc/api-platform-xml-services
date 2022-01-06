@@ -75,7 +75,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
-    val query = equal("organisationId", Codecs.toBson(organisation.organisationId))
+    val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)),
+    equal("vendorId", Codecs.toBson(organisation.vendorId)))
 
     val setOnInsertOperations = List(
       setOnInsert("organisationId", Codecs.toBson(organisation.organisationId)),

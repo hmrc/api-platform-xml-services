@@ -103,9 +103,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[Organisation] { organisation =>
       organisationService.update(organisation).map {
-        case Right(_)                       => Ok
-        //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
-        case Left(_: MongoCommandException) => Conflict(s"Could not update Organisation with ID ${organisation.organisationId.value} - Duplicate ID")
+        case Right(_)                       => Ok(Json.toJson(organisation))
         case _                              => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
     }

@@ -288,11 +288,11 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         result.status mustBe OK
       }
 
-      "respond with 409 if attempt to update Organisation with another Organisations VendorId" in new Setup {
+      "respond with 404 if attempt to update Organisation with another Organisations VendorId" in new Setup {
         await(orgRepo.createOrUpdate(organisation))
         await(orgRepo.createOrUpdate(organisation2))
         val result = callPutEndpoint(s"$url/organisations", Json.toJson(updatedOrgWithDuplicate).toString)
-        result.status mustBe CONFLICT
+        result.status mustBe NOT_FOUND
       }
 
       "respond with 400 if request body is not json" in new Setup {
@@ -311,10 +311,9 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         }
       }
 
-      "respond with 404 if Organisation does not exist" in new Setup {
+      "respond with 200 and do upsert if Organisation does not exist" in new Setup {
         val result = callPutEndpoint(s"$url/organisations", orgAsJsonString)
-        result.status mustBe NOT_FOUND
-        result.body mustBe s"Could not find Organisation with ID ${organisation.organisationId.value}"
+        result.status mustBe OK
       }
     }
 
