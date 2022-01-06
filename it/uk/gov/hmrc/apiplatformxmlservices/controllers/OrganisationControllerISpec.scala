@@ -114,7 +114,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     val organisationWithCollaborators = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
     val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
     val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"))
+    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "))
     val addCollaboratorRequest = AddCollaboratorRequest(email)
     val removeCollaboratorRequest = RemoveCollaboratorRequest(email, gatekeeperUserId)
     val organisationIdValue = organisation.organisationId.value
@@ -173,7 +173,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "GET /organisations/:organisationId" should {
 
       "respond with 200 and return Organisation" in new Setup {
-        await(orgRepo.create(organisation))
+        await(orgRepo.createOrUpdate(organisation))
         val result = callGetEndpoint(s"$url/organisations/${organisationIdValue}")
         result.status mustBe OK
         result.body mustBe Json.toJson(organisation).toString
@@ -194,15 +194,15 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "GET /organisations with query parameters" should {
 
       "respond 200 and return matches when valid vendorID provided" in new Setup {
-        await(orgRepo.create(organisation))
+        await(orgRepo.createOrUpdate(organisation))
         val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue")
         result.status mustBe OK
         result.body mustBe Json.toJson(List(organisation)).toString
       }
 
       "respond 200 and return matches when valid partial organisation name provided" in new Setup {
-        await(orgRepo.create(organisation))
-        await(orgRepo.create(organisation2))
+        await(orgRepo.createOrUpdate(organisation))
+        await(orgRepo.createOrUpdate(organisation2))
 
         val result = callGetEndpoint(s"$url/organisations?organisationName=I am the")
         result.status mustBe OK
@@ -210,8 +210,8 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond 200 and return matches when valid full organisation name provided" in new Setup {
-        await(orgRepo.create(organisation))
-        await(orgRepo.create(organisation2))
+        await(orgRepo.createOrUpdate(organisation))
+        await(orgRepo.createOrUpdate(organisation2))
 
         val result = callGetEndpoint(s"$url/organisations?organisationName=${organisation.name.value}")
         result.status mustBe OK
@@ -219,8 +219,8 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond with 200 and return all Organisations when no vendorId is provided" in new Setup {
-        await(orgRepo.create(organisation))
-        await(orgRepo.create(organisation2))
+        await(orgRepo.createOrUpdate(organisation))
+        await(orgRepo.createOrUpdate(organisation2))
         val result = callGetEndpoint(s"$url/organisations")
         result.status mustBe OK
         result.body mustBe Json.toJson(List(organisation, organisation2)).toString
@@ -233,7 +233,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond 200 and empty list when OrganisationName not found" in new Setup {
-        await(orgRepo.create(organisation2))
+        await(orgRepo.createOrUpdate(organisation2))
         val result = callGetEndpoint(s"$url/organisations?organisationName=unknown")
         result.status mustBe OK
         result.body mustBe "[]"
@@ -248,7 +248,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "DELETE /organisations/:organisationId" should {
 
       "respond with 204 if Organisation was deleted" in new Setup {
-        await(orgRepo.create(organisation))
+        await(orgRepo.createOrUpdate(organisation))
         val result = callDeleteEndpoint(s"$url/organisations/${organisationIdValue}")
         result.status mustBe 204
       }
@@ -267,7 +267,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
         result.status mustBe CREATED
         val createdOrganisation = Json.parse(result.body).as[Organisation]
-        createdOrganisation.name mustBe createOrganisationRequest.organisationName
+        createdOrganisation.name.value mustBe createOrganisationRequest.organisationName.value.trim()
         createdOrganisation.vendorId mustBe VendorId(9000)
       }
 
@@ -283,16 +283,16 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "PUT /organisations" should {
 
       "respond with 200 if Organisation was updated" in new Setup {
-        await(orgRepo.create(organisation))
+        await(orgRepo.createOrUpdate(organisation))
         val result = callPutEndpoint(s"$url/organisations", orgAsJsonString)
         result.status mustBe OK
       }
 
-      "respond with 409 if attempt to update Organisation with another Organisations VendorId" in new Setup {
-        await(orgRepo.create(organisation))
-        await(orgRepo.create(organisation2))
+      "respond with 404 if attempt to update Organisation with another Organisations VendorId" in new Setup {
+        await(orgRepo.createOrUpdate(organisation))
+        await(orgRepo.createOrUpdate(organisation2))
         val result = callPutEndpoint(s"$url/organisations", Json.toJson(updatedOrgWithDuplicate).toString)
-        result.status mustBe CONFLICT
+        result.status mustBe NOT_FOUND
       }
 
       "respond with 400 if request body is not json" in new Setup {
@@ -311,10 +311,9 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         }
       }
 
-      "respond with 404 if Organisation does not exist" in new Setup {
+      "respond with 200 and do upsert if Organisation does not exist" in new Setup {
         val result = callPutEndpoint(s"$url/organisations", orgAsJsonString)
-        result.status mustBe NOT_FOUND
-        result.body mustBe s"Could not find Organisation with ID ${organisation.organisationId.value}"
+        result.status mustBe OK
       }
     }
 
@@ -347,7 +346,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond with 400 if third party developer connector returns and error" in new Setup {
-        await(orgRepo.create(organisation))
+        await(orgRepo.createOrUpdate(organisation))
         stubThirdPartyDeveloperConnectorWithBody(userId, email, BAD_REQUEST)
         val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe BAD_REQUEST
@@ -355,7 +354,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond with 200 if organisationId exists" in new Setup {
-        await(orgRepo.create(organisation))
+        await(orgRepo.createOrUpdate(organisation))
         stubThirdPartyDeveloperConnectorWithBody(userId, email, OK)
         val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe OK
@@ -367,7 +366,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
   "POST /organisations/:organisationId/remove-collaborator" should {
 
     "respond with 200 if organisationId exists and delete successful" in new Setup {
-      await(orgRepo.create(organisationWithCollaborators))
+      await(orgRepo.createOrUpdate(organisationWithCollaborators))
       stubThirdPartyDeveloperDelete(gatekeeperUserId, email, NO_CONTENT)
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe OK
@@ -375,14 +374,14 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     }
 
     "respond with 404 if organisationId exists but collaborator is not associated" in new Setup {
-      await(orgRepo.create(organisation))
+      await(orgRepo.createOrUpdate(organisation))
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe NOT_FOUND
       result.body mustBe "Collaborator not found on Organisation"
     }
 
     "respond with 500 if organisationId exists but delete fails" in new Setup {
-      await(orgRepo.create(organisationWithCollaborators))
+      await(orgRepo.createOrUpdate(organisationWithCollaborators))
       stubThirdPartyDeveloperDelete(gatekeeperUserId, email, INTERNAL_SERVER_ERROR)
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe INTERNAL_SERVER_ERROR

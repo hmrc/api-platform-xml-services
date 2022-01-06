@@ -75,7 +75,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
-    val query = equal("organisationId", Codecs.toBson(organisation.organisationId))
+    val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)),
+    equal("vendorId", Codecs.toBson(organisation.vendorId)))
 
     val setOnInsertOperations = List(
       setOnInsert("organisationId", Codecs.toBson(organisation.organisationId)),
@@ -83,7 +84,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     )
 
     val setOnUpdate = List(
-      set("name", Codecs.toBson(organisation.name)),
+      set("name",  organisation.name.value.trim),
       set("collaborators", Codecs.toBson(organisation.collaborators)),
       set("services", Codecs.toBson(organisation.services))
       )
@@ -97,34 +98,34 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     ).toFuture
       .map(x => Right(x))
       .recover {
-        case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name.value} - ${e.getMessage}"))
+        case e: Exception => Left(new Exception(s"Failed to create or update Organisation with name ${organisation.name.value} - ${e.getMessage}"))
       }
   }
 
-  def update(organisation: Organisation): Future[Either[Exception, Organisation]] = {
+  // def update(organisation: Organisation): Future[Either[Exception, Organisation]] = {
 
-    val filter = equal("organisationId", Codecs.toBson(organisation.organisationId))
+  //   val filter = equal("organisationId", Codecs.toBson(organisation.organisationId))
 
-    collection.findOneAndReplace(filter, organisation, FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)).toFutureOption()
-      .map {
-        case Some(org: Organisation) => Right(org)
-        case None => Left(new BadRequestException("Organisation does not exist"))
-      }.recover {
-        case e: Exception => Left(e)
-      }
-  }
+  //   collection.findOneAndReplace(filter, organisation, FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)).toFutureOption()
+  //     .map {
+  //       case Some(org: Organisation) => Right(org)
+  //       case None => Left(new BadRequestException("Organisation does not exist"))
+  //     }.recover {
+  //       case e: Exception => Left(e)
+  //     }
+  // }
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
     collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture()
       .map(x => x.getDeletedCount == 1)
   }
 
-  def create(organisation: Organisation): Future[Either[Exception, Boolean]] = {
-    collection.insertOne(organisation).toFuture
-      .map(x => Right(x.wasAcknowledged()))
-      .recover {
-        case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
-      }
-  }
+  // def create(organisation: Organisation): Future[Either[Exception, Boolean]] = {
+  //   collection.insertOne(organisation).toFuture
+  //     .map(x => Right(x.wasAcknowledged()))
+  //     .recover {
+  //       case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
+  //     }
+  // }
 
 }

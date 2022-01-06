@@ -53,7 +53,7 @@ class OrganisationService @Inject() (
   }
 
   def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
-    organisationRepository.update(organisation)
+    organisationRepository.createOrUpdate(organisation)
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] =
     organisationRepository.deleteByOrgId(organisationId)
@@ -87,7 +87,7 @@ class OrganisationService @Inject() (
   }
 
   private def handleUpdateOrganisation(organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    organisationRepository.update(organisation).map {
+    organisationRepository.createOrUpdate(organisation).map {
       case Left(value)              => Left(UpdateOrganisationFailedResult(value.getMessage))
       case Right(org: Organisation) => Right(org)
     }

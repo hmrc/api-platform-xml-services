@@ -58,7 +58,8 @@ class OrganisationRepositoryISpec
 
   trait Setup {
     def getUuid() = UUID.randomUUID()
-    val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = OrganisationName("Organisation Name"))
+    val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = OrganisationName(" Organisation Name "))
+    val organisationWithTrimmedName = organisationToPersist.copy(name = OrganisationName(organisationToPersist.name.value.trim))
     val organisationToPersist2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
     val org3 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9003), name = OrganisationName("ABC DEF GHI"))
     val org4 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9004), name = OrganisationName("DEF GHI"))
@@ -66,12 +67,12 @@ class OrganisationRepositoryISpec
     val org6 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9006), name = OrganisationName("GPYGFRTDE"))
 
     def createOrganisations() = {
-      await(repo.create(organisationToPersist))
-      await(repo.create(organisationToPersist2))
-      await(repo.create(org3))
-      await(repo.create(org4))
-      await(repo.create(org5))
-      await(repo.create(org6))
+      await(repo.createOrUpdate(organisationToPersist))
+      await(repo.createOrUpdate(organisationToPersist2))
+      await(repo.createOrUpdate(org3))
+      await(repo.createOrUpdate(org4))
+      await(repo.createOrUpdate(org5))
+      await(repo.createOrUpdate(org6))
     }
 
     def createUnsortedListOfOrganisations(): List[Organisation] = {
@@ -86,16 +87,16 @@ class OrganisationRepositoryISpec
       val orgNine = Organisation(OrganisationId(randomUUID()), VendorId(1119L), OrganisationName("exile dog inc"))
       val orgTen = Organisation(OrganisationId(randomUUID()), VendorId(1120L), OrganisationName("yo yachets"))
 
-      await(repo.create(orgOne))
-      await(repo.create(orgTwo))
-      await(repo.create(orgThree))
-      await(repo.create(orgFour))
-      await(repo.create(orgFive))
-      await(repo.create(orgSix))
-      await(repo.create(orgSeven))
-      await(repo.create(orgEight))
-      await(repo.create(orgNine))
-      await(repo.create(orgTen))
+      await(repo.createOrUpdate(orgOne))
+      await(repo.createOrUpdate(orgTwo))
+      await(repo.createOrUpdate(orgThree))
+      await(repo.createOrUpdate(orgFour))
+      await(repo.createOrUpdate(orgFive))
+      await(repo.createOrUpdate(orgSix))
+      await(repo.createOrUpdate(orgSeven))
+      await(repo.createOrUpdate(orgEight))
+      await(repo.createOrUpdate(orgNine))
+      await(repo.createOrUpdate(orgTen))
 
       List(orgOne, orgTwo, orgThree, orgFour, orgFive, orgSix, orgSeven, orgEight, orgNine, orgTen)
     }
@@ -118,8 +119,8 @@ class OrganisationRepositoryISpec
 
   "findOrgWithMaxVendorId" should {
     "return Organisation with max vendorId when there are 2 organisations" in new Setup {
-      await(repo.create(organisationToPersist))
-      await(repo.create(organisationToPersist2))
+      await(repo.createOrUpdate(organisationToPersist))
+      await(repo.createOrUpdate(organisationToPersist2))
 
       val result = await(repo.findOrgWithMaxVendorId)
 
@@ -135,11 +136,11 @@ class OrganisationRepositoryISpec
 
   "findByOrgId" should {
     "return an Organisation when organisationId exists" in new Setup {
-      await(repo.create(organisationToPersist))
+      await(repo.createOrUpdate(organisationToPersist))
 
       val result = await(repo.findByOrgId(organisationToPersist.organisationId))
 
-      result shouldBe Some(organisationToPersist)
+      result shouldBe Some(organisationWithTrimmedName)
     }
 
     "return None when organisationId does not exist" in new Setup {
@@ -151,11 +152,11 @@ class OrganisationRepositoryISpec
 
   "findByVendorId" should {
     "return an Organisation when vendorId exists" in new Setup {
-      await(repo.create(organisationToPersist))
+      await(repo.createOrUpdate(organisationToPersist))
 
       val result = await(repo.findByVendorId(organisationToPersist.vendorId))
 
-      result shouldBe Some(organisationToPersist)
+      result shouldBe Some(organisationWithTrimmedName)
     }
 
     "return None when vendorId does not exist" in new Setup {
@@ -193,7 +194,7 @@ class OrganisationRepositoryISpec
 
   "deleteByOrgId" should {
     "return true when organisation to be deleted exists" in new Setup {
-      await(repo.create(organisationToPersist))
+      await(repo.createOrUpdate(organisationToPersist))
 
       val result = await(repo.deleteByOrgId(organisationToPersist.organisationId))
 
@@ -207,47 +208,26 @@ class OrganisationRepositoryISpec
     }
   }
 
-  "update" should {
-    "return Right with Organisation when update successful" in new Setup {
-      await(repo.create(organisationToPersist))
-      val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"))
-
-      await(repo.update(updatedOrganisation)) match {
-        case Right(x: Organisation) => x shouldBe updatedOrganisation
-        case _                 => fail
-      }
-    }
-
-    "return Left when organisation does not exist" in new Setup {
-      await(repo.update(organisationToPersist)) match {
-        case Right(x: Organisation) => fail
-        case Left(e)                 => e.getMessage shouldBe "Organisation does not exist"
-      }
-    }
-
-    "return Left when try to update with another organisation's VendorId" in new Setup {
-      await(repo.create(organisationToPersist))
-      await(repo.create(organisationToPersist2))
-      val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"), vendorId = organisationToPersist2.vendorId)
-
-      await(repo.update(updatedOrganisation)) match {
-        case Left(e: Exception) => e.getMessage contains "duplicate key"
-        case _                  => fail
-      }
-    }
-
-  }
 
   "createOrUpdate" should {
     "return Organisation when create successful" in new Setup {
       await(repo.createOrUpdate(organisationToPersist)) match {
-        case Right(organisation: Organisation) => organisation shouldBe organisationToPersist
+        case Right(organisation: Organisation) => organisation.name.value shouldBe organisationToPersist.name.value.trim
+        case _                                 => fail
+      }
+    }
+
+    "return Organisation when upsert successful" in new Setup {
+      await(repo.createOrUpdate(organisationToPersist))
+      val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"))
+      await(repo.createOrUpdate(updatedOrganisation)) match {
+        case Right(organisation: Organisation) => organisation shouldBe updatedOrganisation
         case _                                 => fail
       }
     }
 
     "return Left when vendor Id already exists" in new Setup {
-      await(repo.create(organisationToPersist))
+      await(repo.createOrUpdate(organisationToPersist))
 
       val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"), organisationId = OrganisationId(getUuid()), vendorId = VendorId(9000))
 
@@ -257,40 +237,16 @@ class OrganisationRepositoryISpec
       }
     }
 
-    "return Right and update organisation name if Organisation Id already exists but vendor Id does not" in new Setup {
-      await(repo.create(organisationToPersist))
+    "return Left and if try to update name on an Organisation when OrganisationId and VendorId don't match an existing Organisation" in new Setup {
+      await(repo.createOrUpdate(organisationToPersist))
 
       val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"), vendorId = VendorId(9001))
 
       await(repo.createOrUpdate(updatedOrganisation)) match {
-        case Right(persistedOrg: Organisation) => {
-          persistedOrg.name shouldBe updatedOrganisation.name
-          persistedOrg.organisationId shouldBe organisationToPersist.organisationId
-          persistedOrg.vendorId shouldBe organisationToPersist.vendorId
-        }
-        case Left(_)                           => fail
+        case Left(_) => succeed
+        case Right(_) => fail
       }
     }
   }
 
-  "create Organisation" should {
-    "return a Right if organisation doesn't already exist" in new Setup {
-      val result = await(repo.create(organisationToPersist))
-
-      result match {
-        case Left(e: Exception) => fail
-        case Right(x: Boolean)  => x shouldBe true
-      }
-    }
-
-    "return a Left when try to create an organisation with an existing id" in new Setup {
-      await(repo.create(organisationToPersist))
-      val result = await(repo.create(organisationToPersist))
-
-      result match {
-        case Left(e: Exception) => succeed
-        case Right(_)           => fail
-      }
-    }
-  }
 }
