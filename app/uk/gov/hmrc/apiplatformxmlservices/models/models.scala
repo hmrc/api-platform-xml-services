@@ -20,6 +20,19 @@ import scala.io.Source
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import java.{util => ju}
+import enumeratum._
+
+
+sealed trait OrganisationSortBy extends EnumEntry
+
+object OrganisationSortBy extends Enum[OrganisationSortBy] {
+
+  val values = findValues
+
+  case object VENDOR_ID extends OrganisationSortBy
+  case object ORGANISATION_NAME extends OrganisationSortBy
+
+}
 
 
 case class UserId(value: ju.UUID) 

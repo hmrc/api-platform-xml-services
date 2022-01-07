@@ -42,11 +42,11 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
-  def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None): Action[AnyContent] = Action.async { request =>
+  def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None, sortBy: OrganisationSortBy): Action[AnyContent] = Action.async { request =>    
     (vendorId, organisationName) match {
       case (Some(v: VendorId), None)               => handleFindOrganisationByVendorId(v)
       case (None, Some(orgName: OrganisationName)) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))
-      case _                                       => organisationService.findAll().map(x => Ok(Json.toJson(x)))
+      case _                                       => organisationService.findAll(sortBy).map(x => Ok(Json.toJson(x)))
     }
   }
 
