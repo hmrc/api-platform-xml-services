@@ -16,29 +16,20 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{BAD_REQUEST, CONFLICT, CREATED, NOT_FOUND, OK}
+import play.api.test.Helpers.{BAD_REQUEST, CREATED, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.{CreateOrganisationRequest, Organisation, OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp, ServerBaseISpec}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import play.api.test.Helpers._
-import com.github.tomakehurst.wiremock.client.WireMock._
 
 import java.util.UUID
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
-import uk.gov.hmrc.apiplatformxmlservices.models.AddCollaboratorRequest
-import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
-import uk.gov.hmrc.apiplatformxmlservices.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.models.Collaborator
-import uk.gov.hmrc.apiplatformxmlservices.models.RemoveCollaboratorRequest
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.DeleteUserRequest
 
 class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with MongoApp[Organisation] {
 
@@ -155,17 +146,6 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       )
     }
 
-    def stubThirdPartyDeveloperDelete(gatekeeperUserId: String, email: String, status: Int) = {
-      stubFor(
-        post(urlEqualTo("/developers/delete"))
-          .willReturn(
-            aResponse()
-              .withStatus(status)
-              .withBody(Json.toJson(DeleteUserRequest(Some(gatekeeperUserId), email)).toString)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
-    }
   }
 
   "OrganisationController" when {
@@ -367,7 +347,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
     "respond with 200 if organisationId exists and delete successful" in new Setup {
       await(orgRepo.createOrUpdate(organisationWithCollaborators))
-      stubThirdPartyDeveloperDelete(gatekeeperUserId, email, NO_CONTENT)
+
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe OK
       result.body mustBe Json.toJson(organisation).toString()
@@ -378,14 +358,6 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe NOT_FOUND
       result.body mustBe "Collaborator not found on Organisation"
-    }
-
-    "respond with 500 if organisationId exists but delete fails" in new Setup {
-      await(orgRepo.createOrUpdate(organisationWithCollaborators))
-      stubThirdPartyDeveloperDelete(gatekeeperUserId, email, INTERNAL_SERVER_ERROR)
-      val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
-      result.status mustBe INTERNAL_SERVER_ERROR
-      result.body mustBe "Failed to delete user"
     }
 
     "respond with 400 if request body is not json" in new Setup {

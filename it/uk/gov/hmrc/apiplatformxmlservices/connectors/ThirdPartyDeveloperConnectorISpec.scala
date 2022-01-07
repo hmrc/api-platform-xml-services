@@ -59,7 +59,6 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     val email = "foo@bar.com"
     val userId: UserId = UserId(ju.UUID.randomUUID())
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
-    val deleteUserRequest = DeleteUserRequest(gatekeeperUserId = Some("John Doe"), emailAddress = email)
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
   }
@@ -98,7 +97,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
-        case Left(e: InternalServerException) => e.message mustBe ("Could not find or create user")
+        case Left(e: InternalServerException) => e.message mustBe "Could not find or create user"
         case _                                => fail
       }
 
@@ -119,7 +118,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
-        case Left(e: Upstream5xxResponse) => succeed
+        case Left(_: Upstream5xxResponse) => succeed
         case _                            => fail
       }
 
@@ -128,43 +127,4 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     }
   }
 
-  "deleteUser" should {
-
-    "return DeleteCollaboratorSuccessResult when backend returns a 204" in new Setup {
-      stubFor(
-        post(urlEqualTo("/developers/delete"))
-          .willReturn(
-            aResponse()
-              .withStatus(NO_CONTENT)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
-
-      val result = await(underTest.deleteUser(deleteUserRequest))
-
-      result mustBe DeleteUserSuccessResult
-
-      verify(postRequestedFor(urlMatching(s"/developers/delete"))
-        .withRequestBody(equalToJson(Json.toJson(deleteUserRequest).toString())))
-    }
-
-    "return DeleteCollaboratorFailureResult when backend returns a 404" in new Setup {
-      stubFor(
-        post(urlEqualTo("/developers/delete"))
-          .willReturn(
-            aResponse()
-              .withStatus(NOT_FOUND)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
-
-      val result = await(underTest.deleteUser(deleteUserRequest))
-
-      result mustBe DeleteUserFailureResult
-
-      verify(postRequestedFor(urlMatching(s"/developers/delete"))
-        .withRequestBody(equalToJson(Json.toJson(deleteUserRequest).toString())))
-    }
-
-  }
 }
