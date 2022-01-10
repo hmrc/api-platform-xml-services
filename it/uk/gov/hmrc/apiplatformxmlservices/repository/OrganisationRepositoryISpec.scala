@@ -23,7 +23,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId, OrganisationSortBy}
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
 import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -46,7 +47,8 @@ class OrganisationRepositoryISpec
       .configure("mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}")
 
   override implicit lazy val app: Application = appBuilder.build()
-  implicit val caseInsensitive: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
+  val caseInsensitiveOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
+ val vendorIdOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.vendorId.value.compareTo(y.vendorId.value)
 
   def repo: OrganisationRepository = app.injector.instanceOf[OrganisationRepository]
 
@@ -103,15 +105,30 @@ class OrganisationRepositoryISpec
   }
 
   "findAll" should {
-    "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
-      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitive)
-      val actualResult: List[Organisation] = await(repo.findAll)
+    "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by vendorId by default" in new Setup {
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(vendorIdOrdering)
+      val actualResult: List[Organisation] = await(repo.findAll(None))
 
       actualResult shouldBe expectedResult
     }
 
+    "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by orgname by when requested" in new Setup {
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitiveOrdering)
+      val actualResult: List[Organisation] = await(repo.findAll(Some(OrganisationSortBy.ORGANISATION_NAME)))
+
+      actualResult shouldBe expectedResult
+    }
+
+    "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by vendorId when requested" in new Setup {
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(vendorIdOrdering)
+      val actualResult: List[Organisation] = await(repo.findAll(Some(OrganisationSortBy.VENDOR_ID)))
+
+      actualResult shouldBe expectedResult
+    }
+
+
     "return an empty List when no organisations exist" in new Setup {
-      val result = await(repo.findAll)
+      val result = await(repo.findAll(Some(OrganisationSortBy.ORGANISATION_NAME)))
 
       result shouldBe List.empty
     }
@@ -185,7 +202,7 @@ class OrganisationRepositoryISpec
     }
 
     "return organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
-      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitive)
+      val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitiveOrdering)
       val actualResult: List[Organisation] = await(repo.findByOrganisationName(OrganisationName("")))
 
       actualResult shouldBe expectedResult

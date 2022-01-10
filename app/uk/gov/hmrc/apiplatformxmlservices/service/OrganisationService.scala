@@ -69,7 +69,7 @@ class OrganisationService @Inject()(
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] =
     organisationRepository.findByOrganisationName(organisationName)
 
-  def findAll(): Future[List[Organisation]] = organisationRepository.findAll
+  def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = organisationRepository.findAll(sortBy)
 
   def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {

@@ -21,7 +21,8 @@ import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model.Updates.{set, setOnInsert}
 import org.mongodb.scala.model._
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId, OrganisationSortBy}
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
 import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.mongo.MongoComponent
@@ -44,7 +45,6 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       replaceIndexes = true
     ) {
 
-  implicit val caseInsensitive: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
 
   def findOrgWithMaxVendorId(): Future[Option[Organisation]] = {
     collection
@@ -56,8 +56,18 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       .toFuture().map(_.headOption)
   }
 
-  def findAll(): Future[List[Organisation]] = {
-    collection.find().toFuture().map(_.toList.sorted(caseInsensitive))
+  implicit val caseInsensitiveOrgNameOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
+  implicit val vendorIdOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.vendorId.value.compare(y.vendorId.value)
+
+  def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = {
+
+    val sorting = sortBy match {
+      case Some(ORGANISATION_NAME) => caseInsensitiveOrgNameOrdering
+      case Some(VENDOR_ID) => vendorIdOrdering
+      case _ => vendorIdOrdering
+    }
+    collection.find().toFuture()
+    .map(_.toList.sorted(sorting))
   }
 
   def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
@@ -71,7 +81,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
     collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
       .toFuture()
-      .map(_.toList.sorted(caseInsensitive))
+      .map(_.toList.sorted(caseInsensitiveOrgNameOrdering))
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
@@ -102,30 +112,9 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       }
   }
 
-  // def update(organisation: Organisation): Future[Either[Exception, Organisation]] = {
-
-  //   val filter = equal("organisationId", Codecs.toBson(organisation.organisationId))
-
-  //   collection.findOneAndReplace(filter, organisation, FindOneAndReplaceOptions().returnDocument(ReturnDocument.AFTER)).toFutureOption()
-  //     .map {
-  //       case Some(org: Organisation) => Right(org)
-  //       case None => Left(new BadRequestException("Organisation does not exist"))
-  //     }.recover {
-  //       case e: Exception => Left(e)
-  //     }
-  // }
-
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
     collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture()
       .map(x => x.getDeletedCount == 1)
   }
-
-  // def create(organisation: Organisation): Future[Either[Exception, Boolean]] = {
-  //   collection.insertOne(organisation).toFuture
-  //     .map(x => Right(x.wasAcknowledged()))
-  //     .recover {
-  //       case e: Exception => Left(new Exception(s"Failed to create Organisation with name ${organisation.name} - ${e.getMessage}"))
-  //     }
-  // }
 
 }

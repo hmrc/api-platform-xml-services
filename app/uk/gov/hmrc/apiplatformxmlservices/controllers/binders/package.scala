@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import play.api.mvc.{PathBindable, QueryStringBindable}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, VendorId, OrganisationSortBy}
 
 import java.util.UUID
 import scala.util.Try
@@ -33,6 +33,7 @@ package object binders {
   }
 
   implicit def organisationIdPathBinder(implicit textBinder: PathBindable[String]): PathBindable[OrganisationId] = new PathBindable[OrganisationId] {
+
     override def bind(key: String, value: String): Either[String, OrganisationId] = {
       textBinder.bind(key, value).flatMap(organisationIdFromString)
     }
@@ -51,10 +52,11 @@ package object binders {
 
   implicit def vendorIdQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[VendorId] =
     new QueryStringBindable[VendorId] {
+
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, VendorId]] = {
         textBinder.bind(key, params).map {
           case Right(vendorId) => vendorIdFromString(vendorId)
-          case Left(_) => Left("Unable to bind vendorId")
+          case Left(_)         => Left("Unable to bind vendorId")
         }
       }
 
@@ -63,14 +65,13 @@ package object binders {
       }
     }
 
-
-
   implicit def serviceNameQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ServiceName] =
     new QueryStringBindable[ServiceName] {
+
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ServiceName]] = {
         textBinder.bind(key, params).map {
           case Right(serviceName) => Right(ServiceName(serviceName))
-          case Left(_) => Left("Unable to bind serviceName")
+          case Left(_)            => Left("Unable to bind serviceName")
         }
       }
 
@@ -79,5 +80,26 @@ package object binders {
       }
     }
 
+
+  private def SortByFromString(text: String): Either[String, OrganisationSortBy] = {
+    Try(OrganisationSortBy.withName(text))
+      .toOption
+      .toRight(s"Cannot accept $text as OrganisationSortBy")
+  }
+
+  implicit def organisationSortByQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[OrganisationSortBy] =
+    new QueryStringBindable[OrganisationSortBy] {
+
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, OrganisationSortBy]] = {
+        textBinder.bind(key, params).map {
+          case Right(sortBy) => SortByFromString(sortBy)
+          case Left(_)            => Left("Unable to bind OrganisationSortBy")
+        }
+      }
+
+      override def unbind(key: String, sortBy: OrganisationSortBy): String = {
+        textBinder.unbind(key, sortBy.toString)
+      }
+    }
 
 }
