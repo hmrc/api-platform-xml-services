@@ -59,11 +59,12 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   implicit val caseInsensitiveOrgNameOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
   implicit val vendorIdOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.vendorId.value.compare(y.vendorId.value)
 
-  def findAll(sortBy: OrganisationSortBy): Future[List[Organisation]] = {
+  def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = {
 
     val sorting = sortBy match {
-      case ORGANISATION_NAME => caseInsensitiveOrgNameOrdering
-      case VENDOR_ID => vendorIdOrdering
+      case Some(ORGANISATION_NAME) => caseInsensitiveOrgNameOrdering
+      case Some(VENDOR_ID) => vendorIdOrdering
+      case _ => vendorIdOrdering
     }
     collection.find().toFuture()
     .map(_.toList.sorted(sorting))

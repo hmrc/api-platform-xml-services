@@ -88,15 +88,15 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
   "GET /organisations?vendorId=[some[vendorId]]" should {
     "return 200" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisation)))
-      val result: Future[Result] = controller.findByParams(Some(organisation.vendorId), None, OrganisationSortBy.ORGANISATION_NAME)(fakeRequest)
+      val result: Future[Result] = controller.findByParams(Some(organisation.vendorId), None, Some(OrganisationSortBy.ORGANISATION_NAME))(fakeRequest)
       status(result) shouldBe Status.OK
       verify(mockOrgService).findByVendorId(*[VendorId])
       verify(mockOrgService, times(0)).findAll(*)
     }
 
     "return 200 with all organisations" in new Setup {
-      when(mockOrgService.findAll(OrganisationSortBy.ORGANISATION_NAME)).thenReturn(Future.successful(List(organisation)))
-      val result: Future[Result] = controller.findByParams(sortBy = OrganisationSortBy.ORGANISATION_NAME)(fakeRequest)
+      when(mockOrgService.findAll(None)).thenReturn(Future.successful(List(organisation)))
+      val result: Future[Result] = controller.findByParams(sortBy= None)(fakeRequest)
       status(result) shouldBe Status.OK
       verify(mockOrgService, times(0)).findByVendorId(*[VendorId])
       verify(mockOrgService, times(1)).findAll(*)
@@ -104,7 +104,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(None))
-      val result: Future[Result] = controller.findByParams(Some(VendorId(9000)), sortBy= OrganisationSortBy.ORGANISATION_NAME)(fakeRequest)
+      val result: Future[Result] = controller.findByParams(Some(VendorId(9000)), sortBy= None)(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }
