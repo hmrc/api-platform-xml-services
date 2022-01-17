@@ -57,6 +57,10 @@ class OrganisationService @Inject()(
   def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
     organisationRepository.createOrUpdate(organisation)
 
+  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) ={
+    organisationRepository.updateOrganisationDetails(organisationId, organisationName)
+  }
+
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] =
     organisationRepository.deleteByOrgId(organisationId)
 
@@ -71,7 +75,8 @@ class OrganisationService @Inject()(
 
   def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = organisationRepository.findAll(sortBy)
 
-  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)
+                        (implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
       _ <- EitherT(collaboratorCanBeDeleted(organisation, request.email))
@@ -90,7 +95,7 @@ class OrganisationService @Inject()(
 
   private def handleUpdateOrganisation(organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.createOrUpdate(organisation).map {
-      case Left(value) => Left(UpdateOrganisationFailedResult(value.getMessage))
+      case Left(value) => Left(UpdateCollaboratorFailedResult(value.getMessage))
       case Right(org: Organisation) => Right(org)
     }
   }

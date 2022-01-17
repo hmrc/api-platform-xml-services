@@ -22,7 +22,7 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{BAD_REQUEST, CREATED, NOT_FOUND, OK}
+import play.api.test.Helpers.{BAD_REQUEST, CREATED, NOT_FOUND, OK, INTERNAL_SERVER_ERROR}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
@@ -304,6 +304,21 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
     }
 
+    "POST /organisations/:organisationId" should {
+      "respond with 200 when update details is successful" in new Setup {
+        await(orgRepo.createOrUpdate(organisation))
+        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}", "{\"organisationName\": \"newName\"}")
+        result.status mustBe OK
+
+      }
+
+      "respond with 500 when update fails" in new Setup {
+        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}", "{\"organisationName\": \"newName\"}")
+        result.status mustBe INTERNAL_SERVER_ERROR
+
+      }
+    }
+
     "POST /organisations/:organisationId/add-collaborator" should {
 
       "respond with 400 if request body is not json" in new Setup {
@@ -315,7 +330,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
 
       "respond with 404 if organisationId is not provided" in new Setup {
-        val result: WSResponse = callPostEndpoint(s"$url/organisations/add-collaborator", addCollaboratorRequestAsString)
+        val result: WSResponse = callPostEndpoint(s"$url/organisations//add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe NOT_FOUND
         result.body.contains("URI not found") mustBe true
       }

@@ -21,10 +21,10 @@ import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model.Updates.{set, setOnInsert}
 import org.mongodb.scala.model._
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId, OrganisationSortBy}
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
-import uk.gov.hmrc.http.BadRequestException
+import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
@@ -43,7 +43,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
         IndexModel(ascending("name"), IndexOptions().name("organisationName_index").background(true).unique(false))
       ),
       replaceIndexes = true
-    ) {
+    ) with ApplicationLogger {
 
 
   def findOrgWithMaxVendorId(): Future[Option[Organisation]] = {
@@ -108,8 +108,25 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     ).toFuture
       .map(x => Right(x))
       .recover {
-        case e: Exception => Left(new Exception(s"Failed to create or update Organisation with name ${organisation.name.value} - ${e.getMessage}"))
+        case e: Exception =>  logger.info("createOrUpdate failed:", e)
+          Left(new Exception(s"Failed to create or update Organisation with name ${organisation.name.value} - ${e.getMessage}"))
       }
+  }
+
+  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName): Future[UpdateOrganisationResult] ={
+    val query = equal("organisationId", Codecs.toBson(organisationId))
+    collection.findOneAndUpdate(query,
+      set("name",organisationName.value),
+      options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+    ).toFutureOption
+      .map{
+      case Some(organisation: Organisation) => UpdateOrganisationSuccessResult(organisation)
+      case _ => UpdateOrganisationFailedResult()
+    } .recover {
+      case e: Exception =>  logger.info("UpdateOrganisationFailed:", e)
+        UpdateOrganisationFailedResult()
+    }
+
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {

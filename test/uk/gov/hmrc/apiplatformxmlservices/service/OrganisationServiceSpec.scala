@@ -124,6 +124,24 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
   }
 
+  "updateOrganisationDetails" should {
+    "returns the result from the repository when called" in new Setup {
+      val updatedOrganisationName = OrganisationName("New Organisation Name")
+      val updatedOrganisation = organisationToPersist.copy(name = updatedOrganisationName)
+      when(mockOrganisationRepo.updateOrganisationDetails(eqTo(updatedOrganisation.organisationId), eqTo(updatedOrganisationName)))
+        .thenReturn(Future.successful(UpdateOrganisationSuccessResult(updatedOrganisation)))
+
+      val result = await(inTest.updateOrganisationDetails(updatedOrganisation.organisationId, updatedOrganisationName))
+      result match {
+        case UpdateOrganisationSuccessResult(updatedOrganisation) => succeed
+        case _ => fail
+      }
+
+      verify(mockOrganisationRepo).updateOrganisationDetails(eqTo(updatedOrganisation.organisationId), eqTo(updatedOrganisationName))
+
+    }
+  }
+
   "deleteByOrgId" should {
     "return an true when delete successful" in new Setup {
       when(mockOrganisationRepo.deleteByOrgId(*[OrganisationId])).thenReturn(Future.successful(true))
@@ -235,7 +253,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
       await(inTest.addCollaborator(organisationId, emailOne)) match {
-        case Left(x: UpdateOrganisationFailedResult) => x.message shouldBe s"Organisation does not exist"
+        case Left(x: UpdateCollaboratorFailedResult) => x.message shouldBe s"Organisation does not exist"
         case _ => fail
       }
 
@@ -294,7 +312,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
         await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
-          case Left(x: UpdateOrganisationFailedResult) => x.message shouldBe s"Organisation does not exist"
+          case Left(x: UpdateCollaboratorFailedResult) => x.message shouldBe s"Organisation does not exist"
           case _ => fail
         }
 
