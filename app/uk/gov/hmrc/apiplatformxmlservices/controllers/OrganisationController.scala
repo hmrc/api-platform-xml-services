@@ -84,7 +84,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       case Left(result: GetOrganisationFailedResult)       => NotFound(s"${result.message}")
       case Left(result: GetOrCreateUserIdFailedResult)     => BadRequest(s"${result.message}")
       case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
-      case Left(result: UpdateOrganisationFailedResult)    => InternalServerError(s"${result.message}")
+      case Left(result: UpdateCollaboratorFailedResult)    => InternalServerError(s"${result.message}")
     }
   }
 
@@ -107,4 +107,14 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       }
     }
   }
+  def updateOrganisationDetails(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+    withJsonBody[UpdateOrganisationDetailsRequest] { organisationDetailsRequest =>
+      organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName)
+        .map{
+          case UpdateOrganisationSuccessResult(organisation: Organisation) => Ok(Json.toJson(organisation))
+          case _: UpdateOrganisationFailedResult => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
+        }
+    }
+  }
+
 }

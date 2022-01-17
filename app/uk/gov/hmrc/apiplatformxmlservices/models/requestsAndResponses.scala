@@ -18,6 +18,8 @@ package uk.gov.hmrc.apiplatformxmlservices.models
 
 case class CreateOrganisationRequest(organisationName: OrganisationName)
 
+case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
+
 case class CoreUserDetail(userId: UserId, email: String)
 
 case class AddCollaboratorRequest(email: String)
@@ -27,5 +29,10 @@ sealed trait ManageCollaboratorResult
 case class OrganisationAlreadyHasCollaboratorResult() extends ManageCollaboratorResult
 case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult
 case class GetOrCreateUserIdFailedResult(message: String) extends ManageCollaboratorResult
-case class UpdateOrganisationFailedResult(message: String) extends ManageCollaboratorResult
+case class UpdateCollaboratorFailedResult(message: String) extends ManageCollaboratorResult
 case class ValidateCollaboratorFailureResult(message: String) extends ManageCollaboratorResult
+
+
+sealed trait UpdateOrganisationResult
+case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
+case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult

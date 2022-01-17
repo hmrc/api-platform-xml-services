@@ -23,8 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId, OrganisationSortBy}
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, OrganisationSortBy, UpdateOrganisationFailedResult, UpdateOrganisationSuccessResult, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -264,6 +263,34 @@ class OrganisationRepositoryISpec
         case Right(_) => fail
       }
     }
+  }
+
+  "UpdateOrganisationDetails" should {
+    "return UpdateOrganisationSuccessResult with updated name when successful" in new Setup{
+      await(repo.createOrUpdate(organisationToPersist))
+      val  updatedName = OrganisationName("updatedName")
+
+      val result =   await(repo.updateOrganisationDetails(organisationToPersist.organisationId, updatedName))
+
+      result match {
+        case UpdateOrganisationSuccessResult(organisation: Organisation) =>
+          organisation.name shouldBe updatedName
+        case _ => fail
+      }
+    }
+
+    "return UpdateOrganisationFailedResult when failure" in new Setup{
+      await(repo.createOrUpdate(organisationToPersist))
+      val  updatedName = OrganisationName("updatedName")
+
+      val result =   await(repo.updateOrganisationDetails(OrganisationId(UUID.randomUUID()), updatedName))
+
+      result match {
+        case _ : UpdateOrganisationFailedResult => succeed
+        case _ => fail
+      }
+    }
+
   }
 
 }
