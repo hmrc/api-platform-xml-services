@@ -17,23 +17,48 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import org.mongodb.scala.MongoCommandException
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.Logging
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
+import play.api.mvc.Action
+import play.api.mvc.AnyContent
+import play.api.mvc.ControllerComponents
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
-import uk.gov.hmrc.apiplatformxmlservices.models._
+
+import javax.inject.Inject
+import javax.inject.Singleton
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 @Singleton
 class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
     extends BackendController(cc)
-    with WithJsonBody {
+    with WithJsonBody
+    with Logging {
+
+  def bulkFindAndCreateOrUpdate(): Action[JsValue] = Action.async(parse.tolerantJson) {
+    println("******* In bulkFindAndCreateOrUpdate method")
+    implicit request =>
+      /* withJsonBody[BulkFindAndCreateOrUpdateRequest] { bulkFindAndCreateOrUpdateRequest =>
+        handleFindAndCreateOrUpdate(bulkFindAndCreateOrUpdateRequest) */
+        Future.successful(Ok(Json.toJson(request.toString())))
+      // }
+  }
+
+  private def handleFindAndCreateOrUpdate(bulkFindAndCreateOrUpdateRequest: BulkFindAndCreateOrUpdateRequest) = {
+    def process(organisation: OrganisationWithNameAndVendorId): Unit = {
+      organisationService.findAndCreateOrUpdate(organisation.name, organisation.vendorId) map {
+        case Right(org: Organisation) => logger.info(s"Organisation CSV import - ${org.name} successfully updated/added to database")
+        case Left(e: Exception)       => logger.error(s"Organisation CSV import - ${organisation.name} could not be updated/added to the database - ${e.getMessage}")
+      }
+    }
+
+    bulkFindAndCreateOrUpdateRequest.organisations.map(process)
+  }
 
   def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.findByOrgId(organisationId) map {
@@ -42,12 +67,13 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
-  def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None, sortBy: Option[OrganisationSortBy]): Action[AnyContent] = Action.async { request =>
-    (vendorId, organisationName) match {
-      case (Some(v: VendorId), None)               => handleFindOrganisationByVendorId(v)
-      case (None, Some(orgName: OrganisationName)) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))
-      case _                                       => organisationService.findAll(sortBy).map(x => Ok(Json.toJson(x)))
-    }
+  def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None, sortBy: Option[OrganisationSortBy]): Action[AnyContent] = Action.async {
+    request =>
+      (vendorId, organisationName) match {
+        case (Some(v: VendorId), None)               => handleFindOrganisationByVendorId(v)
+        case (None, Some(orgName: OrganisationName)) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))
+        case _                                       => organisationService.findAll(sortBy).map(x => Ok(Json.toJson(x)))
+      }
   }
 
   private def handleFindOrganisationByVendorId(v: VendorId) = {
@@ -102,17 +128,18 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[Organisation] { organisation =>
       organisationService.update(organisation).map {
-        case Right(_)                       => Ok(Json.toJson(organisation))
-        case _                              => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
+        case Right(_) => Ok(Json.toJson(organisation))
+        case _        => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
     }
   }
+
   def updateOrganisationDetails(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[UpdateOrganisationDetailsRequest] { organisationDetailsRequest =>
       organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName)
-        .map{
+        .map {
           case UpdateOrganisationSuccessResult(organisation: Organisation) => Ok(Json.toJson(organisation))
-          case _: UpdateOrganisationFailedResult => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
+          case _: UpdateOrganisationFailedResult                           => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
         }
     }
   }

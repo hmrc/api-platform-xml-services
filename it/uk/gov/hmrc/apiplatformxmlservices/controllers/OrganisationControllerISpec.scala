@@ -21,12 +21,19 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{BAD_REQUEST, CREATED, NOT_FOUND, OK, INTERNAL_SERVER_ERROR}
+import play.api.libs.ws.WSClient
+import play.api.libs.ws.WSResponse
+import play.api.test.Helpers.BAD_REQUEST
+import play.api.test.Helpers.CREATED
+import play.api.test.Helpers.INTERNAL_SERVER_ERROR
+import play.api.test.Helpers.NOT_FOUND
+import play.api.test.Helpers.OK
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp, ServerBaseISpec}
+import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport
+import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
+import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
@@ -390,5 +397,33 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
     }
 
+  }
+
+  "POST /organisations/bulk" should {
+
+    "respond with 400 if request body is not valid" in new Setup {
+
+      val result = callPostEndpoint(s"$url/organisations/bulk", "\"organisations\": [{}]")
+      
+      result.status mustBe BAD_REQUEST
+      
+      withClue(s"response body not as expected: ${result.body}") {
+        result.body.contains("Invalid BulkFindAndCreateOrUpdateRequest payload:") mustBe true
+      }
+    }
+    
+    /* "respond with 200 if request body is valid" in new Setup {
+      
+      val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+      val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+      val bulkFindAndCreateOrUpdateRequest = BulkFindAndCreateOrUpdateRequest(Seq(orgOne, orgTwo))
+      val payload = Json.toJson(bulkFindAndCreateOrUpdateRequest).toString
+      
+      println(s"***** Payload: $payload")
+
+      val result = callPostEndpoint(s"$url/organisations/bulk", payload)
+      println(s"******* $result")
+      result.status mustBe OK
+    } */
   }
 }
