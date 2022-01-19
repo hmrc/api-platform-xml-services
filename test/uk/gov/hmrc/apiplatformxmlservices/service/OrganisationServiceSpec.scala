@@ -60,6 +60,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     def getUuid() = UUID.randomUUID()
 
     val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name = OrganisationName("Organisation Name"))
+    val updatedOrgName = OrganisationName("Updated Organisation Name")
 
   }
 
@@ -79,6 +80,35 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     val coreUserDetail = CoreUserDetail(userId, emailOne)
 
     val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
+  }
+
+  "findAndCreateOrUpdate" should {
+    "return Right(Organisation) when vendorId exists and organisation successfully updated" in new Setup {
+      when(mockOrganisationRepo.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisationToPersist)))
+      val modifiedOrganisation = organisationToPersist.copy(name = updatedOrgName)
+      when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(modifiedOrganisation)))
+
+      await(inTest.findAndCreateOrUpdate(updatedOrgName, organisationToPersist.vendorId)) match {
+        case Left(e: Exception) => fail
+        case Right(x: Organisation) => x shouldBe modifiedOrganisation
+      }
+
+      verify(mockOrganisationRepo).findByVendorId(*[VendorId])
+      verify(mockOrganisationRepo).createOrUpdate(modifiedOrganisation)
+    }
+
+    "return Left(Exception) when vendorId exists and createOrUpdate returns exception" in new Setup {
+      when(mockOrganisationRepo.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisationToPersist)))
+      when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new InternalServerException("Something went wrong"))))
+
+      await(inTest.findAndCreateOrUpdate(updatedOrgName, organisationToPersist.vendorId)) match {
+        case Left(e: Exception) => succeed
+        case _ => fail
+      }
+
+      verify(mockOrganisationRepo).findByVendorId(*[VendorId])
+      verify(mockOrganisationRepo).createOrUpdate(*)
+    }
   }
 
   "createOrganisation" should {
