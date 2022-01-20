@@ -25,7 +25,7 @@ case class CoreUserDetail(userId: UserId, email: String)
 case class AddCollaboratorRequest(email: String)
 case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 
-case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
+case class OrganisationWithNameAndVendorId(name: String, vendorId: Long)
 case class BulkFindAndCreateOrUpdateRequest(organisations: Seq[OrganisationWithNameAndVendorId])
 
 sealed trait ManageCollaboratorResult

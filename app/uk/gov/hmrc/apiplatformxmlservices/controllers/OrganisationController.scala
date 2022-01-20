@@ -43,15 +43,15 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   def bulkFindAndCreateOrUpdate(): Action[JsValue] = Action.async(parse.tolerantJson) {
     println("******* In bulkFindAndCreateOrUpdate method")
     implicit request =>
-      /* withJsonBody[BulkFindAndCreateOrUpdateRequest] { bulkFindAndCreateOrUpdateRequest =>
-        handleFindAndCreateOrUpdate(bulkFindAndCreateOrUpdateRequest) */
+       withJsonBody[BulkFindAndCreateOrUpdateRequest] { bulkFindAndCreateOrUpdateRequest =>
+        handleFindAndCreateOrUpdate(bulkFindAndCreateOrUpdateRequest)
         Future.successful(Ok(Json.toJson(request.toString())))
-      // }
+       }
   }
 
   private def handleFindAndCreateOrUpdate(bulkFindAndCreateOrUpdateRequest: BulkFindAndCreateOrUpdateRequest) = {
     def process(organisation: OrganisationWithNameAndVendorId): Unit = {
-      organisationService.findAndCreateOrUpdate(organisation.name, organisation.vendorId) map {
+      organisationService.findAndCreateOrUpdate(OrganisationName(organisation.name), VendorId(organisation.vendorId)) map {
         case Right(org: Organisation) => logger.info(s"Organisation CSV import - ${org.name} successfully updated/added to database")
         case Left(e: Exception)       => logger.error(s"Organisation CSV import - ${organisation.name} could not be updated/added to the database - ${e.getMessage}")
       }
