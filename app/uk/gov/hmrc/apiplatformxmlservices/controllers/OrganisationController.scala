@@ -90,12 +90,14 @@ class OrganisationController @Inject() (organisationService: OrganisationService
 
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[CreateOrganisationRequest] { createOrganisationRequest =>
-      organisationService.create(createOrganisationRequest.organisationName).map {
+      if(createOrganisationRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not create Organisation with empty name"))
+      else organisationService.create(createOrganisationRequest.organisationName).map {
         case Right(organisation)            => Created(Json.toJson(organisation))
         //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
         case Left(_: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
         case Left(e: Exception)             => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
       }
+
     }
   }
 
@@ -109,8 +111,8 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   }
   def updateOrganisationDetails(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[UpdateOrganisationDetailsRequest] { organisationDetailsRequest =>
-      organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName)
-        .map{
+      if(organisationDetailsRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not update Organisation with empty name"))
+      else organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName).map{
           case UpdateOrganisationSuccessResult(organisation: Organisation) => Ok(Json.toJson(organisation))
           case _: UpdateOrganisationFailedResult => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
         }
