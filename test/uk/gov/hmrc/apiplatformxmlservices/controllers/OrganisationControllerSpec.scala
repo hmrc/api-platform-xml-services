@@ -123,6 +123,17 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
       contentAsJson(result) shouldBe Json.toJson(organisation)
     }
 
+    "return 400 when organisationName contains only spaces" in new Setup {
+
+      val invalidCreateRequest = FakeRequest("POST", "/organisations")
+        .withBody(Json.toJson(createOrganisationRequest.copy(organisationName = OrganisationName("   "))))
+      val result: Future[Result] = controller.create()(invalidCreateRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentAsString(result) shouldBe "Could not create Organisation with empty name"
+
+      verifyZeroInteractions(mockOrgService)
+    }
+
     "return 409" in new Setup {
       when(mockOrgService.create(any[OrganisationName])).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument(), ServerAddress()))))
       val result: Future[Result] = controller.create()(createRequest)
@@ -145,6 +156,17 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
        val result = controller.updateOrganisationDetails(organisation.organisationId)(updateOrganisationDetailsRequest)
       status(result) shouldBe Status.OK
 
+    }
+
+    "return 400 when organisationName contains only spaces" in new Setup {
+
+      val invalidRequest = FakeRequest("POST", "/organisations")
+        .withBody(Json.toJson(updateOrganisationDetailsRequestObj.copy(organisationName = OrganisationName("   "))))
+      val result: Future[Result] = controller.updateOrganisationDetails(organisation.organisationId)(invalidRequest)
+      status(result) shouldBe Status.BAD_REQUEST
+      contentAsString(result) shouldBe "Could not update Organisation with empty name"
+
+      verifyZeroInteractions(mockOrgService)
     }
 
     "return 500 when service returns UpdateOrganisationFailedResult" in new Setup {
