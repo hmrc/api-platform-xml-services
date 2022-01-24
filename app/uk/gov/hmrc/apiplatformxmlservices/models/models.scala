@@ -35,7 +35,7 @@ object OrganisationSortBy extends Enum[OrganisationSortBy] {
 }
 
 
-case class UserId(value: ju.UUID) 
+case class UserId(value: ju.UUID)
 
 case class ServiceName(value: String) extends AnyVal
 

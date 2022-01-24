@@ -31,36 +31,36 @@ import uk.gov.hmrc.apiplatformxmlservices.models._
 import scala.concurrent.Future
 
 @Singleton
-class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
-    extends BackendController(cc)
+class OrganisationController @Inject()(organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
+  extends BackendController(cc)
     with WithJsonBody {
 
   def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.findByOrgId(organisationId) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(organisation))
-      case _                                => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
   def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None, sortBy: Option[OrganisationSortBy]): Action[AnyContent] = Action.async { request =>
     (vendorId, organisationName) match {
-      case (Some(v: VendorId), None)               => handleFindOrganisationByVendorId(v)
+      case (Some(v: VendorId), None) => handleFindOrganisationByVendorId(v)
       case (None, Some(orgName: OrganisationName)) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))
-      case _                                       => organisationService.findAll(sortBy).map(x => Ok(Json.toJson(x)))
+      case _ => organisationService.findAll(sortBy).map(x => Ok(Json.toJson(x)))
     }
   }
 
   private def handleFindOrganisationByVendorId(v: VendorId) = {
     organisationService.findByVendorId(v) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
-      case _                                => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
+      case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
     }
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
-      case _    => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
@@ -80,42 +80,43 @@ class OrganisationController @Inject() (organisationService: OrganisationService
 
   private def handleCollaboratorResult(result: Either[ManageCollaboratorResult, Organisation]) = {
     result match {
-      case Right(organisation: Organisation)               => Ok(Json.toJson(organisation))
-      case Left(result: GetOrganisationFailedResult)       => NotFound(s"${result.message}")
-      case Left(result: GetOrCreateUserIdFailedResult)     => BadRequest(s"${result.message}")
+      case Right(organisation: Organisation) => Ok(Json.toJson(organisation))
+      case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
+      case Left(result: GetOrCreateUserIdFailedResult) => BadRequest(s"${result.message}")
       case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
-      case Left(result: UpdateCollaboratorFailedResult)    => InternalServerError(s"${result.message}")
+      case Left(result: UpdateCollaboratorFailedResult) => InternalServerError(s"${result.message}")
     }
   }
 
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[CreateOrganisationRequest] { createOrganisationRequest =>
-      if(createOrganisationRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not create Organisation with empty name"))
-      else organisationService.create(createOrganisationRequest.organisationName).map {
-        case Right(organisation)            => Created(Json.toJson(organisation))
-        //TODO do we need a deeper pattern match on below to check the mongo code is the duplicate id / index violation error?
-        case Left(_: MongoCommandException) => Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
-        case Left(e: Exception)             => BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.getMessage}")
+      if (createOrganisationRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not create Organisation with empty name"))
+      else organisationService.create(createOrganisationRequest).map {
+        case CreateOrganisationSuccessResult(organisation: Organisation) => Created(Json.toJson(organisation))
+        case _: CreateOrganisationFailedDuplicateIdResult =>
+          Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
+        case e: CreateOrganisationFailedResult =>
+          BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.message}")
       }
-
     }
   }
 
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[Organisation] { organisation =>
       organisationService.update(organisation).map {
-        case Right(_)                       => Ok(Json.toJson(organisation))
-        case _                              => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
+        case Right(_) => Ok(Json.toJson(organisation))
+        case _ => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
     }
   }
+
   def updateOrganisationDetails(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[UpdateOrganisationDetailsRequest] { organisationDetailsRequest =>
-      if(organisationDetailsRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not update Organisation with empty name"))
-      else organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName).map{
-          case UpdateOrganisationSuccessResult(organisation: Organisation) => Ok(Json.toJson(organisation))
-          case _: UpdateOrganisationFailedResult => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
-        }
+      if (organisationDetailsRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not update Organisation with empty name"))
+      else organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName).map {
+        case UpdateOrganisationSuccessResult(organisation: Organisation) => Ok(Json.toJson(organisation))
+        case _: UpdateOrganisationFailedResult => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
+      }
     }
   }
 
