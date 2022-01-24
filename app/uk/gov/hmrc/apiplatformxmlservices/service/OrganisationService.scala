@@ -29,35 +29,31 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future.successful
 
 @Singleton
-class OrganisationService @Inject()(
-                                     organisationRepository: OrganisationRepository,
-                                     uuidService: UuidService,
-                                     vendorIdService: VendorIdService,
-                                     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-                                   )(implicit val ec: ExecutionContext) {
+class OrganisationService @Inject() (
+    organisationRepository: OrganisationRepository,
+    uuidService: UuidService,
+    vendorIdService: VendorIdService,
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+  )(implicit val ec: ExecutionContext) {
+
+  def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId) = {
+    organisationRepository.findByVendorId(vendorId) flatMap {
+      case Some(organisation) => organisationRepository.createOrUpdate(organisation.copy(name = organisationName)) 
+      case None => createOrganisation(organisationName, vendorId)
+    }
+  }
 
   def create(organisationName: OrganisationName): Future[Either[Exception, Organisation]] = {
-
-    def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
-      organisationRepository.createOrUpdate(
-        Organisation(
-          organisationId = generateOrganisationId,
-          name = organisationName,
-          vendorId = vendorId
-        )
-      )
-    }
-
     vendorIdService.getNextVendorId flatMap {
       case Some(vendorId: VendorId) => createOrganisation(organisationName, vendorId)
-      case _ => successful(Left(new Exception("Could not get max vendorId")))
+      case _                        => successful(Left(new Exception("Could not get max vendorId")))
     }
   }
 
   def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
     organisationRepository.createOrUpdate(organisation)
 
-  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) ={
+  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) = {
     organisationRepository.updateOrganisationDetails(organisationId, organisationName)
   }
 
@@ -75,8 +71,7 @@ class OrganisationService @Inject()(
 
   def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = organisationRepository.findAll(sortBy)
 
-  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)
-                        (implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
       _ <- EitherT(collaboratorCanBeDeleted(organisation, request.email))
@@ -93,9 +88,19 @@ class OrganisationService @Inject()(
     } yield updatedOrganisation).value
   }
 
+  private def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
+    organisationRepository.createOrUpdate(
+      Organisation(
+        organisationId = generateOrganisationId,
+        name = organisationName,
+        vendorId = vendorId
+      )
+    )
+  }
+
   private def handleUpdateOrganisation(organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.createOrUpdate(organisation).map {
-      case Left(value) => Left(UpdateCollaboratorFailedResult(value.getMessage))
+      case Left(value)              => Left(UpdateCollaboratorFailedResult(value.getMessage))
       case Right(org: Organisation) => Right(org)
     }
   }
@@ -125,17 +130,16 @@ class OrganisationService @Inject()(
     else successful(Right(organisation))
   }
 
-
   private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, CoreUserDetail]] = {
     thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(email)).map {
       case Right(x: CoreUserDetail) => Right(x)
-      case Left(e: Throwable) => Left(GetOrCreateUserIdFailedResult(e.getMessage))
+      case Left(e: Throwable)       => Left(GetOrCreateUserIdFailedResult(e.getMessage))
     }
   }
 
   private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.findByOrgId(organisationId).map {
-      case None => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
+      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
       case Some(organisation: Organisation) => Right(organisation)
     }
   }

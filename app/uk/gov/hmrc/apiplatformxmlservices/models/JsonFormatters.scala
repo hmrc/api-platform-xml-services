@@ -38,4 +38,7 @@ object JsonFormatters {
   implicit val formatAddCollaboratorRequest = Json.format[AddCollaboratorRequest]
   implicit val formatRemovedCollaboratorRequest = Json.format[RemoveCollaboratorRequest]
 
+  implicit val formatOrganisationWithNameAndVendorId = Json.format[OrganisationWithNameAndVendorId]
+  implicit val formatBulkFindAndCreateOrUpdateRequest = Json.format[BulkFindAndCreateOrUpdateRequest]
+
 }

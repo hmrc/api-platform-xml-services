@@ -6,6 +6,7 @@ POST       /                                uk.gov.hmrc.apiplatformxmlservices.c
 PUT        /                                uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.update
 DELETE     /:organisationId                 uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.deleteByOrgId(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
 
+POST       /bulk                            uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.bulkFindAndCreateOrUpdate
 POST       /:organisationId                 uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.updateOrganisationDetails(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
 
 # collaborator endpoints
