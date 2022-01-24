@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.service
 
 import cats.data.EitherT
+import com.mongodb.MongoCommandException
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
@@ -36,24 +37,53 @@ class OrganisationService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext) {
 
+
   def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId) = {
     organisationRepository.findByVendorId(vendorId) flatMap {
-      case Some(organisation) => organisationRepository.createOrUpdate(organisation.copy(name = organisationName)) 
+      case Some(organisation) => organisationRepository.createOrUpdate(organisation.copy(name = organisationName))
       case None => createOrganisation(organisationName, vendorId)
     }
   }
 
-  def create(organisationName: OrganisationName): Future[Either[Exception, Organisation]] = {
-    vendorIdService.getNextVendorId flatMap {
-      case Some(vendorId: VendorId) => createOrganisation(organisationName, vendorId)
-      case _                        => successful(Left(new Exception("Could not get max vendorId")))
-    }
+  def create(request: CreateOrganisationRequest)
+            (implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
+    vendorIdService.getNextVendorId()
+      .flatMap(vendorId =>
+        handleGetOrCreateUserId(request.email).flatMap {
+          case Right(user: CoreUserDetail) => handleCreateOrganisation(request.organisationName, vendorId, Collaborator(user.userId, request.email))
+          case Left(e: GetOrCreateUserIdFailedResult) => successful(CreateOrganisationFailedResult(e.message))
+        }
+      )
+  }
+
+  def handleCreateOrganisation(organisationName: OrganisationName,
+                               vendorId: VendorId,
+                               collaborator: Collaborator): Future[CreateOrganisationResult]= {
+
+     def mapError(ex: Exception): CreateOrganisationResult = ex match{
+         case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
+         case ex: Exception => CreateOrganisationFailedResult(ex.getMessage)
+       }
+
+    organisationRepository.createOrUpdate(
+      Organisation(
+        organisationId = generateOrganisationId(),
+        name = organisationName,
+        vendorId = vendorId,
+        collaborators = List(collaborator)
+      )
+    ).map(result =>
+      result
+        .fold(mapError, x => CreateOrganisationSuccessResult(x)))
+      .recover {
+        case ex: Exception => mapError(ex)
+      }
   }
 
   def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
     organisationRepository.createOrUpdate(organisation)
 
-  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) = {
+  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) ={
     organisationRepository.updateOrganisationDetails(organisationId, organisationName)
   }
 
