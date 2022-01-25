@@ -51,8 +51,8 @@ class OrganisationService @Inject() (
           case Right(user: CoreUserDetail)            => handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
           case Left(e: GetOrCreateUserIdFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
-      case Left(e: Exception)        => successful(CreateOrganisationFailedResult(e.getMessage))
-      case _                         => successful(CreateOrganisationFailedResult("Unexpected Result from next vendor Id"))
+      case Left(e: Throwable)        => successful(CreateOrganisationFailedResult(e.getMessage))
+     
     }.recover {
       case NonFatal(e: Throwable) => CreateOrganisationFailedResult(e.getMessage)
     }
@@ -161,7 +161,7 @@ class OrganisationService @Inject() (
     else successful(Right(organisation))
   }
 
-  private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, CoreUserDetail]] = {
+  private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[GetOrCreateUserIdFailedResult, CoreUserDetail]] = {
     thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(email)).map {
       case Right(x: CoreUserDetail) => Right(x)
       case Left(e: Throwable)       => Left(GetOrCreateUserIdFailedResult(e.getMessage))

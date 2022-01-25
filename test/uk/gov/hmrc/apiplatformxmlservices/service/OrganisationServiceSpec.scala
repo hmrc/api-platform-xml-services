@@ -20,6 +20,7 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.http.Status._
 import play.api.test.Helpers.await
 import play.api.test.Helpers.defaultAwaitTimeout
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
@@ -33,6 +34,7 @@ import uk.gov.hmrc.http.InternalServerException
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
@@ -81,7 +83,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     val coreUserDetail = CoreUserDetail(userId, emailOne)
 
     val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
-    
+
   }
 
   "findAndCreateOrUpdate" should {
@@ -168,14 +170,45 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       verify(mockOrganisationRepo).createOrUpdate(organistionWithAddedCollaborator)
     }
 
-    "return CreateOrganisationFailedResult when vendorIdService does not return a vendorId" in new Setup {
-      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.failed(new RuntimeException("some Error")))
+    "return CreateOrganisationFailed when TPD returns error" in new Setup {
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(createOrganisationRequest.email)))(*[HeaderCarrier]))
+        .thenReturn(Future.successful(Left(UpstreamErrorResponse("", NOT_FOUND, NOT_FOUND))))
+      
+
+      await(inTest.create(createOrganisationRequest)) match {
+        case _ : CreateOrganisationFailedResult => succeed
+        case _ => fail
+      }
+
+      verify(mockVendorIdService).getNextVendorId()
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(*[GetOrCreateUserIdRequest])(*)
+      verifyZeroInteractions(mockOrganisationRepo)
+    }
+
+
+    "return CreateOrganisationFailed when next vendorID returns Left" in new Setup {
+      when(mockVendorIdService.getNextVendorId())
+      .thenReturn(Future.successful(Left(new RuntimeException("some error"))))
 
 
       await(inTest.create(createOrganisationRequest)) match {
-        case e : CreateOrganisationFailedResult  => e.message shouldBe "some Error"
-        case _: CreateOrganisationSuccessResult => fail
+        case _ : CreateOrganisationFailedResult => succeed
+        case _ => fail
+      }
 
+      verify(mockVendorIdService).getNextVendorId()
+      verifyZeroInteractions(mockThirdPartyDeveloperConnector)
+      verifyZeroInteractions(mockOrganisationRepo)
+    }
+
+
+    "return CreateOrganisationFailedResult when vendorIdService does not return a vendorId" in new Setup {
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.failed(new RuntimeException("some Error")))
+
+      await(inTest.create(createOrganisationRequest)) match {
+        case e : CreateOrganisationFailedResult  => e.message shouldBe "some Error"
+        case _ => fail
       }
 
       verify(mockVendorIdService).getNextVendorId()
