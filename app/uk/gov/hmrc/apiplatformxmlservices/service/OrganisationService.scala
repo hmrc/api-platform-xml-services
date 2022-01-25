@@ -28,6 +28,7 @@ import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnecto
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future.successful
+import scala.util.control.NonFatal
 
 @Singleton
 class OrganisationService @Inject() (
@@ -53,17 +54,19 @@ class OrganisationService @Inject() (
           case Right(user: CoreUserDetail) => handleCreateOrganisation(request.organisationName, vendorId, Collaborator(user.userId, request.email))
           case Left(e: GetOrCreateUserIdFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
-      )
+      ).recover {
+      case NonFatal(e: Throwable) => CreateOrganisationFailedResult(e.getMessage)
+    }
   }
 
   def handleCreateOrganisation(organisationName: OrganisationName,
                                vendorId: VendorId,
-                               collaborator: Collaborator): Future[CreateOrganisationResult]= {
+                               collaborator: Collaborator): Future[CreateOrganisationResult] = {
 
-     def mapError(ex: Exception): CreateOrganisationResult = ex match{
-         case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
-         case ex: Exception => CreateOrganisationFailedResult(ex.getMessage)
-       }
+    def mapError(ex: Exception): CreateOrganisationResult = ex match {
+      case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
+      case ex: Exception => CreateOrganisationFailedResult(ex.getMessage)
+    }
 
     organisationRepository.createOrUpdate(
       Organisation(

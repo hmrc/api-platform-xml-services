@@ -60,7 +60,11 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     def getUuid() = UUID.randomUUID()
 
     val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name = OrganisationName("Organisation Name"))
+<<<<<<< HEAD
     val updatedOrgName = OrganisationName("Updated Organisation Name")
+=======
+    val createOrganisationRequest = CreateOrganisationRequest(organisationToPersist.name, "some@email.com")
+>>>>>>> API-5249: code compiles and test pass
 
   }
 
@@ -144,27 +148,45 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   }
 
   "createOrganisation" should {
-    "return Right when vendorIdService returns a vendorId" in new Setup {
+    "return CreateOrganisationSuccessResult when vendorIdService returns a vendorId and user exists in TPD" in new Setup {
+      val userId = UserId(UUID.randomUUID())
+      val organistionWithAddedCollaborator = organisationToPersist.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid).thenReturn(uuid)
-      when(mockVendorIdService.getNextVendorId).thenReturn(Future.successful(Some(vendorId)))
-      when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organisationToPersist)))
+      when(mockVendorIdService.getNextVendorId).thenReturn(Future.successful(vendorId))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(createOrganisationRequest.email)))(*[HeaderCarrier]))
+        .thenReturn(Future.successful(Right(CoreUserDetail(userId, createOrganisationRequest.email))))
+      when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organistionWithAddedCollaborator)))
 
+<<<<<<< HEAD
       await(inTest.create(organisationToPersist.name)) match {
         case Left(e: Exception)     => fail
         case Right(x: Organisation) => x shouldBe organisationToPersist
+=======
+
+      await(inTest.create(createOrganisationRequest)) match {
+        case _ : CreateOrganisationFailedResult => fail
+        case CreateOrganisationSuccessResult(x: Organisation) => x shouldBe organistionWithAddedCollaborator
+>>>>>>> API-5249: code compiles and test pass
       }
 
       verify(mockUuidService).newUuid
       verify(mockVendorIdService).getNextVendorId
-      verify(mockOrganisationRepo).createOrUpdate(organisationToPersist)
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(*[GetOrCreateUserIdRequest])(*)
+      verify(mockOrganisationRepo).createOrUpdate(organistionWithAddedCollaborator)
     }
 
-    "return Left when vendorIdService does not return a vendorId" in new Setup {
-      when(mockVendorIdService.getNextVendorId).thenReturn(Future.successful(None))
+    "return CreateOrganisationFailedResult when vendorIdService does not return a vendorId" in new Setup {
+      when(mockVendorIdService.getNextVendorId).thenReturn(Future.failed(new RuntimeException("some Error")))
 
+<<<<<<< HEAD
       await(inTest.create(organisationToPersist.name)) match {
         case Left(e: Exception) => e.getMessage shouldBe "Could not get max vendorId"
         case Right(_)           => fail
+=======
+      await(inTest.create(createOrganisationRequest)) match {
+        case e : CreateOrganisationFailedResult  => e.message shouldBe "some Error"
+        case _: CreateOrganisationSuccessResult => fail
+>>>>>>> API-5249: code compiles and test pass
       }
 
       verify(mockVendorIdService).getNextVendorId

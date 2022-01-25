@@ -112,7 +112,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     val organisationWithCollaborators = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
     val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
     val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "))
+    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email)
     val addCollaboratorRequest = AddCollaboratorRequest(email)
     val removeCollaboratorRequest = RemoveCollaboratorRequest(email, gatekeeperUserId)
     val organisationIdValue = organisation.organisationId.value
@@ -257,9 +257,11 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "POST /organisations" should {
 
       "respond with 201 if Organisation was created" in new Setup {
+        stubThirdPartyDeveloperConnectorWithBody(userId, email, OK)
         val result = callPostEndpoint(s"$url/organisations", createOrganisationRequestAsString)
 
         result.status mustBe CREATED
+
         val createdOrganisation = Json.parse(result.body).as[Organisation]
         createdOrganisation.name.value mustBe createOrganisationRequest.organisationName.value.trim()
         createdOrganisation.vendorId mustBe VendorId(9000)
