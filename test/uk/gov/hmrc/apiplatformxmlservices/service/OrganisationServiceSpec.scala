@@ -35,6 +35,8 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.UpstreamErrorResponse
+import org.mongodb.scala.{MongoCommandException, ServerAddress}
+import org.mongodb.scala.bson.BsonDocument
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
@@ -162,6 +164,50 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       await(inTest.create(createOrganisationRequest)) match {
         case _ : CreateOrganisationFailedResult => fail
         case CreateOrganisationSuccessResult(x: Organisation) => x shouldBe organistionWithAddedCollaborator
+      }
+
+      verify(mockUuidService).newUuid()
+      verify(mockVendorIdService).getNextVendorId()
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(*[GetOrCreateUserIdRequest])(*)
+      verify(mockOrganisationRepo).createOrUpdate(organistionWithAddedCollaborator)
+    }
+
+    "return CreateOrganisationFailed when organisation repo returns MongoCommandException" in new Setup {
+      val userId = UserId(UUID.randomUUID())
+      val organistionWithAddedCollaborator = organisationToPersist.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
+      when(mockUuidService.newUuid()).thenReturn(uuid)
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(createOrganisationRequest.email)))(*[HeaderCarrier]))
+        .thenReturn(Future.successful(Right(CoreUserDetail(userId, createOrganisationRequest.email))))
+      when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument("{\"code\": 11000}"), ServerAddress()))))
+
+
+
+      await(inTest.create(createOrganisationRequest)) match {
+        case _: CreateOrganisationFailedDuplicateIdResult => succeed
+        case _  => fail
+      }
+
+      verify(mockUuidService).newUuid()
+      verify(mockVendorIdService).getNextVendorId()
+      verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(*[GetOrCreateUserIdRequest])(*)
+      verify(mockOrganisationRepo).createOrUpdate(organistionWithAddedCollaborator)
+    }
+
+    "return CreateOrganisationFailed when organisation repo returns Exception" in new Setup {
+      val userId = UserId(UUID.randomUUID())
+      val organistionWithAddedCollaborator = organisationToPersist.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
+      when(mockUuidService.newUuid()).thenReturn(uuid)
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
+      when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(createOrganisationRequest.email)))(*[HeaderCarrier]))
+        .thenReturn(Future.successful(Right(CoreUserDetail(userId, createOrganisationRequest.email))))
+      when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new RuntimeException("Something went wrong"))))
+
+
+
+      await(inTest.create(createOrganisationRequest)) match {
+        case _: CreateOrganisationFailedResult => succeed
+        case _  => fail
       }
 
       verify(mockUuidService).newUuid()
