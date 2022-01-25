@@ -65,7 +65,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.findByOrgId(organisationId) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(organisation))
-      case _                                => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
@@ -81,14 +81,14 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   private def handleFindOrganisationByVendorId(v: VendorId) = {
     organisationService.findByVendorId(v) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
-      case _                                => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
+      case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
     }
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
-      case _    => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
@@ -108,11 +108,11 @@ class OrganisationController @Inject() (organisationService: OrganisationService
 
   private def handleCollaboratorResult(result: Either[ManageCollaboratorResult, Organisation]) = {
     result match {
-      case Right(organisation: Organisation)               => Ok(Json.toJson(organisation))
-      case Left(result: GetOrganisationFailedResult)       => NotFound(s"${result.message}")
-      case Left(result: GetOrCreateUserIdFailedResult)     => BadRequest(s"${result.message}")
+      case Right(organisation: Organisation) => Ok(Json.toJson(organisation))
+      case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
+      case Left(result: GetOrCreateUserIdFailedResult) => BadRequest(s"${result.message}")
       case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
-      case Left(result: UpdateCollaboratorFailedResult)    => InternalServerError(s"${result.message}")
+      case Left(result: UpdateCollaboratorFailedResult) => InternalServerError(s"${result.message}")
     }
   }
 
@@ -132,8 +132,8 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   def update(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[Organisation] { organisation =>
       organisationService.update(organisation).map {
-        case Right(_)                       => Ok(Json.toJson(organisation))
-        case _                              => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
+        case Right(_) => Ok(Json.toJson(organisation))
+        case _ => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
     }
   }
