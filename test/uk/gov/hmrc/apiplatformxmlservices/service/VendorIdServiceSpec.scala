@@ -61,7 +61,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(organisationWithStartingVendorId)))
 
       val result = await(inTest.getNextVendorId)
-      result shouldBe vendorId9001
+      result shouldBe Right(vendorId9001)
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId
 
@@ -71,7 +71,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(organisationWithVendorId4001)))
 
       val result = await(inTest.getNextVendorId)
-      result shouldBe configStartingVendorId
+      result shouldBe Right(configStartingVendorId)
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId
 
@@ -81,7 +81,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(None))
 
       val result = await(inTest.getNextVendorId)
-      result shouldBe configStartingVendorId
+      result shouldBe Right(configStartingVendorId)
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId
 

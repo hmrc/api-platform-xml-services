@@ -38,34 +38,31 @@ class OrganisationService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext) {
 
-
   def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId) = {
     organisationRepository.findByVendorId(vendorId) flatMap {
       case Some(organisation) => organisationRepository.createOrUpdate(organisation.copy(name = organisationName))
-      case None => createOrganisation(organisationName, vendorId)
+      case None               => createOrganisation(organisationName, vendorId)
     }
   }
 
-  def create(request: CreateOrganisationRequest)
-            (implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
-    vendorIdService.getNextVendorId()
-      .flatMap(vendorId =>
-        handleGetOrCreateUserId(request.email).flatMap {
-          case Right(user: CoreUserDetail) => handleCreateOrganisation(request.organisationName, vendorId, Collaborator(user.userId, request.email))
+  def create(request: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
+    vendorIdService.getNextVendorId().flatMap {
+      case Right(vendorId: VendorId) => handleGetOrCreateUserId(request.email).flatMap {
+          case Right(user: CoreUserDetail)            => handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
           case Left(e: GetOrCreateUserIdFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
-      ).recover {
+      case Left(e: Exception)        => successful(CreateOrganisationFailedResult(e.getMessage))
+      case _                         => successful(CreateOrganisationFailedResult("Unexpected Result from next vendor Id"))
+    }.recover {
       case NonFatal(e: Throwable) => CreateOrganisationFailedResult(e.getMessage)
     }
   }
 
-  def handleCreateOrganisation(organisationName: OrganisationName,
-                               vendorId: VendorId,
-                               collaborator: Collaborator): Future[CreateOrganisationResult] = {
+  def handleCreateOrganisation(organisationName: OrganisationName, vendorId: VendorId, collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
 
     def mapError(ex: Exception): CreateOrganisationResult = ex match {
       case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
-      case ex: Exception => CreateOrganisationFailedResult(ex.getMessage)
+      case ex: Exception                                         => CreateOrganisationFailedResult(ex.getMessage)
     }
 
     organisationRepository.createOrUpdate(
@@ -73,11 +70,12 @@ class OrganisationService @Inject() (
         organisationId = generateOrganisationId(),
         name = organisationName,
         vendorId = vendorId,
-        collaborators = List(collaborator)
+        collaborators = collaborators
       )
     ).map(result =>
       result
-        .fold(mapError, x => CreateOrganisationSuccessResult(x)))
+        .fold(mapError, x => CreateOrganisationSuccessResult(x))
+    )
       .recover {
         case ex: Exception => mapError(ex)
       }
@@ -86,7 +84,7 @@ class OrganisationService @Inject() (
   def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
     organisationRepository.createOrUpdate(organisation)
 
-  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) ={
+  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) = {
     organisationRepository.updateOrganisationDetails(organisationId, organisationName)
   }
 

@@ -113,12 +113,9 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     "return 200 with all organisations" in new Setup {
       when(mockOrgService.findAll(None)).thenReturn(Future.successful(List(organisation)))
-<<<<<<< HEAD
-      val result: Future[Result] = controller.findByParams(sortBy = None)(fakeRequest)
-=======
+
 
       val result: Future[Result] = controller.findByParams(sortBy= None)(fakeRequest)
->>>>>>> API-5249: code compiles and test pass
       status(result) shouldBe Status.OK
       verify(mockOrgService, times(0)).findByVendorId(*[VendorId])
       verify(mockOrgService, times(1)).findAll(*)
@@ -126,12 +123,8 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(None))
-<<<<<<< HEAD
-      val result: Future[Result] = controller.findByParams(Some(VendorId(9000)), sortBy = None)(fakeRequest)
-=======
 
       val result: Future[Result] = controller.findByParams(Some(VendorId(9000)), sortBy= None)(fakeRequest)
->>>>>>> API-5249: code compiles and test pass
       status(result) shouldBe Status.NOT_FOUND
     }
   }
@@ -204,10 +197,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
 
     }
-<<<<<<< HEAD
-=======
 
->>>>>>> API-5249: code compiles and test pass
   }
 
   "POST /organisations/:organisationId/collaborator" should {
@@ -221,15 +211,8 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
       contentAsString(result) shouldBe "Organisation does not exist"
     }
 
-<<<<<<< HEAD
     "return 400 when fail to get or create user" in new Setup {
       when(mockOrgService.addCollaborator(*[OrganisationId], *)(*)).thenReturn(Future.successful(Left(GetOrCreateUserIdFailedResult("Could not find or create user"))))
-=======
-     "return 400 when fail to get or create user" in new Setup {
-      when(mockOrgService.addCollaborator(*[OrganisationId], *)(*))
-        .thenReturn(Future.successful(Left(GetOrCreateUserIdFailedResult("Could not find or create user"))))
-
->>>>>>> API-5249: code compiles and test pass
       val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratordRequest)
       status(result) shouldBe Status.BAD_REQUEST
       contentAsString(result) shouldBe "Could not find or create user"

@@ -27,12 +27,14 @@ import scala.concurrent.{ExecutionContext, Future}
 class VendorIdService @Inject()(organisationRepository: OrganisationRepository,
                                 config: Config)(implicit val ec: ExecutionContext) {
 
-  def getNextVendorId(): Future[VendorId] = {
+  def getNextVendorId(): Future[Either[Throwable, VendorId]] = {
 
-    organisationRepository.findOrgWithMaxVendorId.map {
+    organisationRepository.findOrgWithMaxVendorId().map {
           mayBeOrganisation =>
             mayBeOrganisation
-              .fold(VendorId(config.startingVendorId))(x=> calculateNextVendorId(x.vendorId))
+              .fold(Right(VendorId(config.startingVendorId)))(x=> Right(calculateNextVendorId(x.vendorId)))
+    }.recover{
+      case e: Exception => Left(e)
     }
   }
 
