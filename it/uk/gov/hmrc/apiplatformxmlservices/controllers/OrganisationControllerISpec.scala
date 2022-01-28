@@ -401,28 +401,4 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
   }
 
-  "POST /organisations/bulk" should {
-
-    "respond with 400 if request body is not valid" in new Setup {
-
-      val result = callPostEndpoint(s"$url/organisations/bulk", "\"organisations\": [{}]")
-
-      result.status mustBe BAD_REQUEST
-
-      withClue(s"response body not as expected: ${result.body}") {
-        result.body.contains("Invalid Json: Unexpected character") mustBe true
-      }
-    }
-
-    "respond with 200 if request body is valid" in new Setup {
-
-      val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-      val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-      val bulkFindAndCreateOrUpdateRequest = BulkFindAndCreateOrUpdateRequest(Seq(orgOne, orgTwo))
-      val payload = Json.toJson(bulkFindAndCreateOrUpdateRequest).toString
-
-      val result = callPostEndpoint(s"$url/organisations/bulk", payload)
-      result.status mustBe OK
-    }
-  }
 }

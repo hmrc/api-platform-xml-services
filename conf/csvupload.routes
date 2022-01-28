@@ -1,0 +1,4 @@
+# csv upload routes
+
+POST       /bulk                            uk.gov.hmrc.apiplatformxmlservices.controllers.CsvUploadController.bulkFindAndCreateOrUpdate
+
