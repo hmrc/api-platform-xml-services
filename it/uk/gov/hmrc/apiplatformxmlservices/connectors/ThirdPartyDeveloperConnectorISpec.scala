@@ -33,6 +33,7 @@ import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.http.Upstream5xxResponse
 
 import java.{util => ju}
+import uk.gov.hmrc.http.NotFoundException
 
 class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport {
 
@@ -61,6 +62,19 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
+
+    def stubPostWithRequestBody(url: String, status: Int, expectedRequestyBody: String, responseBodyAsString: String) = {
+      stubFor(
+        post(urlEqualTo(url))
+          .withRequestBody(equalTo(expectedRequestyBody))
+          .willReturn(
+            aResponse()
+              .withStatus(status)
+              .withBody(responseBodyAsString)
+              .withHeader("Content-Type", "application/json")
+          )
+      )
+    }
   }
 
   "getOrCreateUserId" should {
@@ -125,6 +139,57 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
         .withRequestBody(equalToJson(Json.toJson(GetOrCreateUserIdRequest(email)).toString())))
     }
+  }
+
+  "getByEmail" should {
+    val getByEmailsRequest = GetByEmailsRequest(List("a@b.com", "b@c.com"))
+    val requestAsString = Json.toJson(getByEmailsRequest).toString()
+    val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", true, EmailPreferences.noPreferences, UserId(ju.UUID.randomUUID)))).toString
+
+    "return Right with users when users are returned" in new Setup {
+      stubPostWithRequestBody("/developers/get-by-emails", OK, requestAsString, validResponseString)
+
+      val result = await(underTest.getByEmail(getByEmailsRequest))
+
+      result match {
+        case Right(x: List[UserResponse]) => succeed
+        case _                            => fail
+      }
+    }
+
+    "return Right when no users are returned" in new Setup {
+      stubPostWithRequestBody("/developers/get-by-emails", OK, requestAsString, "[]")
+
+      val result = await(underTest.getByEmail(getByEmailsRequest))
+
+      result match {
+        case Right(x: List[UserResponse]) => succeed
+        case _                            => fail
+      }
+    }
+
+    "return Left when not found returned" in new Setup {
+      stubPostWithRequestBody("/developers/get-by-emails", NOT_FOUND, requestAsString, "")
+
+      val result = await(underTest.getByEmail(getByEmailsRequest))
+
+      result match {
+        case Left(e: NotFoundException) => succeed
+        case _                          => fail
+      }
+    }
+
+    "return Left when inetrnal server error returned" in new Setup {
+      stubPostWithRequestBody("/developers/get-by-emails", INTERNAL_SERVER_ERROR, requestAsString, "")
+
+      val result = await(underTest.getByEmail(getByEmailsRequest))
+
+      result match {
+        case Left(e: Upstream5xxResponse) => succeed
+        case _                            => fail
+      }
+    }
+
   }
 
 }

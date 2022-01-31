@@ -28,6 +28,9 @@ case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
 case class BulkFindAndCreateOrUpdateRequest(organisations: Seq[OrganisationWithNameAndVendorId])
 
+case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
+case class BulkAddUsersRequest(organisations: Seq[ParsedUser])
+
 sealed trait ManageCollaboratorResult
 case class OrganisationAlreadyHasCollaboratorResult() extends ManageCollaboratorResult
 case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult

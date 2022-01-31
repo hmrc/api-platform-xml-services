@@ -24,4 +24,8 @@ object JsonFormatters {
   implicit val formatGetOrCreateUserIdRequest = Json.format[GetOrCreateUserIdRequest]
 
   implicit val formatUserIdResponse = Json.format[UserIdResponse]
+
+  implicit val formatGetByEmailsRequest = Json.format[GetByEmailsRequest]
+
+  implicit  val formatUserResponse = Json.format[UserResponse]
 }

@@ -18,7 +18,46 @@ package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
 
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
+import play.api.libs.json.Json
+import enumeratum.{EnumEntry, Enum}
+import enumeratum.PlayJsonEnum
 
 case class GetOrCreateUserIdRequest(email: String)
 
 case class UserIdResponse(userId: UserId)
+
+case class GetByEmailsRequest(emails: List[String])
+
+case class UserResponse(email: String,
+                firstName: String,
+                lastName: String,
+                verified: Boolean = false,
+                emailPreferences: EmailPreferences = EmailPreferences.noPreferences,
+                id: UserId)
+
+
+               
+case class TaxRegimeInterests(regime: String, services: Set[String])
+object TaxRegimeInterests {
+  implicit val format = Json.format[TaxRegimeInterests]
+}
+
+case class EmailPreferences(interests: List[TaxRegimeInterests], topics: Set[EmailTopic])
+object EmailPreferences {
+  implicit val format = Json.format[EmailPreferences]
+
+  def noPreferences: EmailPreferences = EmailPreferences(List.empty, Set.empty)
+}
+
+sealed trait EmailTopic extends EnumEntry
+
+object EmailTopic extends Enum[EmailTopic] with PlayJsonEnum[EmailTopic] {
+
+  val values = findValues
+
+  case object BUSINESS_AND_POLICY extends EmailTopic
+  case object TECHNICAL extends EmailTopic
+  case object RELEASE_SCHEDULES extends EmailTopic
+  case object EVENT_INVITES extends EmailTopic
+} 
+

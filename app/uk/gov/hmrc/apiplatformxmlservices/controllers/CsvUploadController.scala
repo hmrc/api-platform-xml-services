@@ -43,6 +43,15 @@ class CsvUploadController @Inject() (organisationService: OrganisationService, c
     with WithJsonBody
     with Logging {
 
+def bulkUploadUsers(): Action[JsValue] = Action.async(parse.tolerantJson) {
+  implicit request =>
+       withJsonBody[BulkAddUsersRequest] { BulkAddUsersRequest => 
+          
+         Future.successful(Ok(""))
+       }
+
+}
+
   def bulkFindAndCreateOrUpdate(): Action[JsValue] = Action.async(parse.tolerantJson) {
     implicit request =>
        withJsonBody[BulkFindAndCreateOrUpdateRequest] { bulkFindAndCreateOrUpdateRequest =>
