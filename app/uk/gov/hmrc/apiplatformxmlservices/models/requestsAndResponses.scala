@@ -31,6 +31,17 @@ case class BulkFindAndCreateOrUpdateRequest(organisations: Seq[OrganisationWithN
 case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
 case class BulkAddUsersRequest(organisations: Seq[ParsedUser])
 
+case class UserDto(userId: UserId, email: String, firstName: String, lastName: String, services: List[String] = List.empty, vendorIds: List[VendorId] = List.empty)
+object UserDto {
+    def fromParsedUser(parsedUser: ParsedUser, userId: UserId): UserDto ={
+        UserDto(userId,
+        parsedUser.email,
+        parsedUser.firstName,
+        parsedUser.lastName)
+        //TODO : map handled services / vendor ids)
+    }
+}
+
 sealed trait ManageCollaboratorResult
 case class OrganisationAlreadyHasCollaboratorResult() extends ManageCollaboratorResult
 case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult
@@ -47,3 +58,10 @@ case class CreateOrganisationFailedDuplicateIdResult(message: String) extends Cr
 sealed trait UpdateOrganisationResult
 case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
 case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult
+
+
+sealed trait UploadUserResult
+case class InvalidVendorIdResult(message: String) extends UploadUserResult
+case class InvalidServiceResult(message: String) extends UploadUserResult
+case class UploadUserFailedResult(message: String) extends UploadUserResult
+case class UploadUserSuccessResult() extends UploadUserResult
