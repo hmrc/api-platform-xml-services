@@ -69,7 +69,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
   }
 
   def register(request: RegistrationRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
-    http.POST[RegistrationRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request)
+    http.POST[RegistrationRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developer", request)
       .map { response => 
         if(response.status == CREATED)  Right(request.email)
         else Left(new InternalServerException("could not get users by email"))
