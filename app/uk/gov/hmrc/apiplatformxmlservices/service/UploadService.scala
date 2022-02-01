@@ -31,31 +31,35 @@ import play.api.Logging
 import cats.data.EitherT
 import cats.data.EitherT
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.RegistrationRequest
 
 @Singleton
 class UploadService @Inject() (
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
+    uuidService: UuidService
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
   def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier) = {
 
-   Future.sequence(users.zipWithIndex.map(x => uploadUser(x._1, x._2+1)))
-    
+    Future.sequence(users.zipWithIndex.map(x => uploadUser(x._1, x._2 + 1)))
+
   }
 
-  private def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult,CreatedOrUpdatedUser]] = {
+  private def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
     // Given a user that does exist in the api platform (dev hub / tpd)
     // When I import an unknown email address in the csv
     // Then the users account is untouched
 
-    {for {
-      validParsedUser <- EitherT(validateParsedUser(parsedUser))
-      parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser, rowNumber))
+    {
+      for {
+        validParsedUser <- EitherT(validateParsedUser(parsedUser))
+        parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser, rowNumber))
 
-      // TODO <- handle update organisations with user id, email
-      // TODO <- merge / update email preferences
-    } yield parsedUserWithUserId}.value
+        // TODO <- handle update organisations with user id, email
+        // TODO <- merge / update email preferences
+      } yield parsedUserWithUserId
+    }.value
 
   }
 
@@ -71,23 +75,31 @@ class UploadService @Inject() (
 
     def createUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
 
-      thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(parsedUser.email)).map {
+      thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(parsedUser.email)).flatMap {
         case Right(user: CoreUserDetail) => {
-                    // Do we need to call register user after this????, false))
-          Right(CreatedOrUpdatedUser.create(rowNumber,
-          parsedUser, 
-          UserResponse(parsedUser.email, parsedUser.firstName, parsedUser.lastName, true, EmailPreferences.noPreferences, user.userId),
-          isExisting = false))
+          // Do we need to call register user after this????, false))
+          thirdPartyDeveloperConnector.register(RegistrationRequest(user.email, uuidService.newUuid.toString, parsedUser.firstName, parsedUser.lastName, None)).map {
+            case Right(_)           => {
+              Right(CreatedOrUpdatedUser.create(
+                rowNumber,
+                parsedUser,
+                UserResponse(parsedUser.email, parsedUser.firstName, parsedUser.lastName, true, EmailPreferences.noPreferences, user.userId),
+                isExisting = false
+              ))
+            }
+            case Left(e: Throwable) => Left(UploadUserFailedResult(s"Unable to register user on csv row number $rowNumber"))
+          }
+
         }
-        case _                           => Left(UploadUserFailedResult(s"Unable to create user on csv row number $rowNumber"))
+        case _                           => Future.successful(Left(UploadUserFailedResult(s"Unable to create user on csv row number $rowNumber")))
       }
 
     }
 
     thirdPartyDeveloperConnector.getByEmail(GetByEmailsRequest(List(parsedUser.email))).flatMap {
-      case Right(Nil) => createUser(parsedUser)
+      case Right(Nil)                       => createUser(parsedUser)
       case Right(users: List[UserResponse]) => updateOrgAndUser(users.head)
-      case _  => Future.successful(Left(UploadUserFailedResult(s"Error when retrieving user by email on csv row number $rowNumber"))) 
+      case _                                => Future.successful(Left(UploadUserFailedResult(s"Error when retrieving user by email on csv row number $rowNumber")))
     }
   }
 
