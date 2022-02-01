@@ -30,6 +30,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import play.api.Logging
 import cats.data.EitherT
 import cats.data.EitherT
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
 
 @Singleton
 class UploadService @Inject() (
@@ -50,44 +51,51 @@ class UploadService @Inject() (
     // When I import an unknown email address in the csv
     // Then the users account is untouched
 
-      for{
-        validParsedUser <- EitherT(validateParsedUser(parsedUser))
-        parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser))
+    {for {
+      validParsedUser <- EitherT(validateParsedUser(parsedUser))
+      parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser))
 
-        // TODO <- handle update organisations with user id, email
-        // TODO <- merge / update email preferences
-      } yield parsedUserWithUserId
-
+      // TODO <- handle update organisations with user id, email
+      // TODO <- merge / update email preferences
+    } yield parsedUserWithUserId}.value
 
   }
 
-  private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, UserDto]] ={
+  private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
 
-        def updateOrgAndUser(user: UserResponse): Either[UploadUserResult, UserDto] = {
+    def updateOrgAndUser(user: UserResponse): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
       // TODO: Add user to Organisation(s).
-      // Map Services on User to XML Services in Json
+      // Map Services on User to XML Services in Json ready for email preferences
       // Merge any new Email preferences with old ones on User and update User
 
       logger.debug(s"*** User email ${user.email} - has gone down Update User route")
-      Right(UserDto.fromParsedUser(parsedUser, user.id))
+      Future.successful(Right(CreatedOrUpdatedUser.create(parsedUser, user, true)))
     }
 
-    def createUser(parsedUser: ParsedUser): Either[UploadUserResult, UserDto]  = {
-       logger.debug(s"*** User email ${parsedUser.email} - has gone down Create User route")
+    def createUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
+      logger.debug(s"*** User email ${parsedUser.email} - has gone down Create User route")
 
-       //TODO  call TPD to create user
-     val user =UserResponse(parsedUser.email, parsedUser.firstName, parsedUser.lastName, true, EmailPreferences.noPreferences, UserId(ju.UUID.randomUUID()))
-      Right(UserDto.fromParsedUser(parsedUser, user.id))
-    }
-
-    thirdPartyDeveloperConnector.getByEmail(GetByEmailsRequest(List(parsedUser.email))).map {
-          case Right(users: List[UserResponse]) if users.nonEmpty => updateOrgAndUser(users.head)
-          case _                                                  => createUser(parsedUser)
+      thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(parsedUser.email)).map {
+        case Right(user: CoreUserDetail) => {
+                    // Do we need to call register user after this????, false))
+          Right(CreatedOrUpdatedUser.create(parsedUser, 
+          UserResponse(parsedUser.email, parsedUser.firstName, parsedUser.lastName, true, EmailPreferences.noPreferences, user.userId),
+          isExisting = false))
         }
+        case _                           => Left(UploadUserFailedResult("unable to create user"))
+      }
+
+    }
+
+    thirdPartyDeveloperConnector.getByEmail(GetByEmailsRequest(List(parsedUser.email))).flatMap {
+      case Right(users: List[UserResponse]) if users.nonEmpty => updateOrgAndUser(users.head)
+      case _                                                  => createUser(parsedUser)
+    }
   }
 
   private def validateParsedUser(user: ParsedUser): Future[Either[UploadUserResult, ParsedUser]] = {
     //TODO when vendor id is not string and services not just big string do validation
+    // check vendor Ids exists, check service names are valid
     Future.successful(Right(user))
   }
 

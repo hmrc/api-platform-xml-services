@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
+
 case class CreateOrganisationRequest(organisationName: OrganisationName, email: String)
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
@@ -31,14 +33,10 @@ case class BulkFindAndCreateOrUpdateRequest(organisations: Seq[OrganisationWithN
 case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
 case class BulkAddUsersRequest(organisations: Seq[ParsedUser])
 
-case class UserDto(userId: UserId, email: String, firstName: String, lastName: String, services: List[String] = List.empty, vendorIds: List[VendorId] = List.empty)
-object UserDto {
-    def fromParsedUser(parsedUser: ParsedUser, userId: UserId): UserDto ={
-        UserDto(userId,
-        parsedUser.email,
-        parsedUser.firstName,
-        parsedUser.lastName)
-        //TODO : map handled services / vendor ids)
+case class CreatedOrUpdatedUser(parsedUser: ParsedUser, userResponse: UserResponse,  isExisting: Boolean = false)
+object CreatedOrUpdatedUser {
+    def create(parsedUser: ParsedUser, userResponse: UserResponse, isExisting: Boolean): CreatedOrUpdatedUser ={
+        CreatedOrUpdatedUser(parsedUser, userResponse, isExisting)
     }
 }
 
