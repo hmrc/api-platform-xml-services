@@ -34,18 +34,15 @@ import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreate
 
 @Singleton
 class UploadService @Inject() (
-    organisationRepository: OrganisationRepository,
-    uuidService: UuidService,
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
-  // def uploadUsers(users: Seq[ParsedUser])(implicit hc: HeaderCarrier) = {
+  def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier) = {
 
-  //   val x = users.zipWithIndex.map(x => handleUploadUser(x._1, x._2))
-  //   x
-
-  // }
+   Future.sequence(users.zipWithIndex.map(x => uploadUser(x._1, x._2+1)))
+    
+  }
 
   def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult,CreatedOrUpdatedUser]] = {
     // Given a user that does exist in the api platform (dev hub / tpd)
@@ -90,8 +87,9 @@ class UploadService @Inject() (
     }
 
     thirdPartyDeveloperConnector.getByEmail(GetByEmailsRequest(List(parsedUser.email))).flatMap {
-      case Right(users: List[UserResponse]) if users.nonEmpty => updateOrgAndUser(users.head)
-      case _                                                  => createUser(parsedUser)
+      case Right(Nil) => createUser(parsedUser)
+      case Right(users: List[UserResponse]) => updateOrgAndUser(users.head)
+      case _  => Future.successful(Left(UploadUserFailedResult(s"Error when retrieving user by email on csv row number $rowNumber"))) 
     }
   }
 

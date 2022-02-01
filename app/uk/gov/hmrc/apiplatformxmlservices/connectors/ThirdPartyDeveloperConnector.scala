@@ -56,7 +56,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
       }
   }
 
-  def getByEmail(request: GetByEmailsRequest)(implicit hc: HeaderCarrier) ={
+  def getByEmail(request: GetByEmailsRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable,List[UserResponse]]] ={
        http.POST[GetByEmailsRequest, List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request)
        .map {
         case x: List[UserResponse] => Right(x)

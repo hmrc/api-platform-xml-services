@@ -20,41 +20,31 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status._
 import play.api.test.Helpers.await
 import play.api.test.Helpers.defaultAwaitTimeout
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
-import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.InternalServerException
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.http.UpstreamErrorResponse
-import org.mongodb.scala.{MongoCommandException, ServerAddress}
-import org.mongodb.scala.bson.BsonDocument
+import uk.gov.hmrc.http.InternalServerException
 
 class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
-  val mockUuidService: UuidService = mock[UuidService]
   val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockOrganisationRepo)
-    reset(mockUuidService)
     reset(mockThirdPartyDeveloperConnector)
   }
 
   trait Setup {
-    val inTest = new UploadService(mockOrganisationRepo, mockUuidService, mockThirdPartyDeveloperConnector)
+    val inTest = new UploadService(mockThirdPartyDeveloperConnector)
 
     val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId = VendorId(9000)
@@ -66,8 +56,6 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
     val userId = UserId(UUID.randomUUID())
     val emailOne = "foo@bar.com"
-    val oldFirstName = "John"
-    val oldLastName = "Doe"
     val firstName = "Joe"
     val lastName = "Bloggs"
     val services = ""
@@ -92,27 +80,62 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
     val userResponse = UserResponse(
       email = emailOne,
-      firstName = oldFirstName,
-      lastName = oldLastName,
+      firstName = firstName,
+      lastName = lastName,
       verified = true,
       emailPreferences = EmailPreferences.noPreferences,
       id = userId
     )
 
-    val createdOrUpdatedUser = CreatedOrUpdatedUser(1, parsedUser, userResponse, true)
+    val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse, true)
+    val expectedCreatedUser = expectedExistingUser.copy(isExisting = false)
 
   }
 
   "uploadUsers" should {
-    "returns Right(CreatedOrUpdatedUser) when user exists in tpd" in new Setup {
+    "return Right(CreatedOrUpdatedUser) when user exists in tpd" in new Setup {
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(GetByEmailsRequest(emails = List(emailOne))))(*)).thenReturn(Future.successful(Right(List(userResponse))))
 
-      await(inTest.uploadUser(parsedUser)(*))
+      val results = await(inTest.uploadUsers(List(parsedUser)))
+
+      results.nonEmpty shouldBe true
+      results.size shouldBe 1
+      results.head match {
+        case Left(_)                                           => fail
+        case Right(createdOrUpdatedUser: CreatedOrUpdatedUser) => createdOrUpdatedUser shouldBe expectedExistingUser
+      }
+
     }
   }
 
-    // "returns Right(CreatedOrUpdatedUser) when user not found in tpd and create user is successful" in new Setup {}
+  "returns Right(CreatedOrUpdatedUser) when user not found in tpd and create user is successful" in new Setup {
+    when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(GetByEmailsRequest(emails = List(parsedUser.email))))(*)).thenReturn(Future.successful(Right(Nil)))
+    when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(parsedUser.email)))(*)).thenReturn(Future.successful(Right(coreUserDetail)))
 
-    // "returns Left(UploadUserResult)" in new Setup {}
-  
+    val results = await(inTest.uploadUsers(List(parsedUser)))
+
+    results.nonEmpty shouldBe true
+    results.size shouldBe 1
+    results.head match {
+      case Left(_)                                           => fail
+      case Right(createdOrUpdatedUser: CreatedOrUpdatedUser) => createdOrUpdatedUser shouldBe expectedCreatedUser
+    }
+
+  }
+
+  "returns Left(UploadUserResult) when getByEmail returns a Left" in new Setup {
+    when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(GetByEmailsRequest(emails = List(emailOne))))(*)).thenReturn(Future.successful(
+      Left(new InternalServerException("could not get users by email"))
+    ))
+
+    val results = await(inTest.uploadUsers(List(parsedUser)))
+
+    results.nonEmpty shouldBe true
+    results.size shouldBe 1
+    results.head match {
+      case Left(e: UploadUserFailedResult) => e.message shouldBe s"Error when retrieving user by email on csv row number 1"
+      case Right(_) => fail
+    }
+  }
+
 }

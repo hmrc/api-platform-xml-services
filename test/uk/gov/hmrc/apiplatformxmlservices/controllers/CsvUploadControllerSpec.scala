@@ -37,13 +37,16 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.apiplatformxmlservices.service.UploadService
 
 class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   private val mockOrgService = mock[OrganisationService]
+  private val mockUploadervice = mock[UploadService]
 
   private val controller = new CsvUploadController(
     mockOrgService,
+    mockUploadervice,
     Helpers.stubControllerComponents()
   )
 

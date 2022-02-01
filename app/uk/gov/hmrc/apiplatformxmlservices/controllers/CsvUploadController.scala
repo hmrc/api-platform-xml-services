@@ -37,6 +37,7 @@ import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import uk.gov.hmrc.apiplatformxmlservices.service.UploadService
+import uk.gov.hmrc.http.HeaderCarrier
 
 @Singleton
 class CsvUploadController @Inject() (
@@ -56,14 +57,15 @@ class CsvUploadController @Inject() (
       }
   }
 
-  private def handleUploadUsers(bulkAddUsersRequest: BulkAddUsersRequest) = {
-    def process(parsedUser: ParsedUser, rowNumber: Int): Unit = {
-      uploadService.uploadUser(parsedUser, rowNumber) map {
-        case Right(user: CreatedOrUpdatedUser) => logger.info(s"Users CSV import - user on row number $rowNumber successfully updated/added to database")
-        case Left(e: Exception)                => logger.error(s"Users CSV import - user on row number $rowNumber could not be updated/added to the database - ${e.getMessage}")
-      }
+  private def handleUploadUsers(bulkAddUsersRequest: BulkAddUsersRequest)(implicit hc: HeaderCarrier) = {
+    uploadService.uploadUsers(bulkAddUsersRequest.users.toList) map {
+      results =>
+        results.map {
+          case Right(user: CreatedOrUpdatedUser) => logger.info(s"Users CSV import - user on row number ${user.csvRowNumber} successfully updated/added to database")
+          case Left(e: UploadUserFailedResult)   => logger.error(s"Users CSV import - ${e.message}")
+          case _                                 => logger.error(s"some unknown error occured")
+        }
     }
-    bulkAddUsersRequest.users.zipWithIndex.map(x => process(x._1, x._2))
 
   }
 
