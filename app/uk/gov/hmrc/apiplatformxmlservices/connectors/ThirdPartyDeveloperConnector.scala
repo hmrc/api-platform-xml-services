@@ -41,6 +41,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import play.api.Logging
+import play.api.http.Status.CREATED
 
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) extends Logging {
@@ -56,11 +57,22 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
       }
   }
 
-  def getByEmail(request: GetByEmailsRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable,List[UserResponse]]] ={
-       http.POST[GetByEmailsRequest, List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request)
-       .map {
+  def getByEmail(request: GetByEmailsRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
+    http.POST[GetByEmailsRequest, List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request)
+      .map {
         case x: List[UserResponse] => Right(x)
-        case _              => Left(new InternalServerException("could not get users by email"))
+        case _                     => Left(new InternalServerException("could not get users by email"))
+      }.recover {
+        case NonFatal(e) => logger.error(e.getMessage)
+          Left(e)
+      }
+  }
+
+  def register(request: RegistrationRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
+    http.POST[RegistrationRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request)
+      .map { response => 
+        if(response.status == CREATED)  Right(request.email)
+        else Left(new InternalServerException("could not get users by email"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)

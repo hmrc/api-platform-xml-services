@@ -28,6 +28,13 @@ case class UserIdResponse(userId: UserId)
 
 case class GetByEmailsRequest(emails: List[String])
 
+case class RegistrationRequest(email: String,
+                               password: String,
+                               firstName: String,
+                               lastName: String,
+                               organisation: Option[String] = None
+                              )
+
 case class UserResponse(email: String,
                 firstName: String,
                 lastName: String,
