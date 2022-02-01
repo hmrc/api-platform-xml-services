@@ -61,7 +61,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
     http.POST[GetByEmailsRequest, List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request)
       .map {
         case x: List[UserResponse] => Right(x)
-        case _                     => Left(new InternalServerException("could not get users by email"))
+        case _                     => Left(new InternalServerException("Could not get users by email"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)
@@ -72,7 +72,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
     http.POST[RegistrationRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developer", request)
       .map { response => 
         if(response.status == CREATED)  Right(request.email)
-        else Left(new InternalServerException("could not get users by email"))
+        else Left(new InternalServerException("Could not register user"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)
