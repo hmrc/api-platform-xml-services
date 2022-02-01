@@ -36,28 +36,43 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import uk.gov.hmrc.apiplatformxmlservices.service.UploadService
 
 @Singleton
-class CsvUploadController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
+class CsvUploadController @Inject() (
+    organisationService: OrganisationService,
+    uploadService: UploadService,
+    cc: ControllerComponents
+  )(implicit val ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
     with Logging {
 
-def bulkUploadUsers(): Action[JsValue] = Action.async(parse.tolerantJson) {
-  implicit request =>
-       withJsonBody[BulkAddUsersRequest] { BulkAddUsersRequest => 
-          
-         Future.successful(Ok(""))
-       }
+  def bulkUploadUsers(): Action[JsValue] = Action.async(parse.tolerantJson) {
+    implicit request =>
+      withJsonBody[BulkAddUsersRequest] { bulkAddUsersRequest =>
+        handleUploadUsers(bulkAddUsersRequest)
+        Future.successful(Ok(""))
+      }
+  }
 
-}
+  private def handleUploadUsers(bulkAddUsersRequest: BulkAddUsersRequest) = {
+    def process(parsedUser: ParsedUser, rowNumber: Int): Unit = {
+      uploadService.uploadUser(parsedUser, rowNumber) map {
+        case Right(user: CreatedOrUpdatedUser) => logger.info(s"Users CSV import - user on row number $rowNumber successfully updated/added to database")
+        case Left(e: Exception)                => logger.error(s"Users CSV import - user on row number $rowNumber could not be updated/added to the database - ${e.getMessage}")
+      }
+    }
+    bulkAddUsersRequest.users.zipWithIndex.map(x => process(x._1, x._2))
+
+  }
 
   def bulkFindAndCreateOrUpdate(): Action[JsValue] = Action.async(parse.tolerantJson) {
     implicit request =>
-       withJsonBody[BulkFindAndCreateOrUpdateRequest] { bulkFindAndCreateOrUpdateRequest =>
+      withJsonBody[BulkFindAndCreateOrUpdateRequest] { bulkFindAndCreateOrUpdateRequest =>
         handleFindAndCreateOrUpdate(bulkFindAndCreateOrUpdateRequest)
         Future.successful(Ok(Json.toJson(request.toString())))
-       }
+      }
   }
 
   private def handleFindAndCreateOrUpdate(bulkFindAndCreateOrUpdateRequest: BulkFindAndCreateOrUpdateRequest) = {

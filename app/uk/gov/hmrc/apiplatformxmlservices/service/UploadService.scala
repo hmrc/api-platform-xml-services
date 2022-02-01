@@ -40,20 +40,21 @@ class UploadService @Inject() (
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
-  def uploadUsers(users: Seq[ParsedUser])(implicit hc: HeaderCarrier) = {
+  // def uploadUsers(users: Seq[ParsedUser])(implicit hc: HeaderCarrier) = {
 
-    users.map(handleUploadUser)
+  //   val x = users.zipWithIndex.map(x => handleUploadUser(x._1, x._2))
+  //   x
 
-  }
+  // }
 
-  private def handleUploadUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier) = {
+  def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult,CreatedOrUpdatedUser]] = {
     // Given a user that does exist in the api platform (dev hub / tpd)
     // When I import an unknown email address in the csv
     // Then the users account is untouched
 
     {for {
       validParsedUser <- EitherT(validateParsedUser(parsedUser))
-      parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser))
+      parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser, rowNumber))
 
       // TODO <- handle update organisations with user id, email
       // TODO <- merge / update email preferences
@@ -61,7 +62,7 @@ class UploadService @Inject() (
 
   }
 
-  private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
+  private def createOrGetUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
 
     def updateOrgAndUser(user: UserResponse): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
       // TODO: Add user to Organisation(s).
@@ -69,7 +70,7 @@ class UploadService @Inject() (
       // Merge any new Email preferences with old ones on User and update User
 
       logger.debug(s"*** User email ${user.email} - has gone down Update User route")
-      Future.successful(Right(CreatedOrUpdatedUser.create(parsedUser, user, true)))
+      Future.successful(Right(CreatedOrUpdatedUser.create(rowNumber, parsedUser, user, true)))
     }
 
     def createUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
@@ -78,11 +79,12 @@ class UploadService @Inject() (
       thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(parsedUser.email)).map {
         case Right(user: CoreUserDetail) => {
                     // Do we need to call register user after this????, false))
-          Right(CreatedOrUpdatedUser.create(parsedUser, 
+          Right(CreatedOrUpdatedUser.create(rowNumber,
+          parsedUser, 
           UserResponse(parsedUser.email, parsedUser.firstName, parsedUser.lastName, true, EmailPreferences.noPreferences, user.userId),
           isExisting = false))
         }
-        case _                           => Left(UploadUserFailedResult("unable to create user"))
+        case _                           => Left(UploadUserFailedResult(s"Unable to create user on csv row number $rowNumber"))
       }
 
     }
