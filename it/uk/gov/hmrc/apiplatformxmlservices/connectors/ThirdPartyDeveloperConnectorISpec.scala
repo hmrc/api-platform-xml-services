@@ -63,10 +63,10 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
 
-    def stubPostWithRequestBody(url: String, status: Int, expectedRequestyBody: String, responseBodyAsString: String) = {
+    def stubPostWithRequestBody(url: String, status: Int, expectedRequestBody: String, responseBodyAsString: String) = {
       stubFor(
         post(urlEqualTo(url))
-          .withRequestBody(equalTo(expectedRequestyBody))
+          .withRequestBody(equalTo(expectedRequestBody))
           .willReturn(
             aResponse()
               .withStatus(status)
@@ -190,6 +190,61 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       }
     }
 
+  }
+
+  "register" should {
+    val emailAddress = "a@b.com" 
+    val registrationRequestObj = RegistrationRequest(email = "a@b.com",
+                               password = "password",
+                               firstName = "firstname",
+                               lastName = "lastName",
+                               organisation = None
+                              )
+    val requestAsString = Json.toJson(registrationRequestObj).toString
+
+    "return Right when call to tpd returns CREATED" in new Setup {
+      stubPostWithRequestBody("/developer", CREATED, requestAsString, "")
+
+      val result = await(underTest.register(registrationRequestObj))
+
+      result match {
+        case Right(email: String) => email mustBe emailAddress
+        case _                            => fail
+      }
+    }
+
+    "return Left when call to tpd returns OK" in new Setup {
+      stubPostWithRequestBody("/developer", OK, requestAsString, "")
+
+      val result = await(underTest.register(registrationRequestObj))
+
+      result match {
+        case Left(e: InternalServerException) => e.message mustBe "Could not register user"
+        case _                            => fail
+      }
+    }
+
+    "return Left when call to tpd returns CONFLICT" in new Setup {
+      stubPostWithRequestBody("/developer", CONFLICT, requestAsString, "")
+
+      val result = await(underTest.register(registrationRequestObj))
+
+      result match {
+        case Left(e: Throwable) => succeed
+        case _                            => fail
+      }
+    }
+
+    "return Left when call to tpd returns Error" in new Setup {
+      stubPostWithRequestBody("/developer", INTERNAL_SERVER_ERROR, requestAsString, "")
+
+      val result = await(underTest.register(registrationRequestObj))
+
+      result match {
+        case Left(e: Upstream5xxResponse) => succeed
+        case _                            => fail
+      }
+    }
   }
 
 }

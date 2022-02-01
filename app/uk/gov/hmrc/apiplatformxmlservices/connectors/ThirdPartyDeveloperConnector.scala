@@ -59,10 +59,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
 
   def getByEmail(request: GetByEmailsRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
     http.POST[GetByEmailsRequest, List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request)
-      .map {
-        case x: List[UserResponse] => Right(x)
-        case _                     => Left(new InternalServerException("Could not get users by email"))
-      }.recover {
+      .map(x => Right(x)).recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)
       }
