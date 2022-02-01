@@ -63,7 +63,6 @@ class CsvUploadController @Inject() (
         results.map {
           case Right(user: CreatedOrUpdatedUser) => logger.info(s"Users CSV import - user on row number ${user.csvRowNumber} successfully updated/added to database")
           case Left(e: UploadUserFailedResult)   => logger.error(s"Users CSV import - ${e.message}")
-          case _                                 => logger.error(s"some unknown error occured")
         }
     }
 

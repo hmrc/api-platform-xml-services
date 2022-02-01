@@ -17,8 +17,6 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import org.mockito.scalatest.MockitoSugar
-import org.mongodb.scala.{MongoCommandException, ServerAddress}
-import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.BeforeAndAfterEach
@@ -29,6 +27,7 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -53,6 +52,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockOrgService)
+    reset(mockUploadervice)
   }
 
   trait Setup {
@@ -74,7 +74,37 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
     val bulkFindAndCreateOrUpdateRequestObj = BulkFindAndCreateOrUpdateRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
-      FakeRequest("POST", s"/csvupload/bulk").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
+      FakeRequest("POST", s"/csvupload/bulkorganisations").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
+
+    val emailOne = "foo@bar.com"
+    val firstName = "Joe"
+    val lastName = "Bloggs"
+    val services = ""
+    val vendorIds = ""
+
+    val parsedUser = ParsedUser(
+      email = emailOne,
+      firstName = firstName,
+      lastName = lastName,
+      services = services,
+      vendorIds = vendorIds
+    )
+
+    val userResponse = UserResponse(
+      email = emailOne,
+      firstName = firstName,
+      lastName = lastName,
+      verified = true,
+      emailPreferences = EmailPreferences.noPreferences,
+      id = userId
+    )
+
+    val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse, true)
+
+    val bulkAddUsersRequestRequestObj = BulkAddUsersRequest(List(parsedUser))
+
+    val bulkAddUsersRequest =
+      FakeRequest("POST", s"/csvupload/bulkusers").withBody(Json.toJson(bulkAddUsersRequestRequestObj))
 
   }
 
@@ -97,4 +127,25 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
   }
 
+  "bulkUploadUsers" should {
+    "return 200 when service returns a Right" in new Setup {
+      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(Right(expectedExistingUser))))
+
+      val result = controller.bulkUploadUsers()(bulkAddUsersRequest)
+      status(result) shouldBe Status.OK
+
+      verify(mockUploadervice).uploadUsers(eqTo(List(parsedUser)))(*)
+    }
+
+    "bulkUploadUsers" should {
+    "return 200 when service returns a Left" in new Setup {
+      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(Left(UploadUserFailedResult(s"Unable to create user on csv row number 1")))))
+
+      val result = controller.bulkUploadUsers()(bulkAddUsersRequest)
+      status(result) shouldBe Status.OK
+
+      verify(mockUploadervice).uploadUsers(eqTo(List(parsedUser)))(*)
+    }
+  }
+  }
 }

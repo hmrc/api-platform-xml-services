@@ -125,8 +125,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
   "returns Left(UploadUserResult) when getByEmail returns a Left" in new Setup {
     when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(GetByEmailsRequest(emails = List(emailOne))))(*)).thenReturn(Future.successful(
-      Left(new InternalServerException("could not get users by email"))
-    ))
+      Left(new InternalServerException("could not get users by email"))))
 
     val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -134,7 +133,21 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     results.size shouldBe 1
     results.head match {
       case Left(e: UploadUserFailedResult) => e.message shouldBe s"Error when retrieving user by email on csv row number 1"
-      case Right(_) => fail
+      case Right(_)                        => fail
+    }
+  }
+
+  "returns Left(UploadUserResult) when getOrCreateUserId returns a Left" in new Setup {
+    when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(GetByEmailsRequest(emails = List(parsedUser.email))))(*)).thenReturn(Future.successful(Right(Nil)))
+    when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(parsedUser.email)))(*)).thenReturn(Future.successful(Left(new InternalServerException("could not get users by email"))))
+    
+    val results = await(inTest.uploadUsers(List(parsedUser)))
+
+    results.nonEmpty shouldBe true
+    results.size shouldBe 1
+    results.head match {
+      case Left(e: UploadUserFailedResult) => e.message shouldBe s"Unable to create user on csv row number 1"
+      case Right(_)                        => fail
     }
   }
 

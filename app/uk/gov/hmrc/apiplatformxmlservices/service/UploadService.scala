@@ -44,7 +44,7 @@ class UploadService @Inject() (
     
   }
 
-  def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult,CreatedOrUpdatedUser]] = {
+  private def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult,CreatedOrUpdatedUser]] = {
     // Given a user that does exist in the api platform (dev hub / tpd)
     // When I import an unknown email address in the csv
     // Then the users account is untouched
@@ -66,12 +66,10 @@ class UploadService @Inject() (
       // Map Services on User to XML Services in Json ready for email preferences
       // Merge any new Email preferences with old ones on User and update User
 
-      logger.debug(s"*** User email ${user.email} - has gone down Update User route")
       Future.successful(Right(CreatedOrUpdatedUser.create(rowNumber, parsedUser, user, true)))
     }
 
     def createUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
-      logger.debug(s"*** User email ${parsedUser.email} - has gone down Create User route")
 
       thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(parsedUser.email)).map {
         case Right(user: CoreUserDetail) => {
