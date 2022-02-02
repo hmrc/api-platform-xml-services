@@ -57,19 +57,19 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
       }
   }
 
-  def getByEmail(request: GetByEmailsRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
-    http.POST[List[String], List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", request.emails)
+  def getByEmail(emails: List[String])(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
+    http.POST[List[String], List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", emails)
       .map(x => Right(x)).recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)
       }
   }
 
-  def register(request: RegistrationRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
-    http.POST[RegistrationRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/developer", request)
+  def createVerifiedUser(request: CreateXmlUserRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
+    http.POST[CreateXmlUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/xml-developer", request)
       .map { response => 
         if(response.status == CREATED)  Right(request.email)
-        else Left(new InternalServerException("Could not register user"))
+        else Left(new InternalServerException("Could not create user"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)

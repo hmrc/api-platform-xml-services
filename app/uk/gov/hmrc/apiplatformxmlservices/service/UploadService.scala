@@ -21,7 +21,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetByEmailsRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.EmailPreferences
@@ -31,12 +30,11 @@ import play.api.Logging
 import cats.data.EitherT
 import cats.data.EitherT
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.RegistrationRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CreateXmlUserRequest
 
 @Singleton
 class UploadService @Inject() (
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
-    uuidService: UuidService
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
@@ -75,11 +73,8 @@ class UploadService @Inject() (
 
     def createUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
 
-      thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(parsedUser.email)).flatMap {
-        case Right(user: CoreUserDetail) => {
-          // Do we need to call register user after this????, false))
-          thirdPartyDeveloperConnector.register(RegistrationRequest(user.email, uuidService.newUuid.toString, parsedUser.firstName, parsedUser.lastName, None)).map {
-            case Right(_)           => {
+          thirdPartyDeveloperConnector.createVerifiedUser(CreateXmlUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, None)).map {
+            case Right(user)           => {
               Right(CreatedOrUpdatedUser.create(
                 rowNumber,
                 parsedUser,
@@ -89,14 +84,11 @@ class UploadService @Inject() (
             }
             case Left(e: Throwable) => Left(UploadUserFailedResult(s"Unable to register user on csv row number $rowNumber"))
           }
-
-        }
-        case _                           => Future.successful(Left(UploadUserFailedResult(s"Unable to create user on csv row number $rowNumber")))
-      }
+    
 
     }
 
-    thirdPartyDeveloperConnector.getByEmail(GetByEmailsRequest(List(parsedUser.email))).flatMap {
+    thirdPartyDeveloperConnector.getByEmail(List(parsedUser.email)).flatMap {
       case Right(Nil)                       => createUser(parsedUser)
       case Right(users: List[UserResponse]) => updateOrgAndUser(users.head)
       case _                                => Future.successful(Left(UploadUserFailedResult(s"Error when retrieving user by email on csv row number $rowNumber")))
