@@ -68,7 +68,7 @@ def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: St
       userId = userId
     )
 
-    stubPostWithRequestBody("/xml-developer", CREATED, requestAsString, Json.toJson(userResponse).toString())
+    stubPostWithRequestBody("/import-user", CREATED, requestAsString, Json.toJson(userResponse).toString())
 
 }
 
@@ -77,7 +77,7 @@ def stubCreateVerifiedUserEmptyResponse(email: String, firstName: String, lastNa
     val requestAsString = Json.toJson(createXmlUserRequestObj).toString
 
 
-    stubPostWithRequestBodyNoResponse("/xml-developer", status, requestAsString)
+    stubPostWithRequestBodyNoResponse("/import-user", status, requestAsString)
 
 }
 

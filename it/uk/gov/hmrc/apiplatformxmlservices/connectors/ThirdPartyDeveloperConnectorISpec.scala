@@ -217,7 +217,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
 
       result match {
-        case Left(e: Throwable) => e.getMessage() mustBe s"POST of 'http://localhost:$wireMockPort/xml-developer' returned 409. Response body: ''"
+        case Left(e: Throwable) => e.getMessage() mustBe s"POST of 'http://localhost:$wireMockPort/import-user' returned 409. Response body: ''"
         case _                  => fail
       }
     }
