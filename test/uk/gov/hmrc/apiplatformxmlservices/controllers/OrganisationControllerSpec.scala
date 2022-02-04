@@ -78,7 +78,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
     val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-    val bulkFindAndCreateOrUpdateRequestObj = BulkFindAndCreateOrUpdateRequest(Seq(orgOne, orgTwo))
+    val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
       FakeRequest("POST", s"/organisations/bulk").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))

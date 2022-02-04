@@ -112,8 +112,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
   "returns Right(CreatedOrUpdatedUser) when user not found in tpd and createVerifiedUser are successful" in new Setup {
     when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(parsedUser.email)))(*)).thenReturn(Future.successful(Right(Nil)))
-    when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(parsedUser.email)))(*)).thenReturn(Future.successful(Right(coreUserDetail)))
-    when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(createXmlUserRequestObj))(*)).thenReturn(Future.successful(Right(emailOne)))
+    when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(createXmlUserRequestObj))(*)).thenReturn(Future.successful(Right(userResponse)))
 
     val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -125,7 +124,6 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     }
 
     verify(mockThirdPartyDeveloperConnector).getByEmail(eqTo(List(parsedUser.email)))(*)
-    verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(parsedUser.email)))(*)
     verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(createXmlUserRequestObj))(*)
 
   }
@@ -141,43 +139,26 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     results.size shouldBe 1
     results.head match {
       case Left(e: UploadUserFailedResult) => e.message shouldBe s"Error when retrieving user by email on csv row number 1"
-      case Right(_)                        => fail
-    }
-  }
-
-  "returns Left(UploadUserResult) when getOrCreateUserId returns a Left" in new Setup {
-    when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(parsedUser.email)))(*)).thenReturn(Future.successful(Right(Nil)))
-    when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(parsedUser.email)))(*)).thenReturn(Future.successful(
-      Left(new InternalServerException("could not get users by email"))
-    ))
-
-    val results = await(inTest.uploadUsers(List(parsedUser)))
-
-    results.nonEmpty shouldBe true
-    results.size shouldBe 1
-    results.head match {
-      case Left(e: UploadUserFailedResult) => e.message shouldBe s"Unable to create user on csv row number 1"
-      case Right(_)                        => fail
+      case _                       => fail
     }
   }
 
   "returns Left(UploadUserResult) when createVerifiedUser user fails" in new Setup {
     when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(parsedUser.email)))(*)).thenReturn(Future.successful(Right(Nil)))
-    when(mockThirdPartyDeveloperConnector.getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(parsedUser.email)))(*)).thenReturn(Future.successful(Right(coreUserDetail)))
-    when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(createXmlUserRequestObj))(*)).thenReturn(Future.successful(Left(new InternalServerException("Unable to register user"))))
+     when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(createXmlUserRequestObj))(*)).thenReturn(Future.successful(Left(new InternalServerException("Unable to register user"))))
 
     val results = await(inTest.uploadUsers(List(parsedUser)))
 
     results.nonEmpty shouldBe true
     results.size shouldBe 1
     results.head match {
-      case Right(_)                                           => fail
       case Left(e: UploadUserFailedResult) => e.message shouldBe s"Unable to register user on csv row number 1"
+      case _                                           => fail
     }
 
     verify(mockThirdPartyDeveloperConnector).getByEmail(eqTo(List(parsedUser.email)))(*)
-    verify(mockThirdPartyDeveloperConnector).getOrCreateUserId(eqTo(GetOrCreateUserIdRequest(parsedUser.email)))(*)
     verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(createXmlUserRequestObj))(*)
   }
+
 
 }

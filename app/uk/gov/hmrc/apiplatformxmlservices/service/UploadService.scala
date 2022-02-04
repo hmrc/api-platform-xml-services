@@ -16,21 +16,18 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
+import cats.data.EitherT
+import play.api.Logging
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.EmailPreferences
-import java.{util => ju}
-import uk.gov.hmrc.apiplatformxmlservices.models.UserId
-import play.api.Logging
-import cats.data.EitherT
-import cats.data.EitherT
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CreateXmlUserRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
+import uk.gov.hmrc.http.HeaderCarrier
+
+import javax.inject.Inject
+import javax.inject.Singleton
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @Singleton
 class UploadService @Inject() (
@@ -74,11 +71,11 @@ class UploadService @Inject() (
     def createUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
 
           thirdPartyDeveloperConnector.createVerifiedUser(CreateXmlUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, None)).map {
-            case Right(user)           => {
+            case Right(userResponse: UserResponse)           => {
               Right(CreatedOrUpdatedUser.create(
                 rowNumber,
                 parsedUser,
-                UserResponse(parsedUser.email, parsedUser.firstName, parsedUser.lastName, true, EmailPreferences.noPreferences, user.userId),
+                userResponse,
                 isExisting = false
               ))
             }

@@ -30,7 +30,6 @@ import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -71,7 +70,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
 
     val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
     val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-    val bulkFindAndCreateOrUpdateRequestObj = BulkFindAndCreateOrUpdateRequest(Seq(orgOne, orgTwo))
+    val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
       FakeRequest("POST", s"/csvupload/bulkorganisations").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
@@ -112,7 +111,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
 
     "return 200 when service returns an exception" in new Setup {
       when(mockOrgService.findAndCreateOrUpdate(*[OrganisationName], *[VendorId])).thenReturn(Future.successful(Left(new InternalServerException("Organisation does not exist"))))
-      val result: Future[Result] = controller.bulkFindAndCreateOrUpdate()(bulkFindAndCreateOrUpdateRequest)
+      val result: Future[Result] = controller.bulkUploadOrganisations()(bulkFindAndCreateOrUpdateRequest)
       status(result) shouldBe Status.OK
 
       verify(mockOrgService, times(2)).findAndCreateOrUpdate(*[OrganisationName], *[VendorId])
@@ -120,7 +119,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
 
     "return 200 when service returns created Organisation" in new Setup {
       when(mockOrgService.findAndCreateOrUpdate(*[OrganisationName], *[VendorId])).thenReturn(Future.successful(Right(organisation)))
-      val result: Future[Result] = controller.bulkFindAndCreateOrUpdate()(bulkFindAndCreateOrUpdateRequest)
+      val result: Future[Result] = controller.bulkUploadOrganisations()(bulkFindAndCreateOrUpdateRequest)
       status(result) shouldBe Status.OK
 
       verify(mockOrgService, times(2)).findAndCreateOrUpdate(*[OrganisationName], *[VendorId])

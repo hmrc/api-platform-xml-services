@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -24,9 +23,6 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers.BAD_REQUEST
-import play.api.test.Helpers.CREATED
-import play.api.test.Helpers.INTERNAL_SERVER_ERROR
-import play.api.test.Helpers.NOT_FOUND
 import play.api.test.Helpers.OK
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
@@ -134,7 +130,7 @@ class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach w
 
       "respond with 400 if request body is not valid" in new Setup {
 
-        val result = callPostEndpoint(s"$url/csvupload/bulk", "\"organisations\": [{}]")
+        val result = callPostEndpoint(s"$url/csvupload/bulkorganisations", "\"organisations\": [{}]")
 
         result.status mustBe BAD_REQUEST
 
@@ -147,11 +143,25 @@ class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach w
 
         val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
         val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-        val bulkFindAndCreateOrUpdateRequest = BulkFindAndCreateOrUpdateRequest(Seq(orgOne, orgTwo))
-        val payload = Json.toJson(bulkFindAndCreateOrUpdateRequest).toString
+        val bulkUploadOrganisationsRequest = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
+        val payload = Json.toJson(bulkUploadOrganisationsRequest).toString
 
-        val result = callPostEndpoint(s"$url/csvupload/bulk", payload)
+        val result = callPostEndpoint(s"$url/csvupload/bulkorganisations", payload)
         result.status mustBe OK
+      }
+    }
+  }
+
+  "POST /csvupload/bulkusers" should {
+
+    "respond with 400 if request body is not valid" in new Setup {
+
+      val result = callPostEndpoint(s"$url/csvupload/bulkusers", "\"organisations\": [{}]")
+
+      result.status mustBe BAD_REQUEST
+
+      withClue(s"response body not as expected: ${result.body}") {
+        result.body.contains("Invalid Json: Unexpected character") mustBe true
       }
     }
   }

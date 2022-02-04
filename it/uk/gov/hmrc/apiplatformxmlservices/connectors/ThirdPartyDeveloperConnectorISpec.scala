@@ -34,8 +34,9 @@ import uk.gov.hmrc.http.Upstream5xxResponse
 
 import java.{util => ju}
 import uk.gov.hmrc.http.NotFoundException
+import uk.gov.hmrc.apiplatformxmlservices.stubs.ThirdPartyDeveloperStub
 
-class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport {
+class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with ThirdPartyDeveloperStub {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -59,7 +60,18 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
     val email = "foo@bar.com"
     val userId: UserId = UserId(ju.UUID.randomUUID())
+    val firstName = "Joe"
+    val lastName = "Bloggs"
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
+
+    val userResponse = UserResponse(
+      email = email,
+      firstName = firstName,
+      lastName = lastName,
+      verified = true,
+      emailPreferences = EmailPreferences.noPreferences,
+      id = userId
+    )
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
 
@@ -80,16 +92,8 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
   "getOrCreateUserId" should {
 
     "return Right when backend returns a user" in new Setup {
-      stubFor(
-        post(urlEqualTo("/developers/user-id"))
-          .willReturn(
-            aResponse()
-              .withStatus(OK)
-              .withBody(Json.toJson(CoreUserDetail(userId, email)).toString)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
-
+      stubCreateOrGetUserIdReturnsResponse(email, Json.toJson(CoreUserDetail(userId, email)).toString)
+     
       val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result.map(x => x.userId mustBe userId)
@@ -99,14 +103,8 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     }
 
     "return Left when backend does not return a user" in new Setup {
-      stubFor(
-        post(urlEqualTo("/developers/user-id"))
-          .willReturn(
-            aResponse()
-              .withStatus(NO_CONTENT)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
+
+      stubCreateOrGetUserIdReturnsNoResponse(email, NO_CONTENT)
 
       val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
@@ -120,14 +118,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     }
 
     "return Left when backend returns Error" in new Setup {
-      stubFor(
-        post(urlEqualTo("/developers/user-id"))
-          .willReturn(
-            aResponse()
-              .withStatus(INTERNAL_SERVER_ERROR)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
+      stubCreateOrGetUserIdReturnsNoResponse(email, INTERNAL_SERVER_ERROR)
 
       val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
@@ -143,11 +134,11 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
   "getByEmail" should {
     val emails = List("a@b.com", "b@c.com")
-    val requestAsString = Json.toJson(emails).toString()
+
     val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", true, EmailPreferences.noPreferences, UserId(ju.UUID.randomUUID)))).toString
 
     "return Right with users when users are returned" in new Setup {
-      stubPostWithRequestBody("/developers/get-by-emails", OK, requestAsString, validResponseString)
+     stubGetByEmailsReturnsResponse(emails, validResponseString)
 
       val result = await(underTest.getByEmail(emails))
 
@@ -158,7 +149,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     }
 
     "return Right when no users are returned" in new Setup {
-      stubPostWithRequestBody("/developers/get-by-emails", OK, requestAsString, "[]")
+      stubGetByEmailsReturnsResponse(emails, "[]")
 
       val result = await(underTest.getByEmail(emails))
 
@@ -169,8 +160,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     }
 
     "return Left when not found returned" in new Setup {
-      stubPostWithRequestBody("/developers/get-by-emails", NOT_FOUND, requestAsString, "")
-
+      stubGetByEmailsReturnsNoResponse(emails, NOT_FOUND)
       val result = await(underTest.getByEmail(emails))
 
       result match {
@@ -180,7 +170,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     }
 
     "return Left when inetrnal server error returned" in new Setup {
-      stubPostWithRequestBody("/developers/get-by-emails", INTERNAL_SERVER_ERROR, requestAsString, "")
+       stubGetByEmailsReturnsNoResponse(emails, INTERNAL_SERVER_ERROR)
 
       val result = await(underTest.getByEmail(emails))
 
@@ -193,51 +183,49 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
   }
 
   "createVerifiedUser" should {
-    val emailAddress = "a@b.com" 
-    val registrationRequestObj = CreateXmlUserRequest(email = "a@b.com",
-                               firstName = "firstname",
-                               lastName = "lastName",
-                               organisation = None
-                              )
-    val requestAsString = Json.toJson(registrationRequestObj).toString
+
+    val email = "foo@bar.com"
+    val firstName = "Joe"
+    val lastName = "Bloggs"
+    val createXmlUserRequestObj = CreateXmlUserRequest(email, firstName, lastName, organisation = None)
 
     "return Right when call to tpd returns CREATED" in new Setup {
-      stubPostWithRequestBody("/xml-developer", CREATED, requestAsString, "")
+     stubCreateVerifiedUserSuccess(email, firstName, lastName, userId)
 
-      val result = await(underTest.createVerifiedUser(registrationRequestObj))
+      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
 
       result match {
-        case Right(email: String) => email mustBe emailAddress
-        case _                            => fail
+        case Right(response: UserResponse) => response mustBe userResponse
+        case _                             => fail
       }
     }
 
     "return Left when call to tpd returns OK" in new Setup {
-      stubPostWithRequestBody("/xml-developer", OK, requestAsString, "")
+      stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, OK)
 
-      val result = await(underTest.createVerifiedUser(registrationRequestObj))
+      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
 
       result match {
         case Left(e: InternalServerException) => e.message mustBe "Could not create user"
-        case _                            => fail
+        case _                                => fail
       }
     }
 
     "return Left when call to tpd returns CONFLICT" in new Setup {
-      stubPostWithRequestBody("/xml-developer", CONFLICT, requestAsString, "")
+      stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, CONFLICT)
 
-      val result = await(underTest.createVerifiedUser(registrationRequestObj))
+      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
 
       result match {
-        case Left(e: Throwable) => succeed
-        case _                            => fail
+        case Left(e: Throwable) => e.getMessage() mustBe s"POST of 'http://localhost:$wireMockPort/xml-developer' returned 409. Response body: ''"
+        case _                  => fail
       }
     }
 
     "return Left when call to tpd returns Error" in new Setup {
-      stubPostWithRequestBody("/xml-developer", INTERNAL_SERVER_ERROR, requestAsString, "")
+      stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.createVerifiedUser(registrationRequestObj))
+      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
 
       result match {
         case Left(e: Upstream5xxResponse) => succeed

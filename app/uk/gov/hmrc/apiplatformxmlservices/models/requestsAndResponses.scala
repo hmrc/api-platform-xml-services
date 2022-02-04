@@ -28,7 +28,7 @@ case class AddCollaboratorRequest(email: String)
 case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
-case class BulkFindAndCreateOrUpdateRequest(organisations: Seq[OrganisationWithNameAndVendorId])
+case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
 
 case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
 case class BulkAddUsersRequest(users: Seq[ParsedUser])
