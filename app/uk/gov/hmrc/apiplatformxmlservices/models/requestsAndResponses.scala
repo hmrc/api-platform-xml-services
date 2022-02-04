@@ -33,10 +33,10 @@ case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNam
 case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
 case class BulkAddUsersRequest(users: Seq[ParsedUser])
 
-case class CreatedOrUpdatedUser(csvRowNumber: Int, parsedUser: ParsedUser, userResponse: UserResponse,  isExisting: Boolean = false)
+case class CreatedOrUpdatedUser(csvRowNumber: Int, parsedUser: ParsedUser, userResponse: UserResponse)
 object CreatedOrUpdatedUser {
-    def create(csvRowNumber: Int,parsedUser: ParsedUser, userResponse: UserResponse, isExisting: Boolean): CreatedOrUpdatedUser ={
-        CreatedOrUpdatedUser(csvRowNumber, parsedUser, userResponse, isExisting)
+    def create(csvRowNumber: Int,parsedUser: ParsedUser, userResponse: UserResponse): CreatedOrUpdatedUser ={
+        CreatedOrUpdatedUser(csvRowNumber, parsedUser, userResponse)
     }
 }
 

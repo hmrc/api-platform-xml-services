@@ -98,7 +98,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       id = userId
     )
 
-    val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse, true)
+    val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse)
 
     val bulkAddUsersRequestRequestObj = BulkAddUsersRequest(List(parsedUser))
 

@@ -60,37 +60,22 @@ class UploadService @Inject() (
 
   private def createOrGetUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
 
-    def updateOrgAndUser(user: UserResponse): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
       // TODO: Add user to Organisation(s).
       // Map Services on User to XML Services in Json ready for email preferences
       // Merge any new Email preferences with old ones on User and update User
-
-      Future.successful(Right(CreatedOrUpdatedUser.create(rowNumber, parsedUser, user, true)))
-    }
-
-    def createUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
 
           thirdPartyDeveloperConnector.createVerifiedUser(CreateXmlUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, None)).map {
             case Right(userResponse: UserResponse)           => {
               Right(CreatedOrUpdatedUser.create(
                 rowNumber,
                 parsedUser,
-                userResponse,
-                isExisting = false
+                userResponse
               ))
             }
-            case Left(e: Throwable) => Left(UploadUserFailedResult(s"Unable to register user on csv row number $rowNumber"))
+            case Left(e: Throwable) => Left(UploadUserFailedResult(s"Unable to get or create user on csv row number $rowNumber"))
           }
     
-
     }
-
-    thirdPartyDeveloperConnector.getByEmail(List(parsedUser.email)).flatMap {
-      case Right(Nil)                       => createUser(parsedUser)
-      case Right(users: List[UserResponse]) => updateOrgAndUser(users.head)
-      case _                                => Future.successful(Left(UploadUserFailedResult(s"Error when retrieving user by email on csv row number $rowNumber")))
-    }
-  }
 
   private def validateParsedUser(user: ParsedUser): Future[Either[UploadUserResult, ParsedUser]] = {
     //TODO when vendor id is not string and services not just big string do validation
