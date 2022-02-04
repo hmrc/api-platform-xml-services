@@ -84,7 +84,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       lastName = lastName,
       verified = true,
       emailPreferences = EmailPreferences.noPreferences,
-      id = userId
+      userId = userId
     )
 
     val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse)

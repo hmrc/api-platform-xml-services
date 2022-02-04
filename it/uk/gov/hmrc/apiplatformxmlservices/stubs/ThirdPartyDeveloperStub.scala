@@ -65,7 +65,7 @@ def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: St
       lastName = lastName,
       verified = true,
       emailPreferences = EmailPreferences.noPreferences,
-      id = userId
+      userId = userId
     )
 
     stubPostWithRequestBody("/xml-developer", CREATED, requestAsString, Json.toJson(userResponse).toString())

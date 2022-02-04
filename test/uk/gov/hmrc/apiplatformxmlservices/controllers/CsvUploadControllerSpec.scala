@@ -95,7 +95,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       lastName = lastName,
       verified = true,
       emailPreferences = EmailPreferences.noPreferences,
-      id = userId
+      userId = userId
     )
 
     val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse)

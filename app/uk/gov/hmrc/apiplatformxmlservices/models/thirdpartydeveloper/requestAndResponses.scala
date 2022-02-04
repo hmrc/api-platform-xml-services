@@ -33,11 +33,11 @@ case class CreateXmlUserRequest(email: String,
                               )
 
 case class UserResponse(email: String,
-                firstName: String,
-                lastName: String,
-                verified: Boolean = false,
-                emailPreferences: EmailPreferences = EmailPreferences.noPreferences,
-                id: UserId)
+                        firstName: String,
+                        lastName: String,
+                        verified: Boolean = false,
+                        emailPreferences: EmailPreferences = EmailPreferences.noPreferences,
+                        userId: UserId)
 
 
                

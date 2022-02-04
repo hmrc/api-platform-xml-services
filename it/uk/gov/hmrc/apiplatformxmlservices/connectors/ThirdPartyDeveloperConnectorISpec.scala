@@ -70,7 +70,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       lastName = lastName,
       verified = true,
       emailPreferences = EmailPreferences.noPreferences,
-      id = userId
+      userId = userId
     )
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]

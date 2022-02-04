@@ -66,7 +66,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
   }
 
   def createVerifiedUser(request: CreateXmlUserRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserResponse]] = {
-    http.POST[CreateXmlUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/xml-developer", request)
+    http.POST[CreateXmlUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/import-user", request)
       .map { response =>
         if(response.status == CREATED)  Right(response.json.as[UserResponse])
         else Left(new InternalServerException("Could not create user"))
