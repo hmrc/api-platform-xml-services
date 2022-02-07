@@ -89,14 +89,14 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
     val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse)
 
-    val createXmlUserRequestObj = CreateXmlUserRequest(email = emailOne, firstName = firstName, lastName = lastName, organisation = None)
+    val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName)
 
   }
 
   "uploadUsers" should {
 
     "returns Right(CreatedOrUpdatedUser) when user is successfully returned from the connector" in new Setup {
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(createXmlUserRequestObj))(*)).thenReturn(Future.successful(Right(userResponse)))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(Right(userResponse)))
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -107,12 +107,12 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case Right(createdOrUpdatedUser: CreatedOrUpdatedUser) => createdOrUpdatedUser shouldBe expectedExistingUser
       }
 
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(createXmlUserRequestObj))(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
 
     }
 
     "returns Left(UploadUserResult) when createVerifiedUser user fails" in new Setup {
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(createXmlUserRequestObj))(*)).thenReturn(
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(
         Future.successful(Left(new InternalServerException("Unable to register user")))
       )
 
@@ -125,7 +125,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case _                               => fail
       }
 
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(createXmlUserRequestObj))(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
     }
   }
 

@@ -20,7 +20,7 @@ import cats.data.EitherT
 import play.api.Logging
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CreateXmlUserRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.ImportUserRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -64,7 +64,7 @@ class UploadService @Inject() (
       // Map Services on User to XML Services in Json ready for email preferences
       // Merge any new Email preferences with old ones on User and update User
 
-          thirdPartyDeveloperConnector.createVerifiedUser(CreateXmlUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, None)).map {
+          thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName)).map {
             case Right(userResponse: UserResponse)           => {
               Right(CreatedOrUpdatedUser.create(
                 rowNumber,

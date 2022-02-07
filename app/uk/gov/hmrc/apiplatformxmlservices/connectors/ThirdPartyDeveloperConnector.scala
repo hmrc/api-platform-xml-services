@@ -41,7 +41,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import play.api.Logging
-import play.api.http.Status.CREATED
+import play.api.http.Status.{CREATED, OK}
 
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) extends Logging {
@@ -65,10 +65,10 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
       }
   }
 
-  def createVerifiedUser(request: CreateXmlUserRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserResponse]] = {
-    http.POST[CreateXmlUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/import-user", request)
+  def createVerifiedUser(request: ImportUserRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserResponse]] = {
+    http.POST[ImportUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/import-user", request)
       .map { response =>
-        if(response.status == CREATED)  Right(response.json.as[UserResponse])
+        if(response.status == CREATED || response.status == OK)  Right(response.json.as[UserResponse])
         else Left(new InternalServerException("Could not create user"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)

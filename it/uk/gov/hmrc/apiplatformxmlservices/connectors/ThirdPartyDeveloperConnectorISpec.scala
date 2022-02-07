@@ -187,12 +187,12 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     val email = "foo@bar.com"
     val firstName = "Joe"
     val lastName = "Bloggs"
-    val createXmlUserRequestObj = CreateXmlUserRequest(email, firstName, lastName, organisation = None)
+    val importUserRequestObj = ImportUserRequest(email, firstName, lastName)
 
     "return Right when call to tpd returns CREATED" in new Setup {
-     stubCreateVerifiedUserSuccess(email, firstName, lastName, userId)
+     stubCreateVerifiedUserSuccess(email, firstName, lastName, userId, CREATED)
 
-      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
+      val result = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
         case Right(response: UserResponse) => response mustBe userResponse
@@ -200,21 +200,21 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       }
     }
 
-    "return Left when call to tpd returns OK" in new Setup {
-      stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, OK)
+    "return Right when call to tpd returns OK" in new Setup {
+      stubCreateVerifiedUserSuccess(email, firstName, lastName, userId, OK)
 
-      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
+      val result = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
-        case Left(e: InternalServerException) => e.message mustBe "Could not create user"
-        case _                                => fail
+        case Right(response: UserResponse) => response mustBe userResponse
+        case _                             => fail
       }
     }
 
     "return Left when call to tpd returns CONFLICT" in new Setup {
       stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, CONFLICT)
 
-      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
+      val result = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
         case Left(e: Throwable) => e.getMessage() mustBe s"POST of 'http://localhost:$wireMockPort/import-user' returned 409. Response body: ''"
@@ -225,7 +225,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     "return Left when call to tpd returns Error" in new Setup {
       stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.createVerifiedUser(createXmlUserRequestObj))
+      val result = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
         case Left(e: Upstream5xxResponse) => succeed

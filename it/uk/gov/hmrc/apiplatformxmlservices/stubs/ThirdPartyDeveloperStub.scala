@@ -24,7 +24,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreate
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.EmailPreferences
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CreateXmlUserRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.ImportUserRequest
 
 trait ThirdPartyDeveloperStub {
   val createOrGetUserIdUrl = "/developers/user-id"
@@ -54,8 +54,8 @@ def stubGetByEmailsReturnsNoResponse(emails: List[String], status: Int) ={
      stubPostWithRequestBodyNoResponse("/developers/get-by-emails", status, requestAsString)
 }
 
-def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: String, userId: UserId) ={
-    val createXmlUserRequestObj = CreateXmlUserRequest(email, firstName, lastName, organisation = None)
+def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: String, userId: UserId, status: Int) ={
+    val createXmlUserRequestObj = ImportUserRequest(email, firstName, lastName)
     val requestAsString = Json.toJson(createXmlUserRequestObj).toString
 
 
@@ -68,13 +68,13 @@ def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: St
       userId = userId
     )
 
-    stubPostWithRequestBody("/import-user", CREATED, requestAsString, Json.toJson(userResponse).toString())
+    stubPostWithRequestBody("/import-user", status, requestAsString, Json.toJson(userResponse).toString())
 
 }
 
 def stubCreateVerifiedUserEmptyResponse(email: String, firstName: String, lastName: String, status: Int) ={
-    val createXmlUserRequestObj = CreateXmlUserRequest(email, firstName, lastName, organisation = None)
-    val requestAsString = Json.toJson(createXmlUserRequestObj).toString
+    val importUserRequestObj = ImportUserRequest(email, firstName, lastName)
+    val requestAsString = Json.toJson(importUserRequestObj).toString
 
 
     stubPostWithRequestBodyNoResponse("/import-user", status, requestAsString)

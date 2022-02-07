@@ -26,10 +26,9 @@ case class GetOrCreateUserIdRequest(email: String)
 
 case class UserIdResponse(userId: UserId)
 
-case class CreateXmlUserRequest(email: String,
+case class ImportUserRequest(email: String,
                                firstName: String,
-                               lastName: String,
-                               organisation: Option[String] = None
+                               lastName: String
                               )
 
 case class UserResponse(email: String,
