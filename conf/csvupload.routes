@@ -1,0 +1,5 @@
+# csv upload routes
+
+POST       /bulkorganisations               uk.gov.hmrc.apiplatformxmlservices.controllers.CsvUploadController.bulkUploadOrganisations
+
+POST       /bulkusers                       uk.gov.hmrc.apiplatformxmlservices.controllers.CsvUploadController.bulkUploadUsers

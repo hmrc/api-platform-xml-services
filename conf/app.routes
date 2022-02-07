@@ -1,5 +1,6 @@
 # microservice specific routes
 ->        /organisations                            organisation.Routes
+->        /csvupload                                csvupload.Routes
 
 GET        /xml/apis                                uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getAll
 GET        /xml/api                                 uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApiByServiceName(serviceName: uk.gov.hmrc.apiplatformxmlservices.models.ServiceName)

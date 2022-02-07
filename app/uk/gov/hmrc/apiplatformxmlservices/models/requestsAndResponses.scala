@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
+
 case class CreateOrganisationRequest(organisationName: OrganisationName, email: String)
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
@@ -26,7 +28,17 @@ case class AddCollaboratorRequest(email: String)
 case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
-case class BulkFindAndCreateOrUpdateRequest(organisations: Seq[OrganisationWithNameAndVendorId])
+case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
+
+case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
+case class BulkAddUsersRequest(users: Seq[ParsedUser])
+
+case class CreatedOrUpdatedUser(csvRowNumber: Int, parsedUser: ParsedUser, userResponse: UserResponse)
+object CreatedOrUpdatedUser {
+    def create(csvRowNumber: Int,parsedUser: ParsedUser, userResponse: UserResponse): CreatedOrUpdatedUser ={
+        CreatedOrUpdatedUser(csvRowNumber, parsedUser, userResponse)
+    }
+}
 
 sealed trait ManageCollaboratorResult
 case class OrganisationAlreadyHasCollaboratorResult() extends ManageCollaboratorResult
@@ -44,3 +56,10 @@ case class CreateOrganisationFailedDuplicateIdResult(message: String) extends Cr
 sealed trait UpdateOrganisationResult
 case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
 case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult
+
+
+sealed trait UploadUserResult
+case class InvalidVendorIdResult(message: String) extends UploadUserResult
+case class InvalidServiceResult(message: String) extends UploadUserResult
+case class UploadUserFailedResult(message: String) extends UploadUserResult
+case class UploadUserSuccessResult() extends UploadUserResult

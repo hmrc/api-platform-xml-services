@@ -17,8 +17,6 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import org.mockito.scalatest.MockitoSugar
-import org.mongodb.scala.{MongoCommandException, ServerAddress}
-import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.BeforeAndAfterEach
@@ -36,8 +34,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.http.InternalServerException
-
 class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   private val mockOrgService = mock[OrganisationService]
@@ -78,14 +74,14 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
     val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-    val bulkFindAndCreateOrUpdateRequestObj = BulkFindAndCreateOrUpdateRequest(Seq(orgOne, orgTwo))
+    val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
       FakeRequest("POST", s"/organisations/bulk").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
 
   }
 
-  "GET /organisations/:organisationId" should {
+  "findByOrgId" should {
     "return 200" in new Setup {
       when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
 
@@ -101,7 +97,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     }
   }
 
-  "GET /organisations?vendorId=[some[vendorId]]" should {
+  "findByParams" should {
     "return 200" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisation)))
 
@@ -129,7 +125,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     }
   }
 
-  "POST /organisations/" should {
+  "create" should {
     "return 200" in new Setup {
       when(mockOrgService.create(any[CreateOrganisationRequest])(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreateOrganisationSuccessResult(organisation)))
@@ -168,7 +164,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
       contentAsString(result) shouldBe "Could not create Organisation with name OrganisationName(Organisation Name) - Failed"
     }
   }
-  "POST /organisations/:organisationId" should {
+  "updateOrganisationDetails" should {
     "return 200 when service returns UpdateOrganisationSuccessResult" in new Setup {
       when(mockOrgService.updateOrganisationDetails(eqTo(organisationId), eqTo(updatedOrganisationName)))
         .thenReturn(Future.successful(UpdateOrganisationSuccessResult(organisation)))
@@ -200,7 +196,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
   }
 
-  "POST /organisations/:organisationId/collaborator" should {
+  "addCollaborator" should {
 
     "return 404 when fail to get organisation" in new Setup {
       when(mockOrgService.addCollaborator(*[OrganisationId], *)(*))
@@ -234,25 +230,6 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
       val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratordRequest)
       status(result) shouldBe Status.OK
       contentAsJson(result) shouldBe Json.toJson(organisationWithCollaborator)
-    }
-  }
-
-  "POST /organisations/bulk" should {
-
-    "return 200 when service returns an exception" in new Setup {
-      when(mockOrgService.findAndCreateOrUpdate(*[OrganisationName], *[VendorId])).thenReturn(Future.successful(Left(new InternalServerException("Organisation does not exist"))))
-      val result: Future[Result] = controller.bulkFindAndCreateOrUpdate()(bulkFindAndCreateOrUpdateRequest)
-      status(result) shouldBe Status.OK
-
-      verify(mockOrgService, times(2)).findAndCreateOrUpdate(*[OrganisationName], *[VendorId])
-    }
-
-    "return 200 when service returns created Organisation" in new Setup {
-      when(mockOrgService.findAndCreateOrUpdate(*[OrganisationName], *[VendorId])).thenReturn(Future.successful(Right(organisation)))
-      val result: Future[Result] = controller.bulkFindAndCreateOrUpdate()(bulkFindAndCreateOrUpdateRequest)
-      status(result) shouldBe Status.OK
-
-      verify(mockOrgService, times(2)).findAndCreateOrUpdate(*[OrganisationName], *[VendorId])
     }
   }
 

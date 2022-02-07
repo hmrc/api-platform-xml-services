@@ -41,6 +41,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import play.api.Logging
+import play.api.http.Status.{CREATED, OK}
 
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) extends Logging {
@@ -50,6 +51,25 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
       .map {
         case Some(response) => Right(CoreUserDetail(response.userId, getOrCreateUserIdRequest.email))
         case _              => Left(new InternalServerException("Could not find or create user"))
+      }.recover {
+        case NonFatal(e) => logger.error(e.getMessage)
+          Left(e)
+      }
+  }
+
+  def getByEmail(emails: List[String])(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
+    http.POST[List[String], List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", emails)
+      .map(x => Right(x)).recover {
+        case NonFatal(e) => logger.error(e.getMessage)
+          Left(e)
+      }
+  }
+
+  def createVerifiedUser(request: ImportUserRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserResponse]] = {
+    http.POST[ImportUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/import-user", request)
+      .map { response =>
+        if(response.status == CREATED || response.status == OK)  Right(response.json.as[UserResponse])
+        else Left(new InternalServerException("Could not create user"))
       }.recover {
         case NonFatal(e) => logger.error(e.getMessage)
           Left(e)
