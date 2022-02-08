@@ -79,7 +79,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
     val firstName = "Joe"
     val lastName = "Bloggs"
     val services = ""
-    val vendorIds = ""
+    val vendorIds = List(VendorId(1))
 
     val parsedUser = ParsedUser(
       email = emailOne,

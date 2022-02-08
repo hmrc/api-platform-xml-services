@@ -37,22 +37,26 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
+  val mockOrganisationService: OrganisationService = mock[OrganisationService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockThirdPartyDeveloperConnector)
+    reset(mockOrganisationService)
   }
 
   trait Setup {
-    val inTest = new UploadService(mockThirdPartyDeveloperConnector)
+    val inTest = new UploadService(mockThirdPartyDeveloperConnector, mockOrganisationService)
 
     val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
-    val vendorId = VendorId(9000)
+    val vendorId1 = VendorId(9000)
+    val vendorId2 = VendorId(9001)
 
     def getUuid() = UUID.randomUUID()
 
     val organisationId = OrganisationId(uuid)
-    val organisation = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
+    val organisation1 = Organisation(organisationId = organisationId, vendorId = vendorId1, name = OrganisationName("Organisation Name"))
+    val organisation2 = organisation1.copy(vendorId = vendorId2)
 
     val userId = UserId(UUID.randomUUID())
     val emailOne = "foo@bar.com"
@@ -65,7 +69,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     val collaboratorOne = Collaborator(userId, emailOne)
     val collaboratorTwo = Collaborator(UserId(UUID.randomUUID()), emailTwo)
     val collaborators = List(collaboratorOne, collaboratorTwo)
-    val organisationWithCollaborators = organisation.copy(collaborators = collaborators)
+    val organisationWithCollaborators = organisation1.copy(collaborators = collaborators)
     val gatekeeperUserId = "John Doe"
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
     val coreUserDetail = CoreUserDetail(userId, emailOne)
@@ -75,7 +79,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       firstName = firstName,
       lastName = lastName,
       services = services,
-      vendorIds = vendorIds
+      vendorIds = List(vendorId1, vendorId2)
     )
 
     val userResponse = UserResponse(
@@ -95,8 +99,10 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
   "uploadUsers" should {
 
-    "returns Right(CreatedOrUpdatedUser) when user is successfully returned from the connector" in new Setup {
+    "return Right(CreatedOrUpdatedUser) when vendorId validation successful and user is successfully returned from the connector" in new Setup {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(Right(userResponse)))
+      when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
+      when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -107,14 +113,18 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case Right(createdOrUpdatedUser: CreatedOrUpdatedUser) => createdOrUpdatedUser shouldBe expectedExistingUser
       }
 
+      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-
+      
     }
 
-    "returns Left(UploadUserResult) when createVerifiedUser user fails" in new Setup {
+    "return Left(UploadUserResult) when vendorId validation successful and createVerifiedUser user fails " in new Setup {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(
         Future.successful(Left(new InternalServerException("Unable to register user")))
       )
+      when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
+      when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
+
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -125,8 +135,11 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case _                               => fail
       }
 
+      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
     }
+
+    
   }
 
 }

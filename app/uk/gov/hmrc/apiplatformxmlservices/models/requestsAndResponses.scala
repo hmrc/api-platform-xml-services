@@ -30,7 +30,7 @@ case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
 case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
 
-case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
+case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: List[VendorId])
 case class BulkAddUsersRequest(users: Seq[ParsedUser])
 
 case class CreatedOrUpdatedUser(csvRowNumber: Int, parsedUser: ParsedUser, userResponse: UserResponse)

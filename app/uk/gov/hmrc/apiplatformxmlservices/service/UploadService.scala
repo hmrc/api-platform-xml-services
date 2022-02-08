@@ -31,7 +31,8 @@ import scala.concurrent.Future
 
 @Singleton
 class UploadService @Inject() (
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
+    organisationService: OrganisationService
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
@@ -48,7 +49,7 @@ class UploadService @Inject() (
 
     {
       for {
-        validParsedUser <- EitherT(validateParsedUser(parsedUser))
+        validParsedUser <- EitherT(validateParsedUser(parsedUser, rowNumber))
         parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser, rowNumber))
 
         // TODO <- handle update organisations with user id, email
@@ -77,10 +78,23 @@ class UploadService @Inject() (
     
     }
 
-  private def validateParsedUser(user: ParsedUser): Future[Either[UploadUserResult, ParsedUser]] = {
+  private def validateParsedUser(user: ParsedUser, rowNumber: Int): Future[Either[UploadUserResult, ParsedUser]] = {
     //TODO when vendor id is not string and services not just big string do validation
     // check vendor Ids exists, check service names are valid
-    Future.successful(Right(user))
+  
+      user.vendorIds match {
+      case vendorIds: List[VendorId] => validateVendorIds(vendorIds) map {
+        case true  => Right(user)
+        case false => Left(UploadUserFailedResult(s"Invalid vendorId(s) on csv row number $rowNumber"))
+      }
+      case _ =>    Future.successful(Left(UploadUserFailedResult(s"Unable to get or create user on csv row number $rowNumber")))
+    }
   }
 
+  private def validateVendorIds(vendorIds: List[VendorId]) = {
+
+    Future.sequence(vendorIds.map(organisationService.findByVendorId(_)))
+    .map(x => x.flatten.size==vendorIds.size)
+    
+  }
 }
