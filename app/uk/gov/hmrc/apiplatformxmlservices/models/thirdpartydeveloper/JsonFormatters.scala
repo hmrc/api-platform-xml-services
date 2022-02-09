@@ -27,4 +27,6 @@ object JsonFormatters {
 
   implicit  val formatUserResponse = Json.format[UserResponse]
   implicit  val formatImportUserRequest = Json.format[ImportUserRequest]
+
+  implicit val formatCoreUserDetail = Json.format[CoreUserDetail]
 }

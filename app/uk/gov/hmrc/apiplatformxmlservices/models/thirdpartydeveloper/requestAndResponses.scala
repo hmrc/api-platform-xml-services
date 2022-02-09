@@ -26,6 +26,9 @@ case class GetOrCreateUserIdRequest(email: String)
 
 case class UserIdResponse(userId: UserId)
 
+
+case class CoreUserDetail(userId: UserId, email: String)
+
 case class ImportUserRequest(email: String,
                                firstName: String,
                                lastName: String
