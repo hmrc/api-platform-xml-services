@@ -86,5 +86,16 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
       verify(mockOrganisationRepo).findOrgWithMaxVendorId
 
     }
+
+    "return Left with exception when repo returns Exception" in new Setup {
+      val exception = new RuntimeException("some error")
+      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.failed(exception))
+
+      val result = await(inTest.getNextVendorId)
+      result shouldBe Left(exception)
+
+      verify(mockOrganisationRepo).findOrgWithMaxVendorId
+
+    }
   }
 }

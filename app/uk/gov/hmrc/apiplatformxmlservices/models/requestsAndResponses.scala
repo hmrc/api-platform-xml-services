@@ -57,9 +57,31 @@ sealed trait UpdateOrganisationResult
 case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
 case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult
 
+sealed trait CreateVerifiedUserResult
+
+case class CreatedUserResult(userResponse: UserResponse) extends CreateVerifiedUserResult
+case class RetrievedUserResult(userResponse: UserResponse) extends CreateVerifiedUserResult
+case class CreateVerifiedUserFailedResult(message: String) extends CreateVerifiedUserResult
+
+sealed trait ValidateUserResult{
+    val message: String
+}
+case class ValidUserResult(message: String) extends ValidateUserResult
+case class InvalidVendorIdResult(message: String) extends ValidateUserResult
+case class MissingVendorIdResult(message: String) extends ValidateUserResult
+//case class InvalidServiceResult(message: String) extends ValidateUserResult
+
 
 sealed trait UploadUserResult
-case class InvalidVendorIdResult(message: String) extends UploadUserResult
-case class InvalidServiceResult(message: String) extends UploadUserResult
-case class UploadUserFailedResult(message: String) extends UploadUserResult
-case class UploadUserSuccessResult() extends UploadUserResult
+
+abstract class UploadFailedResult() extends UploadUserResult {
+    val message: String
+}
+abstract class UploadSuccessResult() extends UploadUserResult
+
+case class UploadCreatedUserSuccessResult(user: CreatedOrUpdatedUser) extends UploadSuccessResult
+case class UploadExistingUserSuccessResult(user: CreatedOrUpdatedUser) extends UploadSuccessResult
+
+case class InvalidUserResult(message: String) extends UploadFailedResult
+case class CreateOrGetUserFailedResult(message: String) extends UploadFailedResult
+

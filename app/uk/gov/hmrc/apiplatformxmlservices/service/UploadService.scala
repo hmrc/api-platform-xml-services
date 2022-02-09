@@ -42,59 +42,61 @@ class UploadService @Inject() (
 
   }
 
-  private def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
+  private def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
     // Given a user that does exist in the api platform (dev hub / tpd)
     // When I import an unknown email address in the csv
-    // Then the users account is untouched
-
-    {
-      for {
-        validParsedUser <- EitherT(validateParsedUser(parsedUser, rowNumber))
-        parsedUserWithUserId <- EitherT(createOrGetUser(validParsedUser, rowNumber))
-
-        // TODO <- handle update organisations with user id, email
-        // TODO <- merge / update email preferences
-      } yield parsedUserWithUserId
-    }.value
-
+      // Then the users account is untouched
+    validateParsedUser(parsedUser, rowNumber).flatMap{
+      case e : ValidUserResult => createOrGetUser(parsedUser, rowNumber)
+      case invalidResult : ValidateUserResult => Future.successful(InvalidUserResult(invalidResult.message))
+    }
+  
   }
 
-  private def createOrGetUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[Either[UploadUserResult, CreatedOrUpdatedUser]] = {
+  private def createOrGetUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
 
       // TODO: Add user to Organisation(s).
       // Map Services on User to XML Services in Json ready for email preferences
       // Merge any new Email preferences with old ones on User and update User
 
           thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName)).map {
-            case Right(userResponse: UserResponse)           => {
-              Right(CreatedOrUpdatedUser.create(
+            case CreatedUserResult(userResponse: UserResponse)           => {
+             UploadCreatedUserSuccessResult(CreatedOrUpdatedUser.create(
                 rowNumber,
                 parsedUser,
                 userResponse
               ))
             }
-            case Left(e: Throwable) => Left(UploadUserFailedResult(s"Unable to get or create user on csv row number $rowNumber"))
+            case RetrievedUserResult(userResponse: UserResponse)           => {
+             UploadExistingUserSuccessResult(CreatedOrUpdatedUser.create(
+                rowNumber,
+                parsedUser,
+                userResponse
+              ))
+            }
+            case CreateVerifiedUserFailedResult(message: String) => CreateOrGetUserFailedResult(s"RowNumber:$rowNumber - Unable to get or create user - $message")
           }
     
     }
 
-  private def validateParsedUser(user: ParsedUser, rowNumber: Int): Future[Either[UploadUserResult, ParsedUser]] = {
+  private def validateParsedUser(user: ParsedUser, rowNumber: Int): Future[ValidateUserResult] = {
     //TODO when vendor id is not string and services not just big string do validation
     // check vendor Ids exists, check service names are valid
   
       user.vendorIds match {
+      case Nil =>    Future.successful(MissingVendorIdResult(s"RowNumber:$rowNumber - missing vendorIds on user")) 
       case vendorIds: List[VendorId] => validateVendorIds(vendorIds) map {
-        case true  => Right(user)
-        case false => Left(UploadUserFailedResult(s"Invalid vendorId(s) on csv row number $rowNumber"))
+        case true  => ValidUserResult("ok")
+        case false => InvalidVendorIdResult(s"RowNumber:$rowNumber - Invalid vendorId(s)")
       }
-      case _ =>    Future.successful(Left(UploadUserFailedResult(s"Unable to get or create user on csv row number $rowNumber")))
+     
     }
   }
 
   private def validateVendorIds(vendorIds: List[VendorId]) = {
 
     Future.sequence(vendorIds.map(organisationService.findByVendorId(_)))
-    .map(x => x.flatten.size==vendorIds.size)
+    .map(x => x.flatten.size==vendorIds.size && vendorIds.nonEmpty)
     
   }
 }
