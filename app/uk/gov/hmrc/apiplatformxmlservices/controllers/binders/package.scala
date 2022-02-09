@@ -56,7 +56,7 @@ package object binders {
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, VendorId]] = {
         textBinder.bind(key, params).map {
           case Right(vendorId) => vendorIdFromString(vendorId)
-          case Left(_)         => Left("Unable to bind vendorId")
+          case _         => Left("Unable to bind vendorId")
         }
       }
 
@@ -69,9 +69,10 @@ package object binders {
     new QueryStringBindable[ServiceName] {
 
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ServiceName]] = {
+        
         textBinder.bind(key, params).map {
           case Right(serviceName) => Right(ServiceName(serviceName))
-          case Left(_)            => Left("Unable to bind serviceName")
+          case _            => Left("Unable to bind serviceName")
         }
       }
 
@@ -93,7 +94,7 @@ package object binders {
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, OrganisationSortBy]] = {
         textBinder.bind(key, params).map {
           case Right(sortBy) => SortByFromString(sortBy)
-          case Left(_)            => Left("Unable to bind OrganisationSortBy")
+          case _            => Left("Unable to bind OrganisationSortBy")
         }
       }
 
