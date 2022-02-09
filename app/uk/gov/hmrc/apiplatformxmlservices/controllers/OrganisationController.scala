@@ -16,26 +16,17 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import org.mongodb.scala.MongoCommandException
 import play.api.Logging
-import play.api.libs.json.JsValue
-import play.api.libs.json.Json
-import play.api.mvc.Action
-import play.api.mvc.AnyContent
-import play.api.mvc.ControllerComponents
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
@@ -90,6 +81,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   private def handleCollaboratorResult(result: Either[ManageCollaboratorResult, Organisation]) = {
     result match {
       case Right(organisation: Organisation) => Ok(Json.toJson(organisation))
+      case Left(_: OrganisationAlreadyHasCollaboratorResult) => BadRequest(s"Organisation Already Has Collaborator")
       case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
       case Left(result: GetOrCreateUserIdFailedResult) => BadRequest(s"${result.message}")
       case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")

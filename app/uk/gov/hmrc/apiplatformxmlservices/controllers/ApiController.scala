@@ -29,19 +29,19 @@ import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 class ApiController @Inject() (cc: ControllerComponents)
     extends BackendController(cc) {
 
-  def getAll(): Action[AnyContent] = Action.async { implicit request =>
+  def getAll(): Action[AnyContent] = Action.async {
     Future.successful(Ok(Json.toJson(XmlApi.xmlApis)))
   }
 
-  @deprecated("use getApiByServiceName")
-  def getApi(name: String): Action[AnyContent] = Action.async { implicit request =>
+  @deprecated("use getApiByServiceName", since = "0.7.0")
+  def getApi(name: String): Action[AnyContent] = Action.async {
     XmlApi.xmlApis.find(_.name == name) match {
       case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
       case _ => Future.successful(NotFound(s"XML API with name $name not found."))
     }
   }
 
-  def getApiByServiceName(serviceName: ServiceName): Action[AnyContent] = Action.async { implicit request =>
+  def getApiByServiceName(serviceName: ServiceName): Action[AnyContent] = Action.async {
     XmlApi.xmlApis.find(_.serviceName == serviceName) match {
       case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
       case _ => Future.successful(NotFound(s"XML API with serviceName $serviceName not found."))

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
-import cats.data.EitherT
-import cats.data.Validated
+//import cats.data.EitherT
+//import cats.data.Validated
 import cats.syntax.traverse._
 import cats.instances.list._
 import cats.syntax.either._
@@ -40,10 +40,8 @@ class UploadService @Inject() (
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
-  def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier) = {
-
+  def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier): Future[List[UploadUserResult]] = {
     Future.sequence(users.zipWithIndex.map(x => uploadUser(x._1, x._2 + 1)))
-
   }
 
   private def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
@@ -51,21 +49,23 @@ class UploadService @Inject() (
     // When I import an unknown email address in the csv
     // Then the users account is untouched
     validateParsedUser(parsedUser, rowNumber).flatMap {
-      case e: ValidUserResult                => handleCreateOrGetUserResult(parsedUser, rowNumber)
+      case _: ValidUserResult                => handleCreateOrGetUserResult(parsedUser, rowNumber)
       case invalidResult: ValidateUserResult => Future.successful(InvalidUserResult(invalidResult.message))
     }
 
   }
 
   private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
-    createOrGetUser(parsedUser, rowNumber) map {
+    createOrGetUser(parsedUser) flatMap {
       case result: CreatedUserResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
       case result: RetrievedUserResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
+      case e: CreateVerifiedUserFailedResult   =>
+        Future.successful(CreateOrGetUserFailedResult(s"RowNumber:$rowNumber - failed to get or create User: ${e.message}"))
+      case _   => Future.successful(CreateOrGetUserFailedResult(s"RowNumber:$rowNumber - failed to get or create User " ))
     }
   }
 
-  private def handleAddCollaboratorToOrgs(result: CreateVerifiedUserSuccessResult, vendors: List[VendorId], rowNumber: Int)
-  (implicit hc: HeaderCarrier) = {
+  private def handleAddCollaboratorToOrgs(result: CreateVerifiedUserSuccessResult, vendors: List[VendorId], rowNumber: Int): Future[UploadUserResult] = {
     def mapSuccessResult(result: CreateVerifiedUserSuccessResult) = {
       result match {
         case CreatedUserResult(userResponse: UserResponse)   => UploadCreatedUserSuccessResult(rowNumber, userResponse)
@@ -77,9 +77,10 @@ class UploadService @Inject() (
       Future.sequence(vendors.map(vendorId => {
         organisationService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
           .map {
-            case Right(organisation: Organisation)      => Right(mapSuccessResult(result))
+            case Right(_ : Organisation)      => Right(mapSuccessResult(result))
             case Left(errorResult: ManageCollaboratorResult) =>
-              Left(AddUserToOrgFailureResult(s"RowNumber:$rowNumber - failed to add user ${result.userResponse.userId.value} to vendorId ${vendorId.value} : ${errorResult.message}"))
+              Left(AddUserToOrgFailureResult(s"RowNumber:$rowNumber - failed to add user " +
+                s"${result.userResponse.userId.value} to vendorId ${vendorId.value} : ${errorResult.message}"))
           }
       }))
     // check list for lefts and return combined messages
@@ -98,15 +99,11 @@ class UploadService @Inject() (
 
   }
 
-  private def createOrGetUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
+  private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
     thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName))
-    
   }
 
   private def validateParsedUser(user: ParsedUser, rowNumber: Int): Future[ValidateUserResult] = {
-    //TODO when vendor id is not string and services not just big string do validation
-    // check vendor Ids exists, check service names are valid
-
     user.vendorIds match {
       case Nil                       => Future.successful(MissingVendorIdResult(s"RowNumber:$rowNumber - missing vendorIds on user"))
       case vendorIds: List[VendorId] => validateVendorIds(vendorIds) map {
@@ -118,8 +115,7 @@ class UploadService @Inject() (
   }
 
   private def validateVendorIds(vendorIds: List[VendorId]) = {
-
-    Future.sequence(vendorIds.map(organisationService.findByVendorId(_)))
+    Future.sequence(vendorIds.map(organisationService.findByVendorId))
       .map(x => x.flatten.size == vendorIds.size && vendorIds.nonEmpty)
 
   }
