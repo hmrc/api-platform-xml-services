@@ -42,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import play.api.Logging
 import play.api.http.Status.{CREATED, OK}
-import uk.gov.hmrc.http.HttpReads.Implicits._
+
 
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) extends Logging {

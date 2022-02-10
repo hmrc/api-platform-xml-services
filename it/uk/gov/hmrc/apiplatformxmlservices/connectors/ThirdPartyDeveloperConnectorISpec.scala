@@ -21,10 +21,8 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformxmlservices.models.CoreUserDetail
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
@@ -113,7 +111,8 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Left(e: InternalServerException) => e.message mustBe "Could not find or create user"
-        case _                                => fail
+        case Left(e: Throwable)                                => println(e) 
+                                                                  fail
       }
 
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))

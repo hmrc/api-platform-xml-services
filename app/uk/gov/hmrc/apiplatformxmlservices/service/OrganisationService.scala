@@ -189,7 +189,7 @@ class OrganisationService @Inject() (
 
   private def handleFindByVendorId(vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.findByVendorId(vendorId).map {
-      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Vendor Id: $vendorId"))
+      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Vendor Id: ${vendorId.value}"))
       case Some(organisation: Organisation) => Right(organisation)
     }
   }

@@ -29,6 +29,7 @@ import play.api.test.Helpers.INTERNAL_SERVER_ERROR
 import play.api.test.Helpers.NOT_FOUND
 import play.api.test.Helpers.OK
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport
@@ -37,6 +38,7 @@ import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
 
 class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with MongoApp[Organisation] {
 

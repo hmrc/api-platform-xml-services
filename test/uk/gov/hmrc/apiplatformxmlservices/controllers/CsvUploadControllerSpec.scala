@@ -98,8 +98,6 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       userId = userId
     )
 
-    val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse)
-
     val bulkAddUsersRequestRequestObj = BulkAddUsersRequest(List(parsedUser))
 
     val bulkAddUsersRequest =
@@ -128,7 +126,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "bulkUploadUsers" should {
     "return 200 when service returns a List of successful UploadUserResults" in new Setup {
-      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(UploadCreatedUserSuccessResult(expectedExistingUser))))
+      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(UploadCreatedUserSuccessResult(1, userResponse))))
 
       val result = controller.bulkUploadUsers()(bulkAddUsersRequest)
       status(result) shouldBe Status.OK

@@ -55,7 +55,7 @@ class UploadService @Inject() (
 
   }
 
-  private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
+  private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = { 
     createOrGetUser(parsedUser) flatMap {
       case result: CreatedUserResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
       case result: RetrievedUserResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)

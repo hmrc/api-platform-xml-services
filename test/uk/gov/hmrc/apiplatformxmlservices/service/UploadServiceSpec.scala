@@ -90,49 +90,58 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       userId = userId
     )
 
-    val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse)
-
     val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName)
 
   }
 
   "uploadUsers" should {
 
-    "return UploadCreatedUserSuccessResult when vendorId validation successful and user is created user successfully returned from the connector" in new Setup {
+    "return UploadCreatedUserSuccessResult when vendorId validation successful and user is created and successfully returned from the connector" in new Setup {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
+      when(mockOrganisationService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
+      when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
-        case UploadCreatedUserSuccessResult(createdOrUpdatedUser: CreatedOrUpdatedUser) => createdOrUpdatedUser shouldBe expectedExistingUser
+        case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
+          response shouldBe userResponse
+          rowNumber shouldBe 1
         case _                                          => fail
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
+      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
       
     }
 
-    "return UploadExistingUserSuccessResult when vendorId validation successful and user is retrieved user successfully returned from the connector" in new Setup {
+    "return UploadExistingUserSuccessResult when vendorId validation successful and user is retrieved and successfully returned from the connector" in new Setup {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(RetrievedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
+      when(mockOrganisationService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
+      when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
+
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
-        case UploadExistingUserSuccessResult(createdOrUpdatedUser: CreatedOrUpdatedUser) => createdOrUpdatedUser shouldBe expectedExistingUser
+        case UploadExistingUserSuccessResult(rowNumber: Int, response: UserResponse) =>
+          response shouldBe userResponse
+          rowNumber shouldBe 1
         case _                                          => fail
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
+      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
       
     }
 
@@ -183,7 +192,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
-        case e: CreateOrGetUserFailedResult => e.message shouldBe s"RowNumber:1 - Unable to get or create user - Unable to register user"
+        case e: CreateOrGetUserFailedResult => e.message shouldBe s"RowNumber:1 - failed to get or create User: Unable to register user"
         case _                               => fail
       }
 
