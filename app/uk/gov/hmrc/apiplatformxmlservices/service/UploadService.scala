@@ -76,6 +76,7 @@ class UploadService @Inject() (
         organisationService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
           .map {
             case Right(_ : Organisation)      => Right(mapSuccessResult(result))
+            case Left(errorResult: OrganisationAlreadyHasCollaboratorResult) => Right(mapSuccessResult(result))
             case Left(errorResult: ManageCollaboratorResult) =>
               Left(AddUserToOrgFailureResult(s"RowNumber:$rowNumber - failed to add user " +
                 s"${result.userResponse.userId.value} to vendorId ${vendorId.value} : ${errorResult.message}"))

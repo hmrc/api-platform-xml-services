@@ -100,6 +100,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response2))
 
     }
+
+    def verifyAddCollaboratorToOrgFailure(){
+      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
+      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+
+    }
   }
 
   "uploadUsers" should {
@@ -209,6 +216,28 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
     }
 
+  "return Sucesss when addCollaboratorByVendorId returns collaborator allready linked to org error" in new Setup {
+
+      primeMocksForAddCollaboratorToOrgFailure(
+        Left(OrganisationAlreadyHasCollaboratorResult(message = s"Failed to get organisation for Vendor Id: ${vendorId1.value}")),
+        Right(organisation2)
+      )
+
+      val results = await(inTest.uploadUsers(List(parsedUser)))
+
+      results.nonEmpty shouldBe true
+      results.size shouldBe 1
+      results.head match {
+        case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
+          response shouldBe userResponse
+          rowNumber shouldBe 1
+          case _ =>  fail
+      }
+
+      verifyAddCollaboratorToOrgFailure()
+
+    }
+
     "return AddUserToOrgFailureResult when addCollaboratorByVendorId fails for first vendorId but successful for the second vendorId" in new Setup {
 
       primeMocksForAddCollaboratorToOrgFailure(
@@ -225,10 +254,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case _                                        => fail
       }
 
-      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
-
+      verifyAddCollaboratorToOrgFailure()
     }
 
     "return AddUserToOrgFailureResult when addCollaboratorByVendorId fails for second vendorId but successful for the first vendorId" in new Setup {
@@ -247,10 +273,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case _                                        => fail
       }
 
-      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
-
+      verifyAddCollaboratorToOrgFailure()
     }
 
     "return AddUserToOrgFailureResult when addCollaboratorByVendorId fails for first and second vendorIds" in new Setup {
@@ -269,12 +292,10 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case _                                        => fail
       }
 
-      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
-
+     verifyAddCollaboratorToOrgFailure()
     }
 
+    
   }
 
 }
