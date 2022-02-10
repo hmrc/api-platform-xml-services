@@ -57,11 +57,9 @@ class UploadService @Inject() (
 
   private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = { 
     createOrGetUser(parsedUser) flatMap {
-      case result: CreatedUserResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
-      case result: RetrievedUserResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
+      case result: CreateVerifiedUserSuccessResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
       case e: CreateVerifiedUserFailedResult   =>
         Future.successful(CreateOrGetUserFailedResult(s"RowNumber:$rowNumber - failed to get or create User: ${e.message}"))
-      case _   => Future.successful(CreateOrGetUserFailedResult(s"RowNumber:$rowNumber - failed to get or create User " ))
     }
   }
 

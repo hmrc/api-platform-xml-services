@@ -92,9 +92,20 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
     val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName)
 
+    def primeMocksForAddCollaboratorToOrgFailure(response1: Either[ManageCollaboratorResult, Organisation], response2: Either[ManageCollaboratorResult, Organisation]) = {
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
+      when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
+      when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
+      when(mockOrganisationService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response1))
+      when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response2))
+
+    }
   }
 
   "uploadUsers" should {
+
+    def errorMessageForVendorIdUserId(vendorId: VendorId, userId: UserId) =
+      s"RowNumber:1 - failed to add user ${userId.value} to vendorId ${vendorId.value} : Failed to get organisation for Vendor Id: ${vendorId.value}"
 
     "return UploadCreatedUserSuccessResult when vendorId validation successful and user is created and successfully returned from the connector" in new Setup {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
@@ -111,13 +122,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                          => fail
+        case _                                                                      => fail
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
       verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
-      
+
     }
 
     "return UploadExistingUserSuccessResult when vendorId validation successful and user is retrieved and successfully returned from the connector" in new Setup {
@@ -127,7 +138,6 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockOrganisationService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
       when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
 
-
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
@@ -136,13 +146,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadExistingUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                          => fail
+        case _                                                                       => fail
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
       verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
-      
+
     }
 
     "return InvalidUserResult when vendorId is not found and so validation fails" in new Setup {
@@ -155,12 +165,12 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - Invalid vendorId(s)"
-        case _                                         => fail
+        case _                                  => fail
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verifyZeroInteractions(mockThirdPartyDeveloperConnector)
-      
+
     }
 
     "return InvalidUserResult when vendorId is missing and so validation fails" in new Setup {
@@ -171,12 +181,12 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - missing vendorIds on user"
-        case _                                         => fail
+        case _                                  => fail
       }
 
       verifyZeroInteractions(mockOrganisationService)
       verifyZeroInteractions(mockThirdPartyDeveloperConnector)
-      
+
     }
 
     "return CreateOrGetUserFailedResult when vendorId validation successful and createVerifiedUser user fails " in new Setup {
@@ -186,21 +196,85 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
 
-
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case e: CreateOrGetUserFailedResult => e.message shouldBe s"RowNumber:1 - failed to get or create User: Unable to register user"
-        case _                               => fail
+        case _                              => fail
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
     }
 
-    
+    "return AddUserToOrgFailureResult when addCollaboratorByVendorId fails for first vendorId but successful for the second vendorId" in new Setup {
+
+      primeMocksForAddCollaboratorToOrgFailure(
+        Left(GetOrganisationFailedResult(message = s"Failed to get organisation for Vendor Id: ${vendorId1.value}")),
+        Right(organisation2)
+      )
+
+      val results = await(inTest.uploadUsers(List(parsedUser)))
+
+      results.nonEmpty shouldBe true
+      results.size shouldBe 1
+      results.head match {
+        case AddUserToOrgFailureResult(error: String) => error shouldBe errorMessageForVendorIdUserId(vendorId1, userId)
+        case _                                        => fail
+      }
+
+      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
+      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+
+    }
+
+    "return AddUserToOrgFailureResult when addCollaboratorByVendorId fails for second vendorId but successful for the first vendorId" in new Setup {
+
+      primeMocksForAddCollaboratorToOrgFailure(
+        Right(organisation1),
+        Left(GetOrganisationFailedResult(message = s"Failed to get organisation for Vendor Id: ${vendorId2.value}"))
+      )
+
+      val results = await(inTest.uploadUsers(List(parsedUser)))
+
+      results.nonEmpty shouldBe true
+      results.size shouldBe 1
+      results.head match {
+        case AddUserToOrgFailureResult(error: String) => error shouldBe errorMessageForVendorIdUserId(vendorId2, userId)
+        case _                                        => fail
+      }
+
+      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
+      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+
+    }
+
+    "return AddUserToOrgFailureResult when addCollaboratorByVendorId fails for first and second vendorIds" in new Setup {
+
+      primeMocksForAddCollaboratorToOrgFailure(
+        Left(GetOrganisationFailedResult(message = s"Failed to get organisation for Vendor Id: ${vendorId1.value}")),
+        Left(GetOrganisationFailedResult(message = s"Failed to get organisation for Vendor Id: ${vendorId2.value}"))
+      )
+
+      val results = await(inTest.uploadUsers(List(parsedUser)))
+
+      results.nonEmpty shouldBe true
+      results.size shouldBe 1
+      results.head match {
+        case AddUserToOrgFailureResult(error: String) => error shouldBe s"${errorMessageForVendorIdUserId(vendorId1, userId)} | ${errorMessageForVendorIdUserId(vendorId2, userId)}"
+        case _                                        => fail
+      }
+
+      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
+      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+
+    }
+
   }
 
 }
