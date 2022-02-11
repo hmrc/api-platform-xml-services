@@ -111,8 +111,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Left(e: InternalServerException) => e.message mustBe "Could not find or create user"
-        case Left(e: Throwable)                                => println(e) 
-                                                                  fail
+        case Left(e: Throwable)                                => fail
       }
 
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
