@@ -119,10 +119,10 @@
     "categories": ["STAMP_DUTY"]
   },
   {
-    "name": "VAT and EC Sales List Online",
+    "name": "EC Sales List Online",
     "serviceName": "vat-and-ec-sales-list",
     "context": "/government/collections/vat-and-ec-sales-list-online-support-for-software-developers",
-    "description": "Technical specifications for software developers working with the VAT and EC Sales List Online service. This API is not part of the Making Tax Digital initiative.",
-    "categories": ["CUSTOMS", "VAT"]
+    "description": "Technical specifications for software developers working with the EC Sales List Online service. This API is not part of the Making Tax Digital initiative.",
+    "categories": ["CUSTOMS"]
   }
 ]
