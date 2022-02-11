@@ -17,7 +17,6 @@
 package uk.gov.hmrc.apiplatformxmlservices.config
 
 import com.google.inject.AbstractModule
-import uk.gov.hmrc.apiplatformxmlservices.connectors
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 

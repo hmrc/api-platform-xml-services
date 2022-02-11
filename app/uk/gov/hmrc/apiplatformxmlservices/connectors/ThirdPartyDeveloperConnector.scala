@@ -43,6 +43,7 @@ import scala.util.control.NonFatal
 import play.api.Logging
 import play.api.http.Status.{CREATED, OK}
 
+
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) extends Logging {
 
@@ -65,14 +66,15 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
       }
   }
 
-  def createVerifiedUser(request: ImportUserRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, UserResponse]] = {
+  def createVerifiedUser(request: ImportUserRequest)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
     http.POST[ImportUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/import-user", request)
-      .map { response =>
-        if(response.status == CREATED || response.status == OK)  Right(response.json.as[UserResponse])
-        else Left(new InternalServerException("Could not create user"))
+      .map { response => response.status match {
+          case CREATED => CreatedUserResult(response.json.as[UserResponse])
+          case OK => RetrievedUserResult(response.json.as[UserResponse])
+          case _ => CreateVerifiedUserFailedResult("Could not get or create user")
+         }
       }.recover {
-        case NonFatal(e) => logger.error(e.getMessage)
-          Left(e)
+        case NonFatal(e) => CreateVerifiedUserFailedResult(e.getMessage)
       }
   }
 

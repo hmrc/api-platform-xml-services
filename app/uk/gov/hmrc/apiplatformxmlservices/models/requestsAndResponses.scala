@@ -22,26 +22,19 @@ case class CreateOrganisationRequest(organisationName: OrganisationName, email: 
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
 
-case class CoreUserDetail(userId: UserId, email: String)
-
 case class AddCollaboratorRequest(email: String)
 case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
 case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
 
-case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: String)
+case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: List[VendorId])
 case class BulkAddUsersRequest(users: Seq[ParsedUser])
 
-case class CreatedOrUpdatedUser(csvRowNumber: Int, parsedUser: ParsedUser, userResponse: UserResponse)
-object CreatedOrUpdatedUser {
-    def create(csvRowNumber: Int,parsedUser: ParsedUser, userResponse: UserResponse): CreatedOrUpdatedUser ={
-        CreatedOrUpdatedUser(csvRowNumber, parsedUser, userResponse)
-    }
+sealed trait ManageCollaboratorResult{
+    val message: String
 }
-
-sealed trait ManageCollaboratorResult
-case class OrganisationAlreadyHasCollaboratorResult() extends ManageCollaboratorResult
+case class OrganisationAlreadyHasCollaboratorResult(message: String) extends ManageCollaboratorResult
 case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult
 case class GetOrCreateUserIdFailedResult(message: String) extends ManageCollaboratorResult
 case class UpdateCollaboratorFailedResult(message: String) extends ManageCollaboratorResult
@@ -57,9 +50,37 @@ sealed trait UpdateOrganisationResult
 case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
 case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult
 
+sealed trait CreateVerifiedUserResult
+
+abstract class CreateVerifiedUserSuccessResult() extends CreateVerifiedUserResult {
+    val userResponse: UserResponse
+}
+
+case class CreatedUserResult(userResponse: UserResponse) extends CreateVerifiedUserSuccessResult
+case class RetrievedUserResult(userResponse: UserResponse) extends CreateVerifiedUserSuccessResult
+case class CreateVerifiedUserFailedResult(message: String) extends CreateVerifiedUserResult
+
+sealed trait ValidateUserResult{
+    val message: String
+}
+case class ValidUserResult(message: String) extends ValidateUserResult
+case class InvalidVendorIdResult(message: String) extends ValidateUserResult
+case class MissingVendorIdResult(message: String) extends ValidateUserResult
+//case class InvalidServiceResult(message: String) extends ValidateUserResult
+
 
 sealed trait UploadUserResult
-case class InvalidVendorIdResult(message: String) extends UploadUserResult
-case class InvalidServiceResult(message: String) extends UploadUserResult
-case class UploadUserFailedResult(message: String) extends UploadUserResult
-case class UploadUserSuccessResult() extends UploadUserResult
+
+abstract class UploadFailedResult() extends UploadUserResult {
+    val message: String
+}
+
+abstract class UploadSuccessResult() extends UploadUserResult
+
+case class UploadCreatedUserSuccessResult(rowNumber: Int, user: UserResponse) extends UploadSuccessResult
+case class UploadExistingUserSuccessResult(rowNumber: Int, user: UserResponse) extends UploadSuccessResult
+
+case class InvalidUserResult(message: String) extends UploadFailedResult
+case class AddUserToOrgFailureResult(message: String) extends UploadFailedResult
+case class CreateOrGetUserFailedResult(message: String) extends UploadFailedResult
+

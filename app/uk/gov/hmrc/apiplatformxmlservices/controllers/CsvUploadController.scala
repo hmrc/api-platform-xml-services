@@ -52,13 +52,26 @@ class CsvUploadController @Inject() (
       }
   }
 
+
+
   private def handleUploadUsers(bulkAddUsersRequest: BulkAddUsersRequest)(implicit hc: HeaderCarrier) = {
-    uploadService.uploadUsers(bulkAddUsersRequest.users.toList) map {
+
+    def printErrors(results: List[UploadUserResult]) ={
+       val errors = results.map(x =>x match {
+              case e: UploadFailedResult => Some(e.message)
+              case _ => None}).flatten
+        errors.map(logger.error(_))
+    }
+    val usersToUpload = bulkAddUsersRequest.users.toList
+    uploadService.uploadUsers(usersToUpload) map {
       results =>
-        results.map {
-          case Right(user: CreatedOrUpdatedUser) => logger.info(s"Users CSV import - user on row number ${user.csvRowNumber} successfully updated/added to database")
-          case Left(e: UploadUserFailedResult)   => logger.error(s"Users CSV import - ${e.message}")
-        }
+          val successful = results.count(x => x.isInstanceOf[UploadSuccessResult])
+          val created = results.count(x => x.isInstanceOf[UploadCreatedUserSuccessResult])
+          val retrieved = results.count(x => x.isInstanceOf[UploadExistingUserSuccessResult])
+          val failure =  results.count(x => x.isInstanceOf[UploadFailedResult])
+
+        printErrors(results)
+        logger.warn(s"Expected to upload ${usersToUpload.size} users. Successfully uploaded $successful; of which $created were created and $retrieved were retrieved. Number of users failed to upload: $failure")
     }
 
   }

@@ -11,6 +11,9 @@ lazy val microservice = Project(appName, file("."))
     scalaVersion                     := "2.12.13",
     PlayKeys.playDefaultPort         := 11116,
     routesImport                     += "uk.gov.hmrc.apiplatformxmlservices.controllers.binders._",
+    scalacOptions ++= Seq(
+      "-Ypartial-unification"
+    ),
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
   )
   .settings(publishingSettings,

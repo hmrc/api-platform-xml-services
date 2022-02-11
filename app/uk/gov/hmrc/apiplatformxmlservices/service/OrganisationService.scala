@@ -48,7 +48,8 @@ class OrganisationService @Inject() (
   def create(request: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
     vendorIdService.getNextVendorId().flatMap {
       case Right(vendorId: VendorId) => handleGetOrCreateUserId(request.email).flatMap {
-          case Right(user: CoreUserDetail)            => handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
+          case Right(user: CoreUserDetail)            =>
+            handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
           case Left(e: GetOrCreateUserIdFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
       case Left(e: Throwable)        => successful(CreateOrganisationFailedResult(e.getMessage))
@@ -58,7 +59,9 @@ class OrganisationService @Inject() (
     }
   }
 
-  def handleCreateOrganisation(organisationName: OrganisationName, vendorId: VendorId, collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
+  def handleCreateOrganisation(organisationName: OrganisationName,
+                               vendorId: VendorId,
+                               collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
 
     def mapError(ex: Exception): CreateOrganisationResult = ex match {
       case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
@@ -102,7 +105,7 @@ class OrganisationService @Inject() (
 
   def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = organisationRepository.findAll(sortBy)
 
-  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
       _ <- EitherT(collaboratorCanBeDeleted(organisation, request.email))
@@ -119,10 +122,19 @@ class OrganisationService @Inject() (
     } yield updatedOrganisation).value
   }
 
+  def addCollaboratorByVendorId(vendorId: VendorId, email: String, userId: UserId): Future[Either[ManageCollaboratorResult, Organisation]] ={
+        //vendor id should exist and be valid at this point (import flow)
+      (for {
+      organisation <- EitherT(handleFindByVendorId(vendorId))
+      _ <- EitherT(collaboratorCanBeAdded(organisation, email))
+      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(CoreUserDetail(userId, email), organisation))
+    } yield updatedOrganisation).value
+  }
+
   private def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.createOrUpdate(
       Organisation(
-        organisationId = generateOrganisationId,
+        organisationId = generateOrganisationId(),
         name = organisationName,
         vendorId = vendorId
       )
@@ -157,7 +169,7 @@ class OrganisationService @Inject() (
   }
 
   private def collaboratorCanBeAdded(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    if (organisationHasCollaborator(organisation, emailAddress)) successful(Left(OrganisationAlreadyHasCollaboratorResult()))
+    if (organisationHasCollaborator(organisation, emailAddress)) successful(Left(OrganisationAlreadyHasCollaboratorResult("")))
     else successful(Right(organisation))
   }
 
@@ -171,6 +183,13 @@ class OrganisationService @Inject() (
   private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.findByOrgId(organisationId).map {
       case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
+      case Some(organisation: Organisation) => Right(organisation)
+    }
+  }
+
+  private def handleFindByVendorId(vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
+    organisationRepository.findByVendorId(vendorId).map {
+      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Vendor Id: ${vendorId.value}"))
       case Some(organisation: Organisation) => Right(organisation)
     }
   }

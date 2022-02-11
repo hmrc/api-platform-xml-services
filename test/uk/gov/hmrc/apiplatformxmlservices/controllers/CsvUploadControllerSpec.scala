@@ -79,7 +79,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
     val firstName = "Joe"
     val lastName = "Bloggs"
     val services = ""
-    val vendorIds = ""
+    val vendorIds = List(VendorId(1))
 
     val parsedUser = ParsedUser(
       email = emailOne,
@@ -97,8 +97,6 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       emailPreferences = EmailPreferences.noPreferences,
       userId = userId
     )
-
-    val expectedExistingUser = CreatedOrUpdatedUser(1, parsedUser, userResponse)
 
     val bulkAddUsersRequestRequestObj = BulkAddUsersRequest(List(parsedUser))
 
@@ -127,8 +125,8 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
   }
 
   "bulkUploadUsers" should {
-    "return 200 when service returns a Right" in new Setup {
-      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(Right(expectedExistingUser))))
+    "return 200 when service returns a List of successful UploadUserResults" in new Setup {
+      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(UploadCreatedUserSuccessResult(1, userResponse))))
 
       val result = controller.bulkUploadUsers()(bulkAddUsersRequest)
       status(result) shouldBe Status.OK
@@ -136,15 +134,13 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       verify(mockUploadervice).uploadUsers(eqTo(List(parsedUser)))(*)
     }
 
-    "bulkUploadUsers" should {
-    "return 200 when service returns a Left" in new Setup {
-      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(Left(UploadUserFailedResult(s"Unable to create user on csv row number 1")))))
+    "return 200 when service returns a List of UploadUserResult" in new Setup {
+      when(mockUploadervice.uploadUsers(eqTo(List(parsedUser)))(*)).thenReturn(Future.successful(List(CreateOrGetUserFailedResult(s"Unable to create user on csv row number 1"))))
 
       val result = controller.bulkUploadUsers()(bulkAddUsersRequest)
       status(result) shouldBe Status.OK
 
       verify(mockUploadervice).uploadUsers(eqTo(List(parsedUser)))(*)
     }
-  }
   }
 }
