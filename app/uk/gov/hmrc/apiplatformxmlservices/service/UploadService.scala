@@ -32,6 +32,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import play.mvc.BodyParser.Xml
 
 @Singleton
 class UploadService @Inject() (
@@ -99,23 +100,37 @@ class UploadService @Inject() (
   }
 
   private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
-    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName))
+    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, Map.empty))
   }
 
-  private def validateParsedUser(user: ParsedUser, rowNumber: Int): Future[ValidateUserResult] = {
-    user.vendorIds match {
+  private def validateParsedUser(user: ParsedUser, rowNumber: Int) = {
+
+
+   Future.sequence(List(validateVendorIds(user.vendorIds, rowNumber), validateServiceNames(user.services, rowNumber))) map {
+      case _: ValidateUserResult => ValidUserResult("ok")
+      case _: InvalidVendorIdResult => 
+      case _: InvalidServiceNameResult =>   
+   }
+  }
+
+  private def validateServiceNames(services: List[ServiceName], rowNumber: Int) = {
+    val allServiceNames = XmlApi.xmlApis.map(x => x.serviceName.value)
+    Future.successful(services.isEmpty || services.forall(x => allServiceNames.contains(x))) map {
+      case true  => ValidUserResult("ok")
+      case false => InvalidServiceNameResult(s"RowNumber:$rowNumber - Invalid service(s)")
+    }
+  }
+
+  private def validateVendorIds(vendorIds: List[VendorId], rowNumber: Int) = {
+    vendorIds match {
       case Nil                       => Future.successful(MissingVendorIdResult(s"RowNumber:$rowNumber - missing vendorIds on user"))
-      case vendorIds: List[VendorId] => validateVendorIds(vendorIds) map {
+      case vendorIds: List[VendorId] =>  Future.sequence(vendorIds.map(organisationService.findByVendorId))
+      .map(x => x.flatten.size == vendorIds.size && vendorIds.nonEmpty) map {
           case true  => ValidUserResult("ok")
           case false => InvalidVendorIdResult(s"RowNumber:$rowNumber - Invalid vendorId(s)")
         }
 
     }
-  }
-
-  private def validateVendorIds(vendorIds: List[VendorId]) = {
-    Future.sequence(vendorIds.map(organisationService.findByVendorId))
-      .map(x => x.flatten.size == vendorIds.size && vendorIds.nonEmpty)
 
   }
 }

@@ -28,7 +28,7 @@ case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
 case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
 
-case class ParsedUser(email: String, firstName: String, lastName: String, services: String, vendorIds: List[VendorId])
+case class ParsedUser(email: String, firstName: String, lastName: String, services: List[ServiceName], vendorIds: List[VendorId])
 case class BulkAddUsersRequest(users: Seq[ParsedUser])
 
 sealed trait ManageCollaboratorResult{
@@ -65,6 +65,7 @@ sealed trait ValidateUserResult{
 }
 case class ValidUserResult(message: String) extends ValidateUserResult
 case class InvalidVendorIdResult(message: String) extends ValidateUserResult
+case class InvalidServiceNameResult(message: String) extends ValidateUserResult
 case class MissingVendorIdResult(message: String) extends ValidateUserResult
 //case class InvalidServiceResult(message: String) extends ValidateUserResult
 

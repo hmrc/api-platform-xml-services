@@ -94,7 +94,6 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      emailPreferences = EmailPreferences.noPreferences,
       userId = userId
     )
 

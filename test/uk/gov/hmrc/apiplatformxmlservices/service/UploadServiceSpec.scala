@@ -72,6 +72,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     val gatekeeperUserId = "John Doe"
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
     val coreUserDetail = CoreUserDetail(userId, emailOne)
+    val emailPreferences: Map[ApiCategory, List[ServiceName]] = Map.empty
+
 
     val parsedUser = ParsedUser(
       email = emailOne,
@@ -86,11 +88,10 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      emailPreferences = EmailPreferences.noPreferences,
       userId = userId
     )
 
-    val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName)
+    val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName, emailPreferences = emailPreferences)
 
     def primeMocksForAddCollaboratorToOrgFailure(response1: Either[ManageCollaboratorResult, Organisation], response2: Either[ManageCollaboratorResult, Organisation]) = {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
