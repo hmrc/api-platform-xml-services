@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service.upload
 
-
 //import cats.data.EitherT
 import cats.data.Validated
 import cats.syntax.traverse._
@@ -33,12 +32,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import cats.data.NonEmptyList
 
+
 @Singleton
 class UploadService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     organisationService: OrganisationService
   )(implicit val ec: ExecutionContext)
-    extends Logging with UploadValidation {
+    extends Logging
+    with UploadValidation 
+    with ConvertToEmailPrefsMap {
 
   def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier): Future[List[UploadUserResult]] = {
     Future.sequence(users.zipWithIndex.map(x => uploadUser(x._1, x._2 + 1)))
@@ -48,18 +50,17 @@ class UploadService @Inject() (
     // Given a user that does exist in the api platform (dev hub / tpd)
     // When I import an unknown email address in the csv
     // Then the users account is untouched
-    validateParsedUser(parsedUser, rowNumber, organisationService.findByVendorId).flatMap{
-      case Validated.Valid(_) => handleCreateOrGetUserResult(parsedUser, rowNumber)
+    validateParsedUser(parsedUser, rowNumber, organisationService.findByVendorId).flatMap {
+      case Validated.Valid(_)                              => handleCreateOrGetUserResult(parsedUser, rowNumber)
       case Validated.Invalid(errors: NonEmptyList[String]) => Future.successful(InvalidUserResult(errors.toList.mkString(" | ")))
     }
-   
 
   }
 
   private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
     createOrGetUser(parsedUser) flatMap {
       case result: CreateVerifiedUserSuccessResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
-      case e: CreateVerifiedUserFailedResult   =>
+      case e: CreateVerifiedUserFailedResult       =>
         Future.successful(CreateOrGetUserFailedResult(s"RowNumber:$rowNumber - failed to get or create User: ${e.message}"))
     }
   }
@@ -76,9 +77,9 @@ class UploadService @Inject() (
       Future.sequence(vendors.map(vendorId => {
         organisationService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
           .map {
-            case Right(_ : Organisation)      => Right(mapSuccessResult(result))
-            case Left(_ : OrganisationAlreadyHasCollaboratorResult) => Right(mapSuccessResult(result))
-            case Left(errorResult: ManageCollaboratorResult) =>
+            case Right(_: Organisation)                            => Right(mapSuccessResult(result))
+            case Left(_: OrganisationAlreadyHasCollaboratorResult) => Right(mapSuccessResult(result))
+            case Left(errorResult: ManageCollaboratorResult)       =>
               Left(AddUserToOrgFailureResult(s"RowNumber:$rowNumber - failed to add user " +
                 s"${result.userResponse.userId.value} to vendorId ${vendorId.value} : ${errorResult.message}"))
           }
@@ -92,15 +93,18 @@ class UploadService @Inject() (
     // List(Right(10), Right(20))           => Right(List(10, 20))
     // List(Right(10), Left("error2"))      => Left(List("error2"))
 
-    results.map(x => x.traverse(_.toValidated.bimap(List(_), identity)).toEither match {
-      case Left(errors: List[AddUserToOrgFailureResult]) => AddUserToOrgFailureResult(errors.map(_.message).mkString(" | "))
-      case Right(successes: List[UploadSuccessResult])   => successes.head
-    })
+    results.map(x =>
+      x.traverse(_.toValidated.bimap(List(_), identity)).toEither match {
+        case Left(errors: List[AddUserToOrgFailureResult]) => AddUserToOrgFailureResult(errors.map(_.message).mkString(" | "))
+        case Right(successes: List[UploadSuccessResult])   => successes.head
+      }
+    )
 
   }
 
   private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
-    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, Map.empty))
+    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, extractEmailPreferencesFromUser(parsedUser)))
   }
+
 
 }

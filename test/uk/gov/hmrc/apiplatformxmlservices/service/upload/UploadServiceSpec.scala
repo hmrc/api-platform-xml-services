@@ -74,7 +74,12 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     val gatekeeperUserId = "John Doe"
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
     val coreUserDetail = CoreUserDetail(userId, emailOne)
-    val emailPreferences: Map[ApiCategory, List[ServiceName]] = Map.empty
+    //[info]     ImportUserRequest(foo@bar.com,Joe,Bloggs,
+    //Map(CHARITIES -> List(ServiceName(charities-online)), CUSTOMS -> List(ServiceName(import-control-system)))),
+    val emailPreferences: Map[ApiCategory, List[ServiceName]] = Map(
+    ApiCategory.CHARITIES -> List(ServiceName("charities-online")),
+    ApiCategory.CUSTOMS -> List(ServiceName("import-control-system"))
+    )
 
 
     val parsedUser = ParsedUser(
