@@ -67,8 +67,6 @@ case class ValidUserResult(message: String) extends ValidateUserResult
 case class InvalidVendorIdResult(message: String) extends ValidateUserResult
 case class InvalidServiceNameResult(message: String) extends ValidateUserResult
 case class MissingVendorIdResult(message: String) extends ValidateUserResult
-//case class InvalidServiceResult(message: String) extends ValidateUserResult
-
 
 sealed trait UploadUserResult
 
