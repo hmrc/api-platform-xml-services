@@ -45,7 +45,7 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
     }
 
     "return empty map when apis passed in is empty" in { // should this throw an exception??
-        val result = extractEmailPreferencesFromUser(validParsedUser, Seq.empty)
+        val result = extractEmailPreferencesFromUser(validParsedUser, List.empty)
       result shouldBe Map.empty
     }
 
@@ -57,7 +57,7 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
 
     "return correct email preferences when one api has no categories" in { // should this throw an exception??
       val extraApiInMultipleCategories = XmlApi("name", api1Name, "context", "description", None )
-      val result = extractEmailPreferencesFromUser(validParsedUser, XmlApi.xmlApis ++ Seq(extraApiInMultipleCategories))
+      val result = extractEmailPreferencesFromUser(validParsedUser, XmlApi.xmlApis ++ List(extraApiInMultipleCategories))
       result.keySet.toList should contain only (ApiCategory.CHARITIES, ApiCategory.CUSTOMS)
       result.getOrElse(ApiCategory.CHARITIES, List.empty) should contain only ServiceName("charities-online")
       result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only ServiceName("import-control-system")

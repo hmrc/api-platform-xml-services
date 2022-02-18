@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service.upload
 
+import cats.implicits._
 import uk.gov.hmrc.apiplatformxmlservices.models.ParsedUser
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
 import uk.gov.hmrc.apiplatformxmlservices.models.ApiCategory
@@ -23,26 +24,36 @@ import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 
 trait ConvertToEmailPrefsMap {
 
-  def extractEmailPreferencesFromUser(parsedUser: ParsedUser, xmlApis: Seq[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
-    import cats.implicits._
-    def apiListToMap(apis: List[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
-      val categoryList = apis.flatMap(api => api.categories.getOrElse(List.empty)).distinct
-      categoryList.flatMap(category =>
-        apis.map(api => {
-          if (api.categories.getOrElse(List.empty).contains(category)) {
-            Map(category -> List(api.serviceName))
-          }
-          else Map.empty[ApiCategory, List[ServiceName]]
-        })).reduce((x, y) => x.combine(y))
+  def extractEmailPreferencesFromUser(parsedUser: ParsedUser, xmlApis: List[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
+
+    val distinctCategories = xmlApis.flatMap(api => api.categories.getOrElse(List.empty)).distinct
+
+    def generateCategoryMaps(category: ApiCategory, apis: List[XmlApi]): List[Map[ApiCategory, List[ServiceName]]] = {
+      apis.map(api => {
+        if (api.categories.getOrElse(List.empty).contains(category)) {
+          Map(category -> List(api.serviceName))
+        }
+        else Map.empty[ApiCategory, List[ServiceName]]
+      })
+    }
+
+    def combineMaps(categoryMaps: List[Map[ApiCategory, List[ServiceName]]]): Map[ApiCategory, List[ServiceName]] = {
+      categoryMaps.reduce((x, y) => x.combine(y))
+    }
+
+    def apiListToMap(filteredApis: List[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
+       val categoryMaps = for {
+        distinctCategory <- distinctCategories
+        categoryMaps = generateCategoryMaps(distinctCategory, filteredApis)
+      } yield categoryMaps
+      combineMaps(categoryMaps.flatten)
     }
 
     if (parsedUser.services.nonEmpty && xmlApis.nonEmpty) {
       val apis: List[XmlApi] = parsedUser.services
         .map(service => xmlApis.filter(x => x.serviceName == service).head)
       apiListToMap(apis)
-    } else {
-      Map.empty[ApiCategory, List[ServiceName]]
-    }
+    } else Map.empty[ApiCategory, List[ServiceName]]
 
   }
 }
