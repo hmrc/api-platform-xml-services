@@ -23,21 +23,22 @@ import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 
 trait ConvertToEmailPrefsMap {
 
-  def extractEmailPreferencesFromUser(parsedUser: ParsedUser) = {
+  def extractEmailPreferencesFromUser(parsedUser: ParsedUser, xmlApis: Seq[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
     import cats.implicits._
     def apiListToMap(apis: List[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
-      val categoryList = apis.map(api => api.categories.getOrElse(List.empty)).flatten.distinct
-      categoryList.map(category =>
+      val categoryList = apis.flatMap(api => api.categories.getOrElse(List.empty)).distinct
+      categoryList.flatMap(category =>
         apis.map(api => {
-          if (api.categories.getOrElse(List.empty).contains(category)) { Map(category -> List(api.serviceName)) }
+          if (api.categories.getOrElse(List.empty).contains(category)) {
+            Map(category -> List(api.serviceName))
+          }
           else Map.empty[ApiCategory, List[ServiceName]]
-        })
-      ).flatten.reduce((x, y) => x.combine(y))
+        })).reduce((x, y) => x.combine(y))
     }
 
-    if (parsedUser.services.nonEmpty) {
+    if (parsedUser.services.nonEmpty && xmlApis.nonEmpty) {
       val apis: List[XmlApi] = parsedUser.services
-        .map(service => XmlApi.xmlApis.filter(x => x.serviceName == service).head)
+        .map(service => xmlApis.filter(x => x.serviceName == service).head)
       apiListToMap(apis)
     } else {
       Map.empty[ApiCategory, List[ServiceName]]

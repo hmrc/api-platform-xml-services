@@ -39,7 +39,7 @@ class UploadService @Inject() (
     organisationService: OrganisationService
   )(implicit val ec: ExecutionContext)
     extends Logging
-    with UploadValidation 
+    with UploadValidation
     with ConvertToEmailPrefsMap {
 
   def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier): Future[List[UploadUserResult]] = {
@@ -103,7 +103,12 @@ class UploadService @Inject() (
   }
 
   private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
-    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, extractEmailPreferencesFromUser(parsedUser)))
+    val request =  ImportUserRequest(parsedUser.email,
+      parsedUser.firstName,
+      parsedUser.lastName,
+      extractEmailPreferencesFromUser(parsedUser, XmlApi.xmlApis)
+    )
+    thirdPartyDeveloperConnector.createVerifiedUser(request)
   }
 
 
