@@ -22,9 +22,10 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.EmailPreferences
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.ImportUserRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.ApiCategory
+import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 
 trait ThirdPartyDeveloperStub {
   val createOrGetUserIdUrl = "/developers/user-id"
@@ -54,17 +55,15 @@ def stubGetByEmailsReturnsNoResponse(emails: List[String], status: Int) ={
      stubPostWithRequestBodyNoResponse("/developers/get-by-emails", status, requestAsString)
 }
 
-def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: String, userId: UserId, status: Int) ={
-    val createXmlUserRequestObj = ImportUserRequest(email, firstName, lastName)
+def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: String, userId: UserId, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) ={
+    val createXmlUserRequestObj = ImportUserRequest(email, firstName, lastName, emailPreferences)
     val requestAsString = Json.toJson(createXmlUserRequestObj).toString
-
 
     val userResponse = UserResponse(
       email = email,
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      emailPreferences = EmailPreferences.noPreferences,
       userId = userId
     )
 
@@ -72,8 +71,8 @@ def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: St
 
 }
 
-def stubCreateVerifiedUserEmptyResponse(email: String, firstName: String, lastName: String, status: Int) ={
-    val importUserRequestObj = ImportUserRequest(email, firstName, lastName)
+def stubCreateVerifiedUserEmptyResponse(email: String, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) ={
+    val importUserRequestObj = ImportUserRequest(email, firstName, lastName, emailPreferences)
     val requestAsString = Json.toJson(importUserRequestObj).toString
 
 

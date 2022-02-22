@@ -30,12 +30,12 @@ import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.service.upload.UploadService
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.InternalServerException
-import uk.gov.hmrc.apiplatformxmlservices.service.UploadService
 
 class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
@@ -78,7 +78,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
     val emailOne = "foo@bar.com"
     val firstName = "Joe"
     val lastName = "Bloggs"
-    val services = ""
+    val services = List(ServiceName("service1"), ServiceName("service2"))
     val vendorIds = List(VendorId(1))
 
     val parsedUser = ParsedUser(
@@ -94,7 +94,6 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      emailPreferences = EmailPreferences.noPreferences,
       userId = userId
     )
 

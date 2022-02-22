@@ -25,6 +25,7 @@ import play.api.test.Helpers.defaultAwaitTimeout
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.service.upload.UploadService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.UUID
@@ -61,7 +62,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     val emailOne = "foo@bar.com"
     val firstName = "Joe"
     val lastName = "Bloggs"
-    val services = ""
+    val services = List(ServiceName("import-control-system"), ServiceName("charities-online"))
+    val invalidServices = List(ServiceName("service1"), ServiceName("charities-online"))
     val vendorIds = ""
 
     val emailTwo = "anotheruser@bar.com"
@@ -72,6 +74,11 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     val gatekeeperUserId = "John Doe"
     val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
     val coreUserDetail = CoreUserDetail(userId, emailOne)
+    val emailPreferences: Map[ApiCategory, List[ServiceName]] = Map(
+    ApiCategory.CHARITIES -> List(ServiceName("charities-online")),
+    ApiCategory.CUSTOMS -> List(ServiceName("import-control-system"))
+    )
+
 
     val parsedUser = ParsedUser(
       email = emailOne,
@@ -86,11 +93,10 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      emailPreferences = EmailPreferences.noPreferences,
       userId = userId
     )
 
-    val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName)
+    val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName, emailPreferences = emailPreferences)
 
     def primeMocksForAddCollaboratorToOrgFailure(response1: Either[ManageCollaboratorResult, Organisation], response2: Either[ManageCollaboratorResult, Organisation]) = {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
@@ -129,9 +135,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                                                      => fail
+        case _ => fail                                                        
       }
-
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
       verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
@@ -161,6 +166,24 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
 
     }
+
+  "return InvalidUserResult when a service and a vendorId are invalid and validation fails" in new Setup {
+      when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
+      when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(None))
+      val results = await(inTest.uploadUsers(List(parsedUser.copy(services = invalidServices))))
+
+      results.nonEmpty shouldBe true
+      results.size shouldBe 1
+      results.head match {
+        case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - Invalid vendorId(s) | RowNumber:1 - Invalid service(s)"
+        case _                                  => fail
+      }
+
+      verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
+      verifyZeroInteractions(mockThirdPartyDeveloperConnector)
+
+    }
+    
 
     "return InvalidUserResult when vendorId is not found and so validation fails" in new Setup {
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))

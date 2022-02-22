@@ -43,8 +43,8 @@ case class XmlApi(name: String, serviceName: ServiceName, context: String, descr
 
 object XmlApi {
 
-  def xmlApis: Seq[XmlApi] =
-    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[Seq[XmlApi]]
+  def xmlApis: List[XmlApi] =
+    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
 }
 
 case class OrganisationId(value: ju.UUID) extends AnyVal

@@ -24,7 +24,7 @@ import play.api.mvc.ControllerComponents
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
-import uk.gov.hmrc.apiplatformxmlservices.service.UploadService
+import uk.gov.hmrc.apiplatformxmlservices.service.upload.UploadService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
