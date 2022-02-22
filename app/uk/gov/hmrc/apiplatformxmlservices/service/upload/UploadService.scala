@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service.upload
 
-//import cats.data.EitherT
 import cats.data.Validated
 import cats.syntax.traverse._
 import cats.instances.list._
@@ -47,9 +46,7 @@ class UploadService @Inject() (
   }
 
   private def uploadUser(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
-    // Given a user that does exist in the api platform (dev hub / tpd)
-    // When I import an unknown email address in the csv
-    // Then the users account is untouched
+
     validateParsedUser(parsedUser, rowNumber, organisationService.findByVendorId).flatMap {
       case Validated.Valid(_)                              => handleCreateOrGetUserResult(parsedUser, rowNumber)
       case Validated.Invalid(errors: NonEmptyList[String]) => Future.successful(InvalidUserResult(errors.toList.mkString(" | ")))
@@ -84,15 +81,7 @@ class UploadService @Inject() (
                 s"${result.userResponse.userId.value} to vendorId ${vendorId.value} : ${errorResult.message}"))
           }
       }))
-    // check list for lefts and return combined messages
-
     // from https://stackoverflow.com/questions/56501107/convert-listeithera-b-to-eitherlista-listb
-    //xs.traverse(_.toValidated.bimap(List(_), identity)).toEither
-
-    // List(Left("error1"), Left("error2")) => Left(List("error1", "error2"))
-    // List(Right(10), Right(20))           => Right(List(10, 20))
-    // List(Right(10), Left("error2"))      => Left(List("error2"))
-
     results.map(x =>
       x.traverse(_.toValidated.bimap(List(_), identity)).toEither match {
         case Left(errors: List[AddUserToOrgFailureResult]) => AddUserToOrgFailureResult(errors.map(_.message).mkString(" | "))
