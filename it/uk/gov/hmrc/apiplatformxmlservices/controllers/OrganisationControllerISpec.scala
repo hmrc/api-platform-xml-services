@@ -38,7 +38,7 @@ import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 
 class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with MongoApp[Organisation] {
 
@@ -109,13 +109,15 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     val userId: UserId = UserId(getUuid())
 
     val email = "foo@bar.com"
+    val firstName = "bob"
+    val lastName = "hope"
     val gatekeeperUserId = "John Doe"
     val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
     val organisationWithCollaborators = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
     val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
     val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email)
-    val addCollaboratorRequest = AddCollaboratorRequest(email)
+    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email, firstName, lastName)
+    val addCollaboratorRequest = AddCollaboratorRequest(email, firstName, lastName)
     val removeCollaboratorRequest = RemoveCollaboratorRequest(email, gatekeeperUserId)
     val organisationIdValue = organisation.organisationId.value
     val vendorIdValue = organisation.vendorId.value
@@ -143,13 +145,13 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       )
     }
 
-    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: String, status: Int) = {
+    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: String, firstName: String, lastName: String,  status: Int) = {
       stubFor(
-        post(urlEqualTo("/developers/user-id"))
+        post(urlEqualTo("/import-user"))
           .willReturn(
             aResponse()
               .withStatus(status)
-              .withBody(Json.toJson(CoreUserDetail(userId, email)).toString)
+              .withBody(Json.toJson(UserResponse(email, firstName, lastName, verified = true, userId)).toString)
               .withHeader("Content-Type", "application/json")
           )
       )
@@ -259,7 +261,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     "POST /organisations" should {
 
       "respond with 201 if Organisation was created" in new Setup {
-        stubThirdPartyDeveloperConnectorWithBody(userId, email, OK)
+        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName, OK)
         val result = callPostEndpoint(s"$url/organisations", createOrganisationRequestAsString)
 
         result.status mustBe CREATED
@@ -360,7 +362,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
       "respond with 400 if third party developer connector returns and error" in new Setup {
         await(orgRepo.createOrUpdate(organisation))
-        stubThirdPartyDeveloperConnectorWithBody(userId, email, BAD_REQUEST)
+        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName,  BAD_REQUEST)
         val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe BAD_REQUEST
         result.body.contains("Bad Request") mustBe true
@@ -368,7 +370,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
       "respond with 200 if organisationId exists" in new Setup {
         await(orgRepo.createOrUpdate(organisation))
-        stubThirdPartyDeveloperConnectorWithBody(userId, email, OK)
+        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName,  OK)
         val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe OK
         result.body mustBe Json.toJson(organisationWithCollaborators).toString()
