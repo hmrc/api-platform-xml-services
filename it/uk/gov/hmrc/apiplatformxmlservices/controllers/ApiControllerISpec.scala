@@ -23,9 +23,9 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
-import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, ServerBaseISpec}
+import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 
-class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with AwaitTestSupport {
+class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
 
   override def beforeEach(): Unit = {
     super.beforeEach()

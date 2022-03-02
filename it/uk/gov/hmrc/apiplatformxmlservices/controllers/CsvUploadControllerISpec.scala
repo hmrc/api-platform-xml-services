@@ -27,14 +27,13 @@ import play.api.test.Helpers.OK
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport
 import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
 
-class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with MongoApp[Organisation] {
+class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
@@ -108,8 +107,7 @@ class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach w
     val organisationWithCollaborators = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
     val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
     val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email)
-    val addCollaboratorRequest = AddCollaboratorRequest(email)
+
     val removeCollaboratorRequest = RemoveCollaboratorRequest(email, gatekeeperUserId)
     val organisationIdValue = organisation.organisationId.value
     val vendorIdValue = organisation.vendorId.value
@@ -121,7 +119,7 @@ class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach w
         |    "vendorId": INVALID_VENDOR_ID,
         |    "name": "Organisation Name 3"
         |}""".stripMargin
-    val createOrganisationRequestAsString = Json.toJson(createOrganisationRequest).toString
+
   }
 
   "CsvUploadController" when {

@@ -63,7 +63,7 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
     val userId = UserId(UUID.randomUUID())
     val email = "foo@bar.com"
     val coreUserDetail = CoreUserDetail(userId, email)
-    val addCollaboratordRequestObj = AddCollaboratorRequest(email)
+
     val updatedOrganisationName = OrganisationName("updated name")
     val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrganisationName)
     val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))

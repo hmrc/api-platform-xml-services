@@ -66,7 +66,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
 
   def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[AddCollaboratorRequest] { addCollaboratorRequest =>
-      organisationService.addCollaborator(organisationId, addCollaboratorRequest.email)
+      organisationService.addCollaborator(organisationId, addCollaboratorRequest.email, addCollaboratorRequest.firstName, addCollaboratorRequest.lastName)
         .map(handleCollaboratorResult)
     }
   }
@@ -83,7 +83,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       case Right(organisation: Organisation) => Ok(Json.toJson(organisation))
       case Left(_: OrganisationAlreadyHasCollaboratorResult) => BadRequest(s"Organisation Already Has Collaborator")
       case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
-      case Left(result: GetOrCreateUserIdFailedResult) => BadRequest(s"${result.message}")
+      case Left(result: GetOrCreateUserFailedResult) => BadRequest(s"${result.message}")
       case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
       case Left(result: UpdateCollaboratorFailedResult) => InternalServerError(s"${result.message}")
     }

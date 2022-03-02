@@ -24,7 +24,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.support.AwaitTestSupport
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.InternalServerException
@@ -39,7 +38,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.CreateVerifiedUserFailedResult
 import uk.gov.hmrc.apiplatformxmlservices.models.ApiCategory
 import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 
-class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with AwaitTestSupport with ThirdPartyDeveloperStub {
+class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach  with ThirdPartyDeveloperStub {
 
   override def beforeEach(): Unit = {
     super.beforeEach()

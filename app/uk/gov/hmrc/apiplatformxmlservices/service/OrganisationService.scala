@@ -47,10 +47,10 @@ class OrganisationService @Inject() (
 
   def create(request: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
     vendorIdService.getNextVendorId().flatMap {
-      case Right(vendorId: VendorId) => handleGetOrCreateUserId(request.email).flatMap {
+      case Right(vendorId: VendorId) => handleGetOrCreateUser(request.email, request.firstName, request.lastName).flatMap {
           case Right(user: CoreUserDetail)            =>
             handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
-          case Left(e: GetOrCreateUserIdFailedResult) => successful(CreateOrganisationFailedResult(e.message))
+          case Left(e: GetOrCreateUserFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
       case Left(e: Throwable)        => successful(CreateOrganisationFailedResult(e.getMessage))
      
@@ -113,11 +113,11 @@ class OrganisationService @Inject() (
     } yield updatedOrganisation).value
   }
 
-  def addCollaborator(organisationId: OrganisationId, email: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  def addCollaborator(organisationId: OrganisationId, email: String, firstName: String, lastName: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation <- EitherT(handleFindByOrgId(organisationId))
       _ <- EitherT(collaboratorCanBeAdded(organisation, email))
-      coreUserDetail <- EitherT(handleGetOrCreateUserId(email))
+      coreUserDetail <- EitherT(handleGetOrCreateUser(email, firstName, lastName))
       updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail, organisation))
     } yield updatedOrganisation).value
   }
@@ -173,11 +173,19 @@ class OrganisationService @Inject() (
     else successful(Right(organisation))
   }
 
-  private def handleGetOrCreateUserId(email: String)(implicit hc: HeaderCarrier): Future[Either[GetOrCreateUserIdFailedResult, CoreUserDetail]] = {
-    thirdPartyDeveloperConnector.getOrCreateUserId(GetOrCreateUserIdRequest(email)).map {
-      case Right(x: CoreUserDetail) => Right(x)
-      case Left(e: Throwable)       => Left(GetOrCreateUserIdFailedResult(e.getMessage))
-    }
+  private def handleGetOrCreateUser(email: String, firstName: String, lastName: String)
+                                   (implicit hc: HeaderCarrier): Future[Either[GetOrCreateUserFailedResult, CoreUserDetail]] = {
+
+     def toCoreUserDetail(userResponse: UserResponse) ={
+       CoreUserDetail(userResponse.userId, userResponse.email)
+     }
+
+     thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(email , firstName , lastName , Map.empty))
+          .map{
+            case x: CreateVerifiedUserSuccessResult => Right(toCoreUserDetail(x.userResponse))
+            case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
+          }
+
   }
 
   private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
