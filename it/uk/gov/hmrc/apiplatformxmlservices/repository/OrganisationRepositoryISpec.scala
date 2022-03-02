@@ -23,8 +23,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, OrganisationSortBy, UpdateOrganisationFailedResult, UpdateOrganisationSuccessResult, VendorId}
-import uk.gov.hmrc.apiplatformxmlservices.support.{AwaitTestSupport, MongoApp}
+import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
@@ -36,7 +37,8 @@ class OrganisationRepositoryISpec
     with GuiceOneAppPerSuite
     with ScalaFutures
     with BeforeAndAfterEach
-    with AwaitTestSupport
+    with DefaultAwaitTimeout
+    with FutureAwaits
     with Matchers {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
