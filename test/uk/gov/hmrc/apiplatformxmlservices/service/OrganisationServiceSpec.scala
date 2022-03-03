@@ -17,26 +17,21 @@
 package uk.gov.hmrc.apiplatformxmlservices.service
 
 import org.mockito.scalatest.MockitoSugar
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.{MongoCommandException, ServerAddress}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status._
-import play.api.test.Helpers.await
-import play.api.test.Helpers.defaultAwaitTimeout
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.http.BadRequestException
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.http.UpstreamErrorResponse
-import org.mongodb.scala.{MongoCommandException, ServerAddress}
-import org.mongodb.scala.bson.BsonDocument
 
 class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
@@ -159,7 +154,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, Map.empty))))
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organistionWithAddedCollaborator)))
 
       await(inTest.create(createOrganisationRequest)) match {
@@ -179,7 +174,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, Map.empty))))
 
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument("{\"code\": 11000}"), ServerAddress()))))
 
@@ -200,7 +195,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, Map.empty))))
 
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new RuntimeException("Something went wrong"))))
 

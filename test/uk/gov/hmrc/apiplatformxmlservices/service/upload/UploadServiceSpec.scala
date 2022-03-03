@@ -26,7 +26,7 @@ import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnecto
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
-import uk.gov.hmrc.apiplatformxmlservices.service.upload.UploadService
+
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.UUID
@@ -96,7 +96,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      userId = userId
+      userId = userId,
+      emailPreferences = Map.empty
     )
 
     val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName, emailPreferences = emailPreferences)

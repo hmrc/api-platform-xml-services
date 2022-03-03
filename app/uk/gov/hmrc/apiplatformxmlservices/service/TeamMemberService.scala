@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.service
 
 import cats.data.EitherT
+import cats.implicits._
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
@@ -24,14 +25,14 @@ import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future.successful
+import scala.concurrent.Future.{sequence, successful}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TeamMemberService @Inject()(
-    organisationRepository: OrganisationRepository,
-    override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-  )(implicit val ec: ExecutionContext) extends RetrieveOrCreateUser {
+                                   organisationRepository: OrganisationRepository,
+                                   override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+                                 )(implicit val ec: ExecutionContext) extends RetrieveOrCreateUser {
 
   def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
@@ -51,7 +52,7 @@ class TeamMemberService @Inject()(
     } yield updatedOrganisation).value
   }
 
-  def addCollaboratorByVendorId(vendorId: VendorId, email: String, userId: UserId): Future[Either[ManageCollaboratorResult, Organisation]] ={
+  def addCollaboratorByVendorId(vendorId: VendorId, email: String, userId: UserId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     //vendor id should exist and be valid at this point (import flow)
     (for {
       organisation <- EitherT(handleFindByVendorId(vendorId))
@@ -60,16 +61,40 @@ class TeamMemberService @Inject()(
     } yield updatedOrganisation).value
   }
 
+
+  def getCollaboratorDetailsByOrganisationId(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[UserResponse]] = {
+    getOrganisationById(organisationId).flatMap {
+      case None => Future.successful(List.empty)
+      case Some(organisation: Organisation) => handleGetOrganisationUsers(organisation.collaborators).map(x => x.reduce(_ ++ _).distinct)
+    }
+  }
+
+
+  private def handleGetOrganisationUsers(collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[UserResponse]]] = {
+    def mapResults(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[UserResponse]] = results map {
+      case Right(users: List[UserResponse]) => List(users.head)
+      case _ => List.empty[UserResponse]
+    }
+
+    collaborators.map(x => thirdPartyDeveloperConnector.getByEmail(List(x.email)))
+      .map(mapResults).sequence
+  }
+
+
+  private def getOrganisationById(organisationId: OrganisationId): Future[Option[Organisation]] = {
+    organisationRepository.findByOrgId(organisationId)
+  }
+
   private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    organisationRepository.findByOrgId(organisationId).map {
-      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
+    getOrganisationById(organisationId).map {
+      case None => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
       case Some(organisation: Organisation) => Right(organisation)
     }
   }
 
   private def handleFindByVendorId(vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.findByVendorId(vendorId).map {
-      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Vendor Id: ${vendorId.value}"))
+      case None => Left(GetOrganisationFailedResult(s"Failed to get organisation for Vendor Id: ${vendorId.value}"))
       case Some(organisation: Organisation) => Right(organisation)
     }
   }
@@ -87,7 +112,7 @@ class TeamMemberService @Inject()(
 
   private def handleUpdateOrganisation(organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.createOrUpdate(organisation).map {
-      case Left(value)              => Left(UpdateCollaboratorFailedResult(value.getMessage))
+      case Left(value) => Left(UpdateCollaboratorFailedResult(value.getMessage))
       case Right(org: Organisation) => Right(org)
     }
   }

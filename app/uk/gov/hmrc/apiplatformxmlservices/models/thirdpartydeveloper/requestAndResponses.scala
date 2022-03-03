@@ -38,4 +38,5 @@ case class UserResponse(email: String,
                         firstName: String,
                         lastName: String,
                         verified: Boolean = false,
-                        userId: UserId)
+                        userId: UserId,
+                        emailPreferences: Map[ApiCategory, List[ServiceName]])
