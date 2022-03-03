@@ -65,31 +65,6 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
-  def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-    withJsonBody[AddCollaboratorRequest] { addCollaboratorRequest =>
-      organisationService.addCollaborator(organisationId, addCollaboratorRequest.email, addCollaboratorRequest.firstName, addCollaboratorRequest.lastName)
-        .map(handleCollaboratorResult)
-    }
-  }
-
-  def removeCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-    withJsonBody[RemoveCollaboratorRequest] { removeCollaboratorRequest =>
-      organisationService.removeCollaborator(organisationId, removeCollaboratorRequest)
-        .map(handleCollaboratorResult)
-    }
-  }
-
-  private def handleCollaboratorResult(result: Either[ManageCollaboratorResult, Organisation]) = {
-    result match {
-      case Right(organisation: Organisation) => Ok(Json.toJson(organisation))
-      case Left(_: OrganisationAlreadyHasCollaboratorResult) => BadRequest(s"Organisation Already Has Collaborator")
-      case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
-      case Left(result: GetOrCreateUserFailedResult) => BadRequest(s"${result.message}")
-      case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
-      case Left(result: UpdateCollaboratorFailedResult) => InternalServerError(s"${result.message}")
-    }
-  }
-
   def create(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[CreateOrganisationRequest] { createOrganisationRequest =>
       if (createOrganisationRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not create Organisation with empty name"))

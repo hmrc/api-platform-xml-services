@@ -24,7 +24,7 @@ import play.api.Logging
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
+import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -35,7 +35,8 @@ import cats.data.NonEmptyList
 @Singleton
 class UploadService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
-    organisationService: OrganisationService
+    organisationService: OrganisationService,
+    teamMemberService: TeamMemberService
   )(implicit val ec: ExecutionContext)
     extends Logging
     with UploadValidation
@@ -72,7 +73,7 @@ class UploadService @Inject() (
 
     val results: Future[List[Either[AddUserToOrgFailureResult, UploadSuccessResult]]] =
       Future.sequence(vendors.map(vendorId => {
-        organisationService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
+        teamMemberService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
           .map {
             case Right(_: Organisation)                            => Right(mapSuccessResult(result))
             case Left(_: OrganisationAlreadyHasCollaboratorResult) => Right(mapSuccessResult(result))

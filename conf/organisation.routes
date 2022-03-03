@@ -9,5 +9,5 @@ DELETE     /:organisationId                 uk.gov.hmrc.apiplatformxmlservices.c
 POST       /:organisationId                 uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.updateOrganisationDetails(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
 
 # collaborator endpoints
-POST       /:organisationId/add-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.addCollaborator(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
-POST       /:organisationId/remove-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.removeCollaborator(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
+POST       /:organisationId/add-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.addCollaborator(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
+POST       /:organisationId/remove-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeCollaborator(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
