@@ -190,6 +190,19 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         result.body mustBe Json.toJson(List(organisation)).toString
       }
 
+      "respond 200 and return matches when valid userId provided" in new Setup {
+        await(orgRepo.createOrUpdate(organisationWithCollaborators))
+        val result = callGetEndpoint(s"$url/organisations?userId=${userId.value}&sortBy=ORGANISATION_NAME")
+        result.status mustBe OK
+        result.body mustBe Json.toJson(List(organisationWithCollaborators)).toString
+      }
+
+      "respond 400 invalid userId provided" in new Setup {
+        await(orgRepo.createOrUpdate(organisationWithCollaborators))
+        val result = callGetEndpoint(s"$url/organisations?userId=$userId&sortBy=ORGANISATION_NAME")
+        result.status mustBe BAD_REQUEST
+      }
+
       "respond 400 and when sortBy param is invalid" in new Setup {
         await(orgRepo.createOrUpdate(organisation))
         val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue&sortBy=UNKNOWN")

@@ -24,7 +24,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, OrganisationSortBy, UpdateOrganisationFailedResult, UpdateOrganisationSuccessResult, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Collaborator, Organisation, OrganisationId, OrganisationName, OrganisationSortBy, UpdateOrganisationFailedResult, UpdateOrganisationSuccessResult, UserId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -61,12 +61,20 @@ class OrganisationRepositoryISpec
 
   trait Setup {
     def getUuid() = UUID.randomUUID()
+    val userIdOne = UserId(getUuid())
+    val userIdTwo = UserId(getUuid())
+    val userIdThree = UserId(getUuid())
+
+    val collaboratorOne = Collaborator(userIdOne, email = "test@collaborators.com")
+    val collaboratorTwo = collaboratorOne.copy(userId = userIdTwo)
+    val collaboratorThree = collaboratorOne.copy(userId = userIdThree)
+
     val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = OrganisationName(" Organisation Name "))
     val organisationWithTrimmedName = organisationToPersist.copy(name = OrganisationName(organisationToPersist.name.value.trim))
     val organisationToPersist2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
-    val org3 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9003), name = OrganisationName("ABC DEF GHI"))
-    val org4 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9004), name = OrganisationName("DEF GHI"))
-    val org5 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9005), name = OrganisationName("GHUIUIU"))
+    val org3 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9003), name = OrganisationName("ABC DEF GHI"), collaborators = List(collaboratorOne, collaboratorTwo))
+    val org4 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9004), name = OrganisationName("DEF GHI"), collaborators = List(collaboratorThree))
+    val org5 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9005), name = OrganisationName("GHUIUIU"), collaborators = List(collaboratorOne, collaboratorTwo))
     val org6 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9006), name = OrganisationName("GPYGFRTDE"))
 
     def createOrganisations() = {
@@ -184,6 +192,25 @@ class OrganisationRepositoryISpec
     }
   }
 
+  "findByUserId" should {
+
+    "return all matching organisations" in new Setup {
+      createOrganisations()
+
+      val results: List[Organisation] = await(repo.findByUserId(userIdOne))
+
+      results should contain only (org3, org5)
+    }
+
+    "return no organisations for non-existent userId" in new Setup {
+      createOrganisations()
+
+      val results: List[Organisation] = await(repo.findByUserId(UserId(getUuid())))
+
+      results shouldBe List.empty
+    }
+  }
+
   "findByOrganisationName" should {
 
     "return all matching organisation" in new Setup {
@@ -294,5 +321,4 @@ class OrganisationRepositoryISpec
     }
 
   }
-
 }

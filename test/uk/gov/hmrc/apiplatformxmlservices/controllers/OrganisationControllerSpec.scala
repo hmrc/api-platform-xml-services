@@ -105,7 +105,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     "return 200" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisation)))
 
-      val result: Future[Result] = controller.findByParams(Some(organisation.vendorId), None, Some(OrganisationSortBy.ORGANISATION_NAME))(fakeRequest)
+      val result: Future[Result] = controller.findByParams(Some(organisation.vendorId), None, None, Some(OrganisationSortBy.ORGANISATION_NAME))(fakeRequest)
       status(result) shouldBe Status.OK
       verify(mockOrgService).findByVendorId(*[VendorId])
       verify(mockOrgService, times(0)).findAll(*)

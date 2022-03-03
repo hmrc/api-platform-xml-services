@@ -100,6 +100,9 @@ class OrganisationService @Inject() (
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] =
     organisationRepository.findByVendorId(vendorId)
 
+  def findByUserId(userId: UserId): Future[List[Organisation]] =
+    organisationRepository.findByUserId(userId)
+
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] =
     organisationRepository.findByOrganisationName(organisationName)
 
