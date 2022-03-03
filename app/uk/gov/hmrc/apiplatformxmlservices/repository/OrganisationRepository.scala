@@ -40,11 +40,12 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       indexes = Seq(
         IndexModel(ascending("organisationId"), IndexOptions().name("organisationId_index").background(true).unique(true)),
         IndexModel(ascending("vendorId"), IndexOptions().name("vendorId_index").background(true).unique(true)),
-        IndexModel(ascending("name"), IndexOptions().name("organisationName_index").background(true).unique(false))
+        IndexModel(ascending("name"), IndexOptions().name("organisationName_index").background(true).unique(false)),
+        IndexModel(ascending("collaborators.userId"), IndexOptions().name("collaborators_userId_index").background(true).unique(false))
       ),
       replaceIndexes = true
-    ) with ApplicationLogger {
-
+    )
+    with ApplicationLogger {
 
   def findOrgWithMaxVendorId(): Future[Option[Organisation]] = {
     collection
@@ -63,15 +64,21 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
     val sorting = sortBy match {
       case Some(ORGANISATION_NAME) => caseInsensitiveOrgNameOrdering
-      case Some(VENDOR_ID) => vendorIdOrdering
-      case _ => vendorIdOrdering
+      case Some(VENDOR_ID)         => vendorIdOrdering
+      case _                       => vendorIdOrdering
     }
     collection.find().toFuture()
-    .map(_.toList.sorted(sorting))
+      .map(_.toList.sorted(sorting))
   }
 
   def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
     collection.find(equal("organisationId", Codecs.toBson(organisationId))).toFuture().map(_.headOption)
+  }
+
+  def findByUserId(userId: UserId): Future[List[Organisation]] = {
+    collection.find(equal("collaborators.userId", Codecs.toBson(userId)))
+      .toFuture()
+      .map(_.toList.sorted(caseInsensitiveOrgNameOrdering))
   }
 
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] = {
@@ -85,8 +92,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
-    val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)),
-    equal("vendorId", Codecs.toBson(organisation.vendorId)))
+    val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)), equal("vendorId", Codecs.toBson(organisation.vendorId)))
 
     val setOnInsertOperations = List(
       setOnInsert("organisationId", Codecs.toBson(organisation.organisationId)),
@@ -94,10 +100,10 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     )
 
     val setOnUpdate = List(
-      set("name",  organisation.name.value.trim),
+      set("name", organisation.name.value.trim),
       set("collaborators", Codecs.toBson(organisation.collaborators)),
       set("services", Codecs.toBson(organisation.services))
-      )
+    )
 
     val allOps = setOnInsertOperations ++ setOnUpdate
 
@@ -108,24 +114,21 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     ).toFuture
       .map(x => Right(x))
       .recover {
-        case e: Exception =>  logger.info("createOrUpdate failed:", e)
+        case e: Exception => logger.info("createOrUpdate failed:", e)
           Left(new Exception(s"Failed to create or update Organisation with name ${organisation.name.value} - ${e.getMessage}"))
       }
   }
 
-  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName): Future[UpdateOrganisationResult] ={
+  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName): Future[UpdateOrganisationResult] = {
     val query = equal("organisationId", Codecs.toBson(organisationId))
-    collection.findOneAndUpdate(query,
-      set("name",organisationName.value),
-      options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
-    ).toFutureOption
-      .map{
-      case Some(organisation: Organisation) => UpdateOrganisationSuccessResult(organisation)
-      case _ => UpdateOrganisationFailedResult()
-    } .recover {
-      case e: Exception =>  logger.info("UpdateOrganisationFailed:", e)
-        UpdateOrganisationFailedResult()
-    }
+    collection.findOneAndUpdate(query, set("name", organisationName.value), options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)).toFutureOption
+      .map {
+        case Some(organisation: Organisation) => UpdateOrganisationSuccessResult(organisation)
+        case _                                => UpdateOrganisationFailedResult()
+      }.recover {
+        case e: Exception => logger.info("UpdateOrganisationFailed:", e)
+          UpdateOrganisationFailedResult()
+      }
 
   }
 
