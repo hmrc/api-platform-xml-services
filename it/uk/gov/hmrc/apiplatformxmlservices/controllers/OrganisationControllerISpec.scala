@@ -150,7 +150,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
           .willReturn(
             aResponse()
               .withStatus(status)
-              .withBody(Json.toJson(UserResponse(email, firstName, lastName, verified = true, userId)).toString)
+              .withBody(Json.toJson(UserResponse(email, firstName, lastName, verified = true, userId, Map.empty)).toString)
               .withHeader("Content-Type", "application/json")
           )
       )

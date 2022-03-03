@@ -25,13 +25,12 @@ import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future.{sequence, successful}
+import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TeamMemberService @Inject()(
-                                   organisationRepository: OrganisationRepository,
-                                   override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+class TeamMemberService @Inject()(organisationRepository: OrganisationRepository,
+                                  override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
                                  )(implicit val ec: ExecutionContext) extends RetrieveOrCreateUser {
 
   def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {

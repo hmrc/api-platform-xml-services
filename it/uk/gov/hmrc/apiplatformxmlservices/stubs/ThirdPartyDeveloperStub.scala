@@ -64,7 +64,8 @@ def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: St
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      userId = userId
+      userId = userId,
+      Map.empty
     )
 
     stubPostWithRequestBody("/import-user", status, requestAsString, Json.toJson(userResponse).toString())

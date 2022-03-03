@@ -67,7 +67,8 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      userId = userId
+      userId = userId,
+      Map.empty
     )
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
@@ -132,7 +133,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
   "getByEmail" should {
     val emails = List("a@b.com", "b@c.com")
 
-    val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", verified = true, UserId(ju.UUID.randomUUID)))).toString
+    val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", verified = true, UserId(ju.UUID.randomUUID), Map.empty))).toString
 
     "return Right with users when users are returned" in new Setup {
      stubGetByEmailsReturnsResponse(emails, validResponseString)
