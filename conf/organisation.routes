@@ -11,3 +11,5 @@ POST       /:organisationId                 uk.gov.hmrc.apiplatformxmlservices.c
 # collaborator endpoints
 POST       /:organisationId/add-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.addCollaborator(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
 POST       /:organisationId/remove-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeCollaborator(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)
+
+GET       /:organisationId/get-users    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.getOrganisationUserByOrganisationId(organisationId: uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId)

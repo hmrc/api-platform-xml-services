@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
-trait JsonFormatters extends CommonJsonFormatters{
+trait JsonFormatters extends CommonJsonFormatters {
 
   implicit val formatXmlApi = Json.format[XmlApi]
 
@@ -37,6 +37,7 @@ trait JsonFormatters extends CommonJsonFormatters{
   implicit val formatAddCollaboratorRequest = Json.format[AddCollaboratorRequest]
   implicit val formatRemovedCollaboratorRequest = Json.format[RemoveCollaboratorRequest]
 
+  implicit val formatOrganisationUser = Json.format[OrganisationUser]
 }
 
 

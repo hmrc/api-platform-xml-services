@@ -71,6 +71,7 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
 
   private def handleGetOrganisationUsers(collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[UserResponse]]] = {
     def mapResults(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[UserResponse]] = results map {
+      case Right(Nil) => List.empty[UserResponse]
       case Right(users: List[UserResponse]) => List(users.head)
       case _ => List.empty[UserResponse]
     }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters, Organisation, OrganisationId}
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, GetOrCreateUserFailedResult, GetOrganisationFailedResult, ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult, RemoveCollaboratorRequest, UpdateCollaboratorFailedResult, ValidateCollaboratorFailureResult}
 import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
@@ -46,6 +46,11 @@ class TeamMemberController @Inject()(teamMemberService: TeamMemberService, cc: C
       teamMemberService.removeCollaborator(organisationId, removeCollaboratorRequest)
         .map(handleCollaboratorResult)
     }
+  }
+
+  def getOrganisationUserByOrganisationId(organisationId: OrganisationId): Action[AnyContent] = Action.async { implicit request =>
+    teamMemberService.getOrganisationUserByOrganisationId(organisationId)
+      .map(x => Ok(Json.toJson(x)))
   }
 
   private def handleCollaboratorResult(result: Either[ManageCollaboratorResult, Organisation]) = {

@@ -20,6 +20,7 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
@@ -27,7 +28,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.collaborators._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreatedUserResult}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, UpstreamErrorResponse}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -294,14 +295,32 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
     }
 
     "return empty list when organisation not found" in new Setup {
-
       when(mockOrganisationRepo.findByOrgId(eqTo(organisationId))).thenReturn(Future.successful(None))
 
-
-      val result = await(inTest.getOrganisationUserByOrganisationId(organisationId))
-
+      await(inTest.getOrganisationUserByOrganisationId(organisationId)) shouldBe Nil
 
     }
+
+    "return empty list when no results returned from third party developer" in new Setup {
+
+      when(mockOrganisationRepo.findByOrgId(eqTo(organisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailOne)))(*)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
+
+      await(inTest.getOrganisationUserByOrganisationId(organisationId)) shouldBe Nil
+
+    }
+
+    "return empty list when errors returned from third party developer" in new Setup {
+
+      when(mockOrganisationRepo.findByOrgId(eqTo(organisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailOne)))(*)).thenReturn(Future.successful(Left(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR))))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
+
+      await(inTest.getOrganisationUserByOrganisationId(organisationId)) shouldBe Nil
+
+    }
+
   }
 
 }

@@ -27,7 +27,7 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, GetOrCreateUserFailedResult, GetOrganisationFailedResult, UpdateCollaboratorFailedResult}
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, GetOrCreateUserFailedResult, GetOrganisationFailedResult, OrganisationAlreadyHasCollaboratorResult, UpdateCollaboratorFailedResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{BulkUploadOrganisationsRequest, CSVJsonFormats}
 import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
@@ -102,6 +102,14 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
         contentAsString(result) shouldBe "Organisation does not exist"
       }
 
+      "return 400 when service returns collaborator already added" in new Setup {
+        when(mockTeamMemberService.addCollaborator(*[OrganisationId], *, *, *)(*))
+          .thenReturn(Future.successful(Left(OrganisationAlreadyHasCollaboratorResult("some error"))))
+        val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
+        status(result) shouldBe Status.BAD_REQUEST
+        contentAsString(result) shouldBe "Organisation Already Has Collaborator"
+      }
+
       "return 400 when fail to get or create user" in new Setup {
         when(mockTeamMemberService.addCollaborator(*[OrganisationId], *, *, *)(*)).thenReturn(Future.successful(Left(GetOrCreateUserFailedResult("Could not find or create user"))))
         val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
@@ -127,5 +135,19 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
         contentAsJson(result) shouldBe Json.toJson(organisationWithCollaborator)
       }
     }
+
+    "getOrganisationUserByOrganisationId" should {
+      "return 200 with list of users when service returns a list" in new Setup {
+        val organisationUser = OrganisationUser(organisationId, userId , email, firstName , lastName , List.empty)
+        when(mockTeamMemberService.getOrganisationUserByOrganisationId(eqTo(organisationId))(*)).thenReturn(Future.successful(List(organisationUser)))
+
+        val result: Future[Result] = controller.getOrganisationUserByOrganisationId(organisationId)(fakeRequest)
+        status(result) shouldBe Status.OK
+        contentAsJson(result) shouldBe Json.toJson(List(organisationUser))
+
+      }
+    }
   }
+
+
 }
