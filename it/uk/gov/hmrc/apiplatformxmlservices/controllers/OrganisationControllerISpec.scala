@@ -21,25 +21,19 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.WSClient
-import play.api.libs.ws.WSResponse
-import play.api.test.Helpers.BAD_REQUEST
-import play.api.test.Helpers.CREATED
-import play.api.test.Helpers.INTERNAL_SERVER_ERROR
-import play.api.test.Helpers.NOT_FOUND
-import play.api.test.Helpers.OK
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
+import play.api.libs.ws.{WSClient, WSResponse}
+import play.api.test.Helpers.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
-import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
+import uk.gov.hmrc.apiplatformxmlservices.support.{MongoApp, ServerBaseISpec}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 
-class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] {
+class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] with JsonFormatters {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
@@ -150,7 +144,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
           .willReturn(
             aResponse()
               .withStatus(status)
-              .withBody(Json.toJson(UserResponse(email, firstName, lastName, verified = true, userId)).toString)
+              .withBody(Json.toJson(UserResponse(email, firstName, lastName, verified = true, userId, EmailPreferences.noPreferences)).toString)
               .withHeader("Content-Type", "application/json")
           )
       )
@@ -344,77 +338,5 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       }
     }
 
-    "POST /organisations/:organisationId/add-collaborator" should {
-
-      "respond with 400 if request body is not json" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", "{\"someinvalidkey\": \"something\"}")
-        result.status mustBe BAD_REQUEST
-        withClue(s"response body not as expected: ${result.body}") {
-          result.body.startsWith("Invalid AddCollaboratorRequest payload:") mustBe true
-        }
-      }
-
-      "respond with 404 if organisationId is not provided" in new Setup {
-        val result: WSResponse = callPostEndpoint(s"$url/organisations//add-collaborator", addCollaboratorRequestAsString)
-        result.status mustBe NOT_FOUND
-        result.body.contains("URI not found") mustBe true
-      }
-
-      "respond with 400 if organisationId is not a uuid" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations/:alsjdflaksjdf/add-collaborator", addCollaboratorRequestAsString)
-        result.status mustBe BAD_REQUEST
-        result.body.contains("bad request") mustBe true
-      }
-
-      "respond with 404 if organisationId exists" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
-        result.body mustBe s"Failed to get organisation for Id: ${organisation.organisationId.value}"
-        result.status mustBe NOT_FOUND
-      }
-
-      "respond with 400 if third party developer connector returns and error" in new Setup {
-        await(orgRepo.createOrUpdate(organisation))
-        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName,  BAD_REQUEST)
-        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
-        result.status mustBe BAD_REQUEST
-        result.body.contains("Bad Request") mustBe true
-      }
-
-      "respond with 200 if organisationId exists" in new Setup {
-        await(orgRepo.createOrUpdate(organisation))
-        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName,  OK)
-        val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
-        result.status mustBe OK
-        result.body mustBe Json.toJson(organisationWithCollaborators).toString()
-      }
-    }
   }
-
-  "POST /organisations/:organisationId/remove-collaborator" should {
-
-    "respond with 200 if organisationId exists and delete successful" in new Setup {
-      await(orgRepo.createOrUpdate(organisationWithCollaborators))
-
-      val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
-      result.status mustBe OK
-      result.body mustBe Json.toJson(organisation).toString()
-    }
-
-    "respond with 404 if organisationId exists but collaborator is not associated" in new Setup {
-      await(orgRepo.createOrUpdate(organisation))
-      val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
-      result.status mustBe NOT_FOUND
-      result.body mustBe "Collaborator not found on Organisation"
-    }
-
-    "respond with 400 if request body is not json" in new Setup {
-      val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/remove-collaborator", "{\"someinvalidkey\": \"something\"}")
-      result.status mustBe BAD_REQUEST
-      withClue(s"response body not as expected: ${result.body}") {
-        result.body.startsWith("Invalid RemoveCollaboratorRequest payload:") mustBe true
-      }
-    }
-
-  }
-
 }

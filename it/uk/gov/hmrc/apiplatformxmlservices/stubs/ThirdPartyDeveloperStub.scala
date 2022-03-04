@@ -19,13 +19,10 @@ package uk.gov.hmrc.apiplatformxmlservices.stubs
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.ImportUserRequest
-import uk.gov.hmrc.apiplatformxmlservices.models.ApiCategory
-import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 
 trait ThirdPartyDeveloperStub {
   val createOrGetUserIdUrl = "/developers/user-id"
@@ -64,7 +61,8 @@ def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: St
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      userId = userId
+      userId = userId,
+      EmailPreferences.noPreferences
     )
 
     stubPostWithRequestBody("/import-user", status, requestAsString, Json.toJson(userResponse).toString())

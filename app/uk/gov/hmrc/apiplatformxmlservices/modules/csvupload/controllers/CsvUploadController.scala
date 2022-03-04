@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.controllers
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.controllers
 
 import play.api.Logging
-import play.api.libs.json.JsValue
-import play.api.libs.json.Json
-import play.api.mvc.Action
-import play.api.mvc.ControllerComponents
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service.UploadService
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
-import uk.gov.hmrc.apiplatformxmlservices.service.upload.UploadService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CsvUploadController @Inject() (
@@ -42,6 +38,7 @@ class CsvUploadController @Inject() (
   )(implicit val ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
+      with CSVJsonFormats
     with Logging {
 
   def bulkUploadUsers(): Action[JsValue] = Action.async(parse.tolerantJson) {
@@ -57,9 +54,10 @@ class CsvUploadController @Inject() (
   private def handleUploadUsers(bulkAddUsersRequest: BulkAddUsersRequest)(implicit hc: HeaderCarrier) = {
 
     def printErrors(results: List[UploadUserResult]) ={
-       val errors = results.map(x =>x match {
-              case e: UploadFailedResult => Some(e.message)
-              case _ => None}).flatten
+       val errors = results.flatMap(x => x match {
+         case e: UploadFailedResult => Some(e.message)
+         case _ => None
+       })
         errors.map(logger.error(_))
     }
     val usersToUpload = bulkAddUsersRequest.users.toList

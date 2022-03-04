@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.service.upload
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
-import cats.data.Validated
-import cats.syntax.traverse._
+import cats.data.{NonEmptyList, Validated}
 import cats.instances.list._
 import cats.syntax.either._
+import cats.syntax.traverse._
 import play.api.Logging
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{AddUserToOrgFailureResult, CreateOrGetUserFailedResult, CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreateVerifiedUserSuccessResult, CreatedUserResult, InvalidUserResult, ParsedUser, RetrievedUserResult, UploadCreatedUserSuccessResult, UploadExistingUserSuccessResult, UploadSuccessResult, UploadUserResult}
+import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import cats.data.NonEmptyList
 
 
 @Singleton
 class UploadService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
-    organisationService: OrganisationService
+    organisationService: OrganisationService,
+    teamMemberService: TeamMemberService
   )(implicit val ec: ExecutionContext)
     extends Logging
     with UploadValidation
@@ -72,7 +74,7 @@ class UploadService @Inject() (
 
     val results: Future[List[Either[AddUserToOrgFailureResult, UploadSuccessResult]]] =
       Future.sequence(vendors.map(vendorId => {
-        organisationService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
+        teamMemberService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
           .map {
             case Right(_: Organisation)                            => Right(mapSuccessResult(result))
             case Left(_: OrganisationAlreadyHasCollaboratorResult) => Right(mapSuccessResult(result))

@@ -14,38 +14,39 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.service.upload
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
-import cats.implicits._
-import cats.data.Validated.Valid
+import cats.data.Validated._
 import cats.data.ValidatedNel
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import scala.concurrent.{ExecutionContext, Future}
+import cats.implicits._
 
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, VendorId, XmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait UploadValidation {
 
   def validateParsedUser(user: ParsedUser, rowNumber: Int, vendorIdExistsFunc: VendorId => Future[Option[Organisation]])
-                        (implicit ec: ExecutionContext): Future[ValidatedNel[String, List[ParsedUser]]]= {
+                        (implicit ec: ExecutionContext): Future[ValidatedNel[String, List[ParsedUser]]] = {
 
-  
+
     Future.sequence(List(
-    validateVendorIds(user, rowNumber, vendorIdExistsFunc),
-    validateServiceNames(user, rowNumber)))
-    .map(x => x.sequence)
+      validateVendorIds(user, rowNumber, vendorIdExistsFunc),
+      validateServiceNames(user, rowNumber)))
+      .map(x => x.sequence)
   }
 
 
-  def validateVendorIds(parsedUser: ParsedUser, rowNumber: Int, vendorIdExistsFunc: VendorId => Future[Option[Organisation]] )
-                               (implicit ec: ExecutionContext): Future[ValidatedNel[String, ParsedUser]]= {
+  def validateVendorIds(parsedUser: ParsedUser, rowNumber: Int, vendorIdExistsFunc: VendorId => Future[Option[Organisation]])
+                       (implicit ec: ExecutionContext): Future[ValidatedNel[String, ParsedUser]] = {
     parsedUser.vendorIds match {
-      case Nil                       => Future.successful(s"RowNumber:$rowNumber - missing vendorIds on user".invalidNel)
-      case vendorIds: List[VendorId] =>  Future.sequence(vendorIds.map(vendorIdExistsFunc))
+      case Nil => Future.successful(s"RowNumber:$rowNumber - missing vendorIds on user".invalidNel)
+      case vendorIds: List[VendorId] => Future.sequence(vendorIds.map(vendorIdExistsFunc))
         .map(x => x.flatten.size == vendorIds.size && vendorIds.nonEmpty) map {
-        case true  => Valid(parsedUser)
+        case true => Valid(parsedUser)
         case false => s"RowNumber:$rowNumber - Invalid vendorId(s)".invalidNel
       }
-
     }
 
   }
@@ -53,9 +54,9 @@ trait UploadValidation {
 
   def validateServiceNames(user: ParsedUser, rowNumber: Int)(implicit ec: ExecutionContext): Future[ValidatedNel[String, ParsedUser]] = {
     val allServiceNames = XmlApi.xmlApis.map(x => x.serviceName.value)
-    
+
     Future.successful(user.services.isEmpty || user.services.forall(x => allServiceNames.contains(x.value))) map {
-      case true  => Valid(user)
+      case true => Valid(user)
       case false => s"RowNumber:$rowNumber - Invalid service(s)".invalidNel
     }
   }

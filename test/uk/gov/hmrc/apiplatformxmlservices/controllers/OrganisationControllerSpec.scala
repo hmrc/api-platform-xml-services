@@ -17,9 +17,9 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.libs.json.Json
@@ -27,15 +27,17 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.AddCollaboratorRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{BulkUploadOrganisationsRequest, CSVJsonFormats}
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
-class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar
+  with GuiceOneAppPerSuite with BeforeAndAfterEach with JsonFormatters with CSVJsonFormats {
 
   private val mockOrgService = mock[OrganisationService]
 
@@ -198,43 +200,6 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     }
 
-  }
-
-  "addCollaborator" should {
-
-    "return 404 when fail to get organisation" in new Setup {
-      when(mockOrgService.addCollaborator(*[OrganisationId], *, *, *)(*))
-        .thenReturn(Future.successful(Left(GetOrganisationFailedResult("Organisation does not exist"))))
-
-      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
-      status(result) shouldBe Status.NOT_FOUND
-      contentAsString(result) shouldBe "Organisation does not exist"
-    }
-
-    "return 400 when fail to get or create user" in new Setup {
-      when(mockOrgService.addCollaborator(*[OrganisationId], *, *, *)(*)).thenReturn(Future.successful(Left(GetOrCreateUserFailedResult("Could not find or create user"))))
-      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
-      status(result) shouldBe Status.BAD_REQUEST
-      contentAsString(result) shouldBe "Could not find or create user"
-    }
-
-    "return 500 when fail to update organisation" in new Setup {
-      when(mockOrgService.addCollaborator(*[OrganisationId], *, *, *)(*))
-        .thenReturn(Future.successful(Left(UpdateCollaboratorFailedResult("Organisation does not exist"))))
-
-      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-      contentAsString(result) shouldBe "Organisation does not exist"
-    }
-
-    "return 200 when collaborator added" in new Setup {
-      when(mockOrgService.addCollaborator(*[OrganisationId], *, *, *)(*))
-        .thenReturn(Future.successful(Right(organisationWithCollaborator)))
-
-      val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
-      status(result) shouldBe Status.OK
-      contentAsJson(result) shouldBe Json.toJson(organisationWithCollaborator)
-    }
   }
 
 }

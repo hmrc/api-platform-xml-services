@@ -17,26 +17,21 @@
 package uk.gov.hmrc.apiplatformxmlservices.connectors
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatformxmlservices.models.UserId
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.UserId
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreatedUserResult, RetrievedUserResult}
+import uk.gov.hmrc.apiplatformxmlservices.stubs.ThirdPartyDeveloperStub
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.InternalServerException
-import uk.gov.hmrc.http.Upstream5xxResponse
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse}
 
 import java.{util => ju}
-import uk.gov.hmrc.http.NotFoundException
-import uk.gov.hmrc.apiplatformxmlservices.stubs.ThirdPartyDeveloperStub
-import uk.gov.hmrc.apiplatformxmlservices.models.CreatedUserResult
-import uk.gov.hmrc.apiplatformxmlservices.models.RetrievedUserResult
-import uk.gov.hmrc.apiplatformxmlservices.models.CreateVerifiedUserFailedResult
-import uk.gov.hmrc.apiplatformxmlservices.models.ApiCategory
-import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
 
 class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach  with ThirdPartyDeveloperStub {
 
@@ -64,19 +59,20 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     val userId: UserId = UserId(ju.UUID.randomUUID())
     val firstName = "Joe"
     val lastName = "Bloggs"
-    val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
+    val getOrCreateUserIdRequest: GetOrCreateUserIdRequest = GetOrCreateUserIdRequest(email)
 
-    val userResponse = UserResponse(
+    val userResponse: UserResponse = UserResponse(
       email = email,
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      userId = userId
+      userId = userId,
+      EmailPreferences.noPreferences
     )
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
 
-    def stubPostWithRequestBody(url: String, status: Int, expectedRequestBody: String, responseBodyAsString: String) = {
+    def stubPostWithRequestBody(url: String, status: Int, expectedRequestBody: String, responseBodyAsString: String): StubMapping = {
       stubFor(
         post(urlEqualTo(url))
           .withRequestBody(equalTo(expectedRequestBody))
@@ -95,7 +91,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     "return Right when backend returns a user" in new Setup {
       stubCreateOrGetUserIdReturnsResponse(email, Json.toJson(CoreUserDetail(userId, email)).toString)
      
-      val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
+      val result: Either[Throwable, CoreUserDetail] = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result.map(x => x.userId mustBe userId)
 
@@ -107,11 +103,11 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       stubCreateOrGetUserIdReturnsNoResponse(email, NO_CONTENT)
 
-      val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
+      val result: Either[Throwable, CoreUserDetail] = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
         case Left(e: InternalServerException) => e.message mustBe "Could not find or create user"
-        case Left(e: Throwable)                                => fail
+        case _                                => fail
       }
 
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
@@ -121,7 +117,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     "return Left when backend returns Error" in new Setup {
       stubCreateOrGetUserIdReturnsNoResponse(email, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
+      val result: Either[Throwable, CoreUserDetail] = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
         case Left(_: Upstream5xxResponse) => succeed
@@ -136,15 +132,15 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
   "getByEmail" should {
     val emails = List("a@b.com", "b@c.com")
 
-    val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", true, UserId(ju.UUID.randomUUID)))).toString
+    val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", verified = true, UserId(ju.UUID.randomUUID), EmailPreferences.noPreferences))).toString
 
     "return Right with users when users are returned" in new Setup {
      stubGetByEmailsReturnsResponse(emails, validResponseString)
 
-      val result = await(underTest.getByEmail(emails))
+      val result: Either[Throwable, List[UserResponse]] = await(underTest.getByEmail(emails))
 
       result match {
-        case Right(x: List[UserResponse]) => succeed
+        case Right(_: List[UserResponse]) => succeed
         case _                            => fail
       }
     }
@@ -152,31 +148,31 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     "return Right when no users are returned" in new Setup {
       stubGetByEmailsReturnsResponse(emails, "[]")
 
-      val result = await(underTest.getByEmail(emails))
+      val result: Either[Throwable, List[UserResponse]] = await(underTest.getByEmail(emails))
 
       result match {
-        case Right(x: List[UserResponse]) => succeed
+        case Right(_: List[UserResponse]) => succeed
         case _                            => fail
       }
     }
 
     "return Left when not found returned" in new Setup {
       stubGetByEmailsReturnsNoResponse(emails, NOT_FOUND)
-      val result = await(underTest.getByEmail(emails))
+      val result: Either[Throwable, List[UserResponse]] = await(underTest.getByEmail(emails))
 
       result match {
-        case Left(e: NotFoundException) => succeed
+        case Left(_: NotFoundException) => succeed
         case _                          => fail
       }
     }
 
-    "return Left when inetrnal server error returned" in new Setup {
+    "return Left when internal server error returned" in new Setup {
        stubGetByEmailsReturnsNoResponse(emails, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.getByEmail(emails))
+      val result: Either[Throwable, List[UserResponse]] = await(underTest.getByEmail(emails))
 
       result match {
-        case Left(e: Upstream5xxResponse) => succeed
+        case Left(_: Upstream5xxResponse) => succeed
         case _                            => fail
       }
     }
@@ -189,7 +185,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     val firstName = "Joe"
     val lastName = "Bloggs"
     val emailPreferences: Map[ApiCategory, List[ServiceName]] = Map.empty
-    val populatedEmailPreferences: Map[ApiCategory, List[ServiceName]] = 
+    val populatedEmailPreferences: Map[ApiCategory, List[ServiceName]] =
       Map(
       ApiCategory.AGENTS -> List(ServiceName("service1"), ServiceName("service2")),
       ApiCategory.CHARITIES -> List(ServiceName("service1"), ServiceName("service2"))
@@ -201,7 +197,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       
       stubCreateVerifiedUserSuccess(email, firstName, lastName, userId, populatedEmailPreferences, CREATED)
 
-      val result = await(underTest.createVerifiedUser(importUserRequestObj.copy(emailPreferences = populatedEmailPreferences)))
+      val result: CreateVerifiedUserResult = await(underTest.createVerifiedUser(importUserRequestObj.copy(emailPreferences = populatedEmailPreferences)))
 
       result match {
         case response: CreatedUserResult => response.userResponse mustBe userResponse
@@ -213,7 +209,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     "return RetrievedUserResult when call to tpd returns OK" in new Setup {
       stubCreateVerifiedUserSuccess(email, firstName, lastName, userId, emailPreferences, OK)
 
-      val result = await(underTest.createVerifiedUser(importUserRequestObj))
+      val result: CreateVerifiedUserResult = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
         case response: RetrievedUserResult => response.userResponse mustBe userResponse
@@ -224,7 +220,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     "return CreateVerifiedUserFailedResult when call to tpd returns CONFLICT" in new Setup {
       stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, emailPreferences, CONFLICT)
 
-      val result = await(underTest.createVerifiedUser(importUserRequestObj))
+      val result: CreateVerifiedUserResult = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
         case e: CreateVerifiedUserFailedResult => e.message mustBe s"POST of 'http://localhost:$wireMockPort/import-user' returned 409. Response body: ''"
@@ -235,7 +231,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
      "return CreateVerifiedUserFailedResult when call to tpd returns NO_CONTENT" in new Setup {
       stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, emailPreferences, NO_CONTENT)
 
-      val result = await(underTest.createVerifiedUser(importUserRequestObj))
+      val result: CreateVerifiedUserResult = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
         case e: CreateVerifiedUserFailedResult  => e.message mustBe s"Could not get or create user"
@@ -247,7 +243,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     "return CreateVerifiedUserFailedResult when call to tpd returns INTERNAL_SERVER_ERROR" in new Setup {
       stubCreateVerifiedUserEmptyResponse(email, firstName, lastName, emailPreferences, INTERNAL_SERVER_ERROR)
 
-      val result = await(underTest.createVerifiedUser(importUserRequestObj))
+      val result: CreateVerifiedUserResult = await(underTest.createVerifiedUser(importUserRequestObj))
 
       result match {
         case e: CreateVerifiedUserFailedResult  => e.message mustBe s"POST of 'http://localhost:$wireMockPort/import-user' returned 500. Response body: ''"

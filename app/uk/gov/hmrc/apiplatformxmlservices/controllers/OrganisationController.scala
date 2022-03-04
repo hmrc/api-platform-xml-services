@@ -19,7 +19,6 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -32,6 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
+    with JsonFormatters
     with Logging {
 
   def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
@@ -62,31 +62,6 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
       case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
-    }
-  }
-
-  def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-    withJsonBody[AddCollaboratorRequest] { addCollaboratorRequest =>
-      organisationService.addCollaborator(organisationId, addCollaboratorRequest.email, addCollaboratorRequest.firstName, addCollaboratorRequest.lastName)
-        .map(handleCollaboratorResult)
-    }
-  }
-
-  def removeCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-    withJsonBody[RemoveCollaboratorRequest] { removeCollaboratorRequest =>
-      organisationService.removeCollaborator(organisationId, removeCollaboratorRequest)
-        .map(handleCollaboratorResult)
-    }
-  }
-
-  private def handleCollaboratorResult(result: Either[ManageCollaboratorResult, Organisation]) = {
-    result match {
-      case Right(organisation: Organisation) => Ok(Json.toJson(organisation))
-      case Left(_: OrganisationAlreadyHasCollaboratorResult) => BadRequest(s"Organisation Already Has Collaborator")
-      case Left(result: GetOrganisationFailedResult) => NotFound(s"${result.message}")
-      case Left(result: GetOrCreateUserFailedResult) => BadRequest(s"${result.message}")
-      case Left(result: ValidateCollaboratorFailureResult) => NotFound(s"${result.message}")
-      case Left(result: UpdateCollaboratorFailedResult) => InternalServerError(s"${result.message}")
     }
   }
 

@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
-import cats.data.EitherT
 import com.mongodb.MongoCommandException
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
-import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
+import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
@@ -35,10 +34,10 @@ class OrganisationService @Inject() (
     organisationRepository: OrganisationRepository,
     uuidService: UuidService,
     vendorIdService: VendorIdService,
-    thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-  )(implicit val ec: ExecutionContext) {
+    override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+  )(implicit val ec: ExecutionContext) extends UserFunctions {
 
-  def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId) = {
+  def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.findByVendorId(vendorId) flatMap {
       case Some(organisation) => organisationRepository.createOrUpdate(organisation.copy(name = organisationName))
       case None               => createOrganisation(organisationName, vendorId)
@@ -48,7 +47,7 @@ class OrganisationService @Inject() (
   def create(request: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
     vendorIdService.getNextVendorId().flatMap {
       case Right(vendorId: VendorId) => handleGetOrCreateUser(request.email, request.firstName, request.lastName).flatMap {
-          case Right(user: CoreUserDetail)            =>
+          case Right(user: UserResponse)            =>
             handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
           case Left(e: GetOrCreateUserFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
@@ -108,31 +107,6 @@ class OrganisationService @Inject() (
 
   def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = organisationRepository.findAll(sortBy)
 
-  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    (for {
-      organisation <- EitherT(handleFindByOrgId(organisationId))
-      _ <- EitherT(collaboratorCanBeDeleted(organisation, request.email))
-      updatedOrganisation <- EitherT(handleRemoveCollaboratorFromOrg(organisation, request.email))
-    } yield updatedOrganisation).value
-  }
-
-  def addCollaborator(organisationId: OrganisationId, email: String, firstName: String, lastName: String)(implicit hc: HeaderCarrier): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    (for {
-      organisation <- EitherT(handleFindByOrgId(organisationId))
-      _ <- EitherT(collaboratorCanBeAdded(organisation, email))
-      coreUserDetail <- EitherT(handleGetOrCreateUser(email, firstName, lastName))
-      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail, organisation))
-    } yield updatedOrganisation).value
-  }
-
-  def addCollaboratorByVendorId(vendorId: VendorId, email: String, userId: UserId): Future[Either[ManageCollaboratorResult, Organisation]] ={
-        //vendor id should exist and be valid at this point (import flow)
-      (for {
-      organisation <- EitherT(handleFindByVendorId(vendorId))
-      _ <- EitherT(collaboratorCanBeAdded(organisation, email))
-      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(CoreUserDetail(userId, email), organisation))
-    } yield updatedOrganisation).value
-  }
 
   private def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.createOrUpdate(
@@ -144,66 +118,6 @@ class OrganisationService @Inject() (
     )
   }
 
-  private def handleUpdateOrganisation(organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    organisationRepository.createOrUpdate(organisation).map {
-      case Left(value)              => Left(UpdateCollaboratorFailedResult(value.getMessage))
-      case Right(org: Organisation) => Right(org)
-    }
-  }
-
-  private def handleAddCollaboratorToOrg(coreUserDetail: CoreUserDetail, organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    val updatedOrg = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
-    handleUpdateOrganisation(updatedOrg)
-  }
-
-  private def handleRemoveCollaboratorFromOrg(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    val updatedOrg = organisation.copy(collaborators =
-      organisation.collaborators.filterNot(_.email.equalsIgnoreCase(emailAddress)))
-    handleUpdateOrganisation(updatedOrg)
-  }
-
-  private def organisationHasCollaborator(organisation: Organisation, emailAddress: String): Boolean = {
-    organisation.collaborators.exists(_.email.equalsIgnoreCase(emailAddress))
-  }
-
-  private def collaboratorCanBeDeleted(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    if (organisationHasCollaborator(organisation, emailAddress)) successful(Right(organisation))
-    else successful(Left(ValidateCollaboratorFailureResult("Collaborator not found on Organisation")))
-  }
-
-  private def collaboratorCanBeAdded(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    if (organisationHasCollaborator(organisation, emailAddress)) successful(Left(OrganisationAlreadyHasCollaboratorResult("")))
-    else successful(Right(organisation))
-  }
-
-  private def handleGetOrCreateUser(email: String, firstName: String, lastName: String)
-                                   (implicit hc: HeaderCarrier): Future[Either[GetOrCreateUserFailedResult, CoreUserDetail]] = {
-
-     def toCoreUserDetail(userResponse: UserResponse) ={
-       CoreUserDetail(userResponse.userId, userResponse.email)
-     }
-
-     thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(email , firstName , lastName , Map.empty))
-          .map{
-            case x: CreateVerifiedUserSuccessResult => Right(toCoreUserDetail(x.userResponse))
-            case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
-          }
-
-  }
-
-  private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    organisationRepository.findByOrgId(organisationId).map {
-      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
-      case Some(organisation: Organisation) => Right(organisation)
-    }
-  }
-
-  private def handleFindByVendorId(vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    organisationRepository.findByVendorId(vendorId).map {
-      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Vendor Id: ${vendorId.value}"))
-      case Some(organisation: Organisation) => Right(organisation)
-    }
-  }
 
   private def generateOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.controllers
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.controllers
 
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -24,8 +24,9 @@ import play.api.libs.ws.WSClient
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers.BAD_REQUEST
 import play.api.test.Helpers.OK
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.{Collaborator, JsonFormatters, Organisation, OrganisationId, OrganisationName, OrganisationWithNameAndVendorId, UserId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.RemoveCollaboratorRequest
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{BulkUploadOrganisationsRequest, CSVJsonFormats}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
@@ -33,7 +34,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
 
-class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] {
+class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] with JsonFormatters with CSVJsonFormats {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 

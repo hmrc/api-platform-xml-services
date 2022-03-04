@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.service
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.test.Helpers.await
-import play.api.test.Helpers.defaultAwaitTimeout
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
-import uk.gov.hmrc.apiplatformxmlservices.service.upload.UploadService
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{GetOrganisationFailedResult, ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{AddUserToOrgFailureResult, CreateOrGetUserFailedResult, CreateVerifiedUserFailedResult, CreatedUserResult, InvalidUserResult, ParsedUser, RetrievedUserResult, UploadCreatedUserSuccessResult, UploadExistingUserSuccessResult}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service.UploadService
+import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.UUID
@@ -38,15 +41,17 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
   val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
   val mockOrganisationService: OrganisationService = mock[OrganisationService]
+  val mockTeamMemberService: TeamMemberService = mock[TeamMemberService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockThirdPartyDeveloperConnector)
     reset(mockOrganisationService)
+    reset(mockTeamMemberService)
   }
 
   trait Setup {
-    val inTest = new UploadService(mockThirdPartyDeveloperConnector, mockOrganisationService)
+    val inTest = new UploadService(mockThirdPartyDeveloperConnector, mockOrganisationService, mockTeamMemberService)
 
     val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId1 = VendorId(9000)
@@ -93,7 +98,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      userId = userId
+      userId = userId,
+      emailPreferences = EmailPreferences.noPreferences
     )
 
     val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName, emailPreferences = emailPreferences)
@@ -102,15 +108,15 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
-      when(mockOrganisationService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response1))
-      when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response2))
+      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response1))
+      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response2))
 
     }
 
     def verifyAddCollaboratorToOrgFailure(){
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+      verify(mockTeamMemberService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
 
     }
   }
@@ -124,8 +130,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
-      when(mockOrganisationService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
-      when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
+      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
+      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -135,11 +141,11 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _ => fail                                                        
+        case _ => fail
       }
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+      verify(mockTeamMemberService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
 
     }
 
@@ -147,8 +153,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(RetrievedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
-      when(mockOrganisationService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
-      when(mockOrganisationService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
+      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
+      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -163,7 +169,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockOrganisationService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+      verify(mockTeamMemberService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
 
     }
 

@@ -17,7 +17,8 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import play.api.mvc.{PathBindable, QueryStringBindable}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, ServiceName, UserId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, UserId, VendorId}
 
 import java.util.UUID
 import scala.util.Try

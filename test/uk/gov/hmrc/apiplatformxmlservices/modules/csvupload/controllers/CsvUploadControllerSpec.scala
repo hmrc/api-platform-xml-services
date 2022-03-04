@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.controllers
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.controllers
 
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.libs.json.Json
@@ -27,17 +27,18 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service.UploadService
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.service.upload.UploadService
+import uk.gov.hmrc.http.InternalServerException
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.http.InternalServerException
 
-class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach with CSVJsonFormats {
 
   private val mockOrgService = mock[OrganisationService]
   private val mockUploadervice = mock[UploadService]
@@ -94,7 +95,8 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
       firstName = firstName,
       lastName = lastName,
       verified = true,
-      userId = userId
+      userId = userId,
+      EmailPreferences.noPreferences
     )
 
     val bulkAddUsersRequestRequestObj = BulkAddUsersRequest(List(parsedUser))

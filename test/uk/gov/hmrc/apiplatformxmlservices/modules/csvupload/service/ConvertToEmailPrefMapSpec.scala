@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.service.upload
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.apiplatformxmlservices.models.{ApiCategory, ParsedUser, ServiceName, XmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 
 class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with ConvertToEmailPrefsMap {
 

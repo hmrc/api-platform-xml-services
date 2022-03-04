@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
+trait CSVJsonFormats extends CommonJsonFormatters{
 
-object JsonFormatters extends CommonJsonFormatters {
 
-  implicit val formatUserId = Json.valueFormat[UserId]
-  implicit val formatGetOrCreateUserIdRequest = Json.format[GetOrCreateUserIdRequest]
+  implicit val formatBulkUploadOrganisationsRequest = Json.format[BulkUploadOrganisationsRequest]
 
-  implicit val formatUserIdResponse = Json.format[UserIdResponse]
-
-  implicit  val formatUserResponse = Json.format[UserResponse]
-  implicit  val formatImportUserRequest = Json.format[ImportUserRequest]
-
-  implicit val formatCoreUserDetail = Json.format[CoreUserDetail]
+  implicit val formatParsedUser = Json.format[ParsedUser]
+  implicit val formatBulkAddUsersRequest = Json.format[BulkAddUsersRequest]
 }

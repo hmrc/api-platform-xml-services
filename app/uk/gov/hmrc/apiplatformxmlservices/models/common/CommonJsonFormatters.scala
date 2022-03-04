@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.repository
+package uk.gov.hmrc.apiplatformxmlservices.models.common
 
-import play.api.libs.json._
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
+import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationName, OrganisationWithNameAndVendorId, VendorId}
 
-object MongoFormatters extends CommonJsonFormatters{
+trait CommonJsonFormatters {
 
-  implicit val organisationIdFormats: Format[OrganisationId] = Json.valueFormat[OrganisationId]
-  implicit val userIdFormats: Format[UserId] = Json.valueFormat[UserId]
-  implicit val collaboratorFormats: OFormat[Collaborator] = Json.format[Collaborator]
-  implicit val organisationFormats: OFormat[Organisation] = Json.format[Organisation]
+  implicit val formatServiceName = Json.valueFormat[ServiceName]
+  implicit val formatVendorId = Json.valueFormat[VendorId]
+  implicit val formatOrganisationName = Json.valueFormat[OrganisationName]
+  implicit val formatOrganisationWithNameAndVendorId = Json.format[OrganisationWithNameAndVendorId]
+
+
 }
+
+

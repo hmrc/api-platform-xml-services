@@ -17,16 +17,16 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
+import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
-object JsonFormatters {
+trait JsonFormatters extends CommonJsonFormatters {
 
-  implicit val formatServiceName = Json.valueFormat[ServiceName]
   implicit val formatXmlApi = Json.format[XmlApi]
 
   implicit val formatUserId = Json.valueFormat[UserId]
   implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
-  implicit val formatVendorId = Json.valueFormat[VendorId]
-  implicit val formatOrganisationName = Json.valueFormat[OrganisationName]
+
   implicit val formatCollaborator = Json.format[Collaborator]
   implicit val formatOrganisation = Json.format[Organisation]
 
@@ -37,9 +37,7 @@ object JsonFormatters {
   implicit val formatAddCollaboratorRequest = Json.format[AddCollaboratorRequest]
   implicit val formatRemovedCollaboratorRequest = Json.format[RemoveCollaboratorRequest]
 
-  implicit val formatOrganisationWithNameAndVendorId = Json.format[OrganisationWithNameAndVendorId]
-  implicit val formatBulkUploadOrganisationsRequest = Json.format[BulkUploadOrganisationsRequest]
-
-  implicit val formatParsedUser = Json.format[ParsedUser]
-  implicit val formatBulkAddUsersRequest = Json.format[BulkAddUsersRequest]
+  implicit val formatOrganisationUser = Json.format[OrganisationUser]
 }
+
+

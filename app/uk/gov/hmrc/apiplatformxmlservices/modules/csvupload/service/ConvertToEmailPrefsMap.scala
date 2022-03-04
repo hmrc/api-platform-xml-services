@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.service.upload
+package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
-import cats.implicits._
-import uk.gov.hmrc.apiplatformxmlservices.models.ParsedUser
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
-import uk.gov.hmrc.apiplatformxmlservices.models.ApiCategory
-import uk.gov.hmrc.apiplatformxmlservices.models.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
+import cats.implicits._
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 trait ConvertToEmailPrefsMap {
 
@@ -42,7 +41,7 @@ trait ConvertToEmailPrefsMap {
     }
 
     def apiListToMap(filteredApis: List[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
-       val categoryMaps = for {
+      val categoryMaps = for {
         distinctCategory <- distinctCategories
         categoryMaps = generateCategoryMaps(distinctCategory, filteredApis)
       } yield categoryMaps
