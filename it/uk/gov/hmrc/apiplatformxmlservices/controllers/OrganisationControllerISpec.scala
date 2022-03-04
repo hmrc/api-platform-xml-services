@@ -21,25 +21,19 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.WSClient
-import play.api.libs.ws.WSResponse
-import play.api.test.Helpers.BAD_REQUEST
-import play.api.test.Helpers.CREATED
-import play.api.test.Helpers.INTERNAL_SERVER_ERROR
-import play.api.test.Helpers.NOT_FOUND
-import play.api.test.Helpers.OK
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
+import play.api.libs.ws.{WSClient, WSResponse}
+import play.api.test.Helpers.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
-import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
+import uk.gov.hmrc.apiplatformxmlservices.support.{MongoApp, ServerBaseISpec}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 
-class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] {
+class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] with JsonFormatters {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
@@ -150,7 +144,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
           .willReturn(
             aResponse()
               .withStatus(status)
-              .withBody(Json.toJson(UserResponse(email, firstName, lastName, verified = true, userId, Map.empty)).toString)
+              .withBody(Json.toJson(UserResponse(email, firstName, lastName, verified = true, userId, EmailPreferences.noPreferences)).toString)
               .withHeader("Content-Type", "application/json")
           )
       )

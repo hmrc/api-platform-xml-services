@@ -18,10 +18,11 @@ package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
 
-object JsonFormatters {
+object JsonFormatters extends CommonJsonFormatters {
+
   implicit val formatUserId = Json.valueFormat[UserId]
   implicit val formatGetOrCreateUserIdRequest = Json.format[GetOrCreateUserIdRequest]
 

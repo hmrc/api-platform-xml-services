@@ -22,17 +22,16 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatformxmlservices.models.UserId
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreatedUserResult, RetrievedUserResult}
+import uk.gov.hmrc.apiplatformxmlservices.stubs.ThirdPartyDeveloperStub
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.InternalServerException
-import uk.gov.hmrc.http.Upstream5xxResponse
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse}
 
 import java.{util => ju}
-import uk.gov.hmrc.http.NotFoundException
-import uk.gov.hmrc.apiplatformxmlservices.stubs.ThirdPartyDeveloperStub
 
 class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach  with ThirdPartyDeveloperStub {
 
@@ -68,7 +67,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       lastName = lastName,
       verified = true,
       userId = userId,
-      Map.empty
+      EmailPreferences.noPreferences
     )
 
     val underTest: ThirdPartyDeveloperConnector = app.injector.instanceOf[ThirdPartyDeveloperConnector]
@@ -133,7 +132,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
   "getByEmail" should {
     val emails = List("a@b.com", "b@c.com")
 
-    val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", verified = true, UserId(ju.UUID.randomUUID), Map.empty))).toString
+    val validResponseString = Json.toJson(List(UserResponse("a@b.com", "firstname", "lastName", verified = true, UserId(ju.UUID.randomUUID), EmailPreferences.noPreferences))).toString
 
     "return Right with users when users are returned" in new Setup {
      stubGetByEmailsReturnsResponse(emails, validResponseString)

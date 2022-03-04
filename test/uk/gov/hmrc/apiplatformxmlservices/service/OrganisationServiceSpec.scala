@@ -25,7 +25,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.RemoveCollaboratorRequest
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreatedUserResult}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
@@ -154,7 +156,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, Map.empty))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, EmailPreferences.noPreferences))))
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organistionWithAddedCollaborator)))
 
       await(inTest.create(createOrganisationRequest)) match {
@@ -174,7 +176,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, Map.empty))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, EmailPreferences.noPreferences))))
 
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument("{\"code\": 11000}"), ServerAddress()))))
 
@@ -195,7 +197,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, Map.empty))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, EmailPreferences.noPreferences))))
 
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new RuntimeException("Something went wrong"))))
 

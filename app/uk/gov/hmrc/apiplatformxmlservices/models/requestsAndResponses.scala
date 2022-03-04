@@ -16,29 +16,12 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
-
 case class CreateOrganisationRequest(organisationName: OrganisationName, email: String, firstName: String, lastName: String)
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
 
-case class AddCollaboratorRequest(email: String, firstName: String, lastName: String)
-case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
-
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
-case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
 
-case class ParsedUser(email: String, firstName: String, lastName: String, services: List[ServiceName], vendorIds: List[VendorId])
-case class BulkAddUsersRequest(users: Seq[ParsedUser])
-
-sealed trait ManageCollaboratorResult{
-    val message: String
-}
-case class OrganisationAlreadyHasCollaboratorResult(message: String) extends ManageCollaboratorResult
-case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult
-case class GetOrCreateUserFailedResult(message: String) extends ManageCollaboratorResult
-case class UpdateCollaboratorFailedResult(message: String) extends ManageCollaboratorResult
-case class ValidateCollaboratorFailureResult(message: String) extends ManageCollaboratorResult
 
 sealed trait CreateOrganisationResult
 case class CreateOrganisationSuccessResult(organisation: Organisation) extends CreateOrganisationResult
@@ -49,37 +32,4 @@ case class CreateOrganisationFailedDuplicateIdResult(message: String) extends Cr
 sealed trait UpdateOrganisationResult
 case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
 case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult
-
-sealed trait CreateVerifiedUserResult
-
-abstract class CreateVerifiedUserSuccessResult() extends CreateVerifiedUserResult {
-    val userResponse: UserResponse
-}
-
-case class CreatedUserResult(userResponse: UserResponse) extends CreateVerifiedUserSuccessResult
-case class RetrievedUserResult(userResponse: UserResponse) extends CreateVerifiedUserSuccessResult
-case class CreateVerifiedUserFailedResult(message: String) extends CreateVerifiedUserResult
-
-sealed trait ValidateUserResult{
-    val message: String
-}
-case class ValidUserResult(message: String) extends ValidateUserResult
-case class InvalidVendorIdResult(message: String) extends ValidateUserResult
-case class InvalidServiceNameResult(message: String) extends ValidateUserResult
-case class MissingVendorIdResult(message: String) extends ValidateUserResult
-
-sealed trait UploadUserResult
-
-abstract class UploadFailedResult() extends UploadUserResult {
-    val message: String
-}
-
-abstract class UploadSuccessResult() extends UploadUserResult
-
-case class UploadCreatedUserSuccessResult(rowNumber: Int, user: UserResponse) extends UploadSuccessResult
-case class UploadExistingUserSuccessResult(rowNumber: Int, user: UserResponse) extends UploadSuccessResult
-
-case class InvalidUserResult(message: String) extends UploadFailedResult
-case class AddUserToOrgFailureResult(message: String) extends UploadFailedResult
-case class CreateOrGetUserFailedResult(message: String) extends UploadFailedResult
 

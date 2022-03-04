@@ -23,7 +23,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreatedUserResult}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 
@@ -71,8 +73,8 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
     val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
 
-    val userResponse1 = UserResponse(emailOne, firstName+1, lastName+1,  verified = true, userId1, emailPreferences = Map.empty)
-    val userResponse2 = UserResponse(emailTwo, firstName+2, lastName+2,  verified = true, userId1, emailPreferences = Map.empty)
+    val userResponse1 = UserResponse(emailOne, firstName+1, lastName+1,  verified = true, userId1, emailPreferences = EmailPreferences.noPreferences)
+    val userResponse2 = UserResponse(emailTwo, firstName+2, lastName+2,  verified = true, userId1, emailPreferences = EmailPreferences.noPreferences)
   }
 
  
@@ -111,7 +113,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
       val organisationWithUSer = organisation.copy(collaborators = List(Collaborator(UserId(UUID.randomUUID()), emailOne)))
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithUSer)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(emailOne, firstName, lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, Map.empty))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, EmailPreferences.noPreferences))))
 
 
       await(inTest.addCollaborator(organisationId, emailOne, firstName, lastName)) match {
@@ -126,7 +128,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
     "return Left when Organisation exists and get User is successful but update Org fails" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(emailOne, firstName, lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, Map.empty))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, EmailPreferences.noPreferences))))
 
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
@@ -144,7 +146,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
     "return Right when collaborator successfully added to organisation" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(emailOne, firstName, lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, Map.empty))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, EmailPreferences.noPreferences))))
 
       val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
@@ -278,15 +280,27 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
   }
   
-  "getCollaboratorDetailsByOrganisationId" should {
-    "" in new Setup {
+  "getOrganisationUserByOrganisationId" should {
+
+    "return converted Organisation Users when organisation exists and users are retrieved" in new Setup {
 
       when(mockOrganisationRepo.findByOrgId(eqTo(organisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailOne)))(*)).thenReturn(Future.successful(Right(List(userResponse1))))
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List(userResponse2))))
 
-      val result = await(inTest.getCollaboratorDetailsByOrganisationId(organisationId))
-      result should contain only (userResponse1, userResponse2)
+      val result = await(inTest.getOrganisationUserByOrganisationId(organisationId))
+      result should contain only (OrganisationUser(organisationId , userResponse1.userId, userResponse1.email, userResponse1.firstName, userResponse1.lastName, serviceNames = Nil),
+        OrganisationUser(organisationId , userResponse2.userId, userResponse2.email, userResponse2.firstName, userResponse2.lastName, serviceNames = Nil))
+    }
+
+    "return empty list when organisation not found" in new Setup {
+
+      when(mockOrganisationRepo.findByOrgId(eqTo(organisationId))).thenReturn(Future.successful(None))
+
+
+      val result = await(inTest.getOrganisationUserByOrganisationId(organisationId))
+
+
     }
   }
 

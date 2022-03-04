@@ -19,8 +19,8 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models.{AddCollaboratorRequest, GetOrCreateUserFailedResult, GetOrganisationFailedResult, ManageCollaboratorResult, Organisation, OrganisationAlreadyHasCollaboratorResult, OrganisationId, RemoveCollaboratorRequest, UpdateCollaboratorFailedResult, ValidateCollaboratorFailureResult}
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters, Organisation, OrganisationId}
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, GetOrCreateUserFailedResult, GetOrganisationFailedResult, ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult, RemoveCollaboratorRequest, UpdateCollaboratorFailedResult, ValidateCollaboratorFailureResult}
 import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
@@ -31,6 +31,7 @@ import scala.concurrent.ExecutionContext
 class TeamMemberController @Inject()(teamMemberService: TeamMemberService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
   extends BackendController(cc)
     with WithJsonBody
+    with JsonFormatters
     with Logging {
 
   def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>

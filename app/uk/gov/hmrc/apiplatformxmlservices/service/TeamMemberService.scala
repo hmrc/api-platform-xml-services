@@ -20,7 +20,8 @@ import cats.data.EitherT
 import cats.implicits._
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -31,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class TeamMemberService @Inject()(organisationRepository: OrganisationRepository,
                                   override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-                                 )(implicit val ec: ExecutionContext) extends RetrieveOrCreateUser {
+
+                                 )(implicit val ec: ExecutionContext) extends UserFunctions {
 
   def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
@@ -47,7 +49,7 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
       organisation <- EitherT(handleFindByOrgId(organisationId))
       _ <- EitherT(collaboratorCanBeAdded(organisation, email))
       coreUserDetail <- EitherT(handleGetOrCreateUser(email, firstName, lastName))
-      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail, organisation))
+      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(coreUserDetail.email, coreUserDetail.userId, organisation))
     } yield updatedOrganisation).value
   }
 
@@ -56,18 +58,16 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
     (for {
       organisation <- EitherT(handleFindByVendorId(vendorId))
       _ <- EitherT(collaboratorCanBeAdded(organisation, email))
-      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(CoreUserDetail(userId, email), organisation))
+      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(email, userId, organisation))
     } yield updatedOrganisation).value
   }
 
-
-  def getCollaboratorDetailsByOrganisationId(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[UserResponse]] = {
+  def getOrganisationUserByOrganisationId(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[OrganisationUser]] = {
     getOrganisationById(organisationId).flatMap {
       case None => Future.successful(List.empty)
       case Some(organisation: Organisation) => handleGetOrganisationUsers(organisation.collaborators).map(x => x.reduce(_ ++ _).distinct)
-    }
+    }.map(users => users.map(user => toOrganisationUser(organisationId, user)))
   }
-
 
   private def handleGetOrganisationUsers(collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[UserResponse]]] = {
     def mapResults(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[UserResponse]] = results map {
@@ -98,8 +98,9 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
     }
   }
 
-  private def handleAddCollaboratorToOrg(coreUserDetail: CoreUserDetail, organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    val updatedOrg = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
+
+  private def handleAddCollaboratorToOrg(email: String, userId: UserId, organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
+    val updatedOrg = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
     handleUpdateOrganisation(updatedOrg)
   }
 

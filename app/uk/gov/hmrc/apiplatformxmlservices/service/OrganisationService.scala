@@ -19,7 +19,8 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 import com.mongodb.MongoCommandException
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -34,7 +35,7 @@ class OrganisationService @Inject() (
     uuidService: UuidService,
     vendorIdService: VendorIdService,
     override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-  )(implicit val ec: ExecutionContext) extends RetrieveOrCreateUser {
+  )(implicit val ec: ExecutionContext) extends UserFunctions {
 
   def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.findByVendorId(vendorId) flatMap {
@@ -46,7 +47,7 @@ class OrganisationService @Inject() (
   def create(request: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
     vendorIdService.getNextVendorId().flatMap {
       case Right(vendorId: VendorId) => handleGetOrCreateUser(request.email, request.firstName, request.lastName).flatMap {
-          case Right(user: CoreUserDetail)            =>
+          case Right(user: UserResponse)            =>
             handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
           case Left(e: GetOrCreateUserFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }

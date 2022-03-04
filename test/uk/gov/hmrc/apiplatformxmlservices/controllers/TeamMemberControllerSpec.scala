@@ -26,17 +26,18 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, GetOrCreateUserFailedResult, GetOrganisationFailedResult, UpdateCollaboratorFailedResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
-import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{BulkUploadOrganisationsRequest, CSVJsonFormats}
+import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSugar
+  with GuiceOneAppPerSuite with BeforeAndAfterEach with JsonFormatters with CSVJsonFormats {
 
   private val mockTeamMemberService = mock[TeamMemberService]
 
