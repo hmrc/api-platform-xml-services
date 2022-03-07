@@ -47,7 +47,7 @@ object XmlApi extends JsonFormatters {
     Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
 }
 
-case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, serviceNames: List[String])
+case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[XmlApi])
 
 case class OrganisationId(value: ju.UUID) extends AnyVal
 

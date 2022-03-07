@@ -41,12 +41,18 @@ trait UserFunctions {
   def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
 
     val xmlServiceNames: Set[String] = XmlApi.xmlApis.map(_.serviceName.value).toSet
+    def getXmlApiByServiceName(serviceName: String): Option[XmlApi] ={
+      XmlApi.xmlApis.find(_.serviceName.value == serviceName)
+    }
 
-     val filteredTaxRegimeInterests =  user.emailPreferences.interests
-        .filter(x => x.services.intersect(xmlServiceNames).nonEmpty)
-        .map(x => TaxRegimeInterests(x.regime, x.services.intersect(xmlServiceNames)))
-      if(filteredTaxRegimeInterests.isEmpty){ OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, List.empty) }
-      else { OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, filteredTaxRegimeInterests.flatMap(_.services.toList)) }
+     val filteredXmlEmailPreferences = for { filteredInterests <- user.emailPreferences.interests.filter(x => x.services.intersect(xmlServiceNames).nonEmpty)
+                serviceName <- filteredInterests.services.intersect(xmlServiceNames)
+                xmlApi <-  getXmlApiByServiceName(serviceName)
+            }  yield xmlApi
+
+
+      if(filteredXmlEmailPreferences.isEmpty){ OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, List.empty) }
+      else { OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, filteredXmlEmailPreferences) }
     }
 
 

@@ -27,7 +27,6 @@ import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{GetOrganisationF
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{AddUserToOrgFailureResult, CreateOrGetUserFailedResult, CreateVerifiedUserFailedResult, CreatedUserResult, InvalidUserResult, ParsedUser, RetrievedUserResult, UploadCreatedUserSuccessResult, UploadExistingUserSuccessResult}
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service.UploadService
 import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
 import uk.gov.hmrc.http.HeaderCarrier
 
