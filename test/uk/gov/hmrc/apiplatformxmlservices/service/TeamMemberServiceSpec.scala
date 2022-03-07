@@ -290,8 +290,8 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List(userResponse2))))
 
       val result = await(inTest.getOrganisationUserByOrganisationId(organisationId))
-      result should contain only (OrganisationUser(organisationId , userResponse1.userId, userResponse1.email, userResponse1.firstName, userResponse1.lastName, serviceNames = Nil),
-        OrganisationUser(organisationId , userResponse2.userId, userResponse2.email, userResponse2.firstName, userResponse2.lastName, serviceNames = Nil))
+      result should contain only (OrganisationUser(organisationId , userResponse1.userId, userResponse1.email, userResponse1.firstName, userResponse1.lastName, xmlApis = Nil),
+        OrganisationUser(organisationId , userResponse2.userId, userResponse2.email, userResponse2.firstName, userResponse2.lastName, xmlApis = Nil))
     }
 
     "return empty list when organisation not found" in new Setup {
