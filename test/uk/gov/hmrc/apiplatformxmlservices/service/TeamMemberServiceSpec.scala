@@ -311,6 +311,16 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
     }
 
+    "return empty list when no results returned from third party developer and no collaborators linked to organisation" in new Setup {
+
+      when(mockOrganisationRepo.findByOrgId(eqTo(organisationId))).thenReturn(Future.successful(Some(organisation)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailOne)))(*)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
+
+      await(inTest.getOrganisationUserByOrganisationId(organisationId)) shouldBe Nil
+
+    }
+
     "return empty list when errors returned from third party developer" in new Setup {
 
       when(mockOrganisationRepo.findByOrgId(eqTo(organisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))

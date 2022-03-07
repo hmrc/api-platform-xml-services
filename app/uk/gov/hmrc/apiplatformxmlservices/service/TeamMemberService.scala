@@ -65,7 +65,7 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
   def getOrganisationUserByOrganisationId(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[OrganisationUser]] = {
     getOrganisationById(organisationId).flatMap {
       case None => Future.successful(List.empty)
-      case Some(organisation: Organisation) => handleGetOrganisationUsers(organisation.collaborators).map(x => x.reduce(_ ++ _).distinct)
+      case Some(organisation: Organisation) => handleGetOrganisationUsers(organisation.collaborators).map(x => if(x.nonEmpty) x.reduce(_ ++ _).distinct else List.empty)
     }.map(users => users.map(user => toOrganisationUser(organisationId, user)))
   }
 
