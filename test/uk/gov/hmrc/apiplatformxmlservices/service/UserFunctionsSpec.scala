@@ -25,7 +25,7 @@ import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnecto
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, EmailTopic, ImportUserRequest, TaxRegimeInterests, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, UserId, XmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, UserId, XmlApiWithoutStatus}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreatedUserResult, RetrievedUserResult}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -85,19 +85,19 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
   "toOrganisationUser" should {
 
-    val xmlApi1 = XmlApi("Excise Movement Control System",
+    val xmlApi1 = XmlApiWithoutStatus("Excise Movement Control System",
       ServiceName("excise-movement-control"),
       "/government/collections/excise-movement-control-system-fs31-support-for-software-developers",
       "Technical specifications for the Excise Movement Control System (EMCS).",
       Some(List(ApiCategory.CUSTOMS)))
 
-    val xmlApi2 = XmlApi("Import Control System",
+    val xmlApi2 = XmlApiWithoutStatus("Import Control System",
       ServiceName("import-control-system"),
       "/government/collections/import-control-system-support-for-software-developers",
       "Technical specifications for Import Control System software developers.",
       Some(List(ApiCategory.CUSTOMS)))
 
-    val xmlApi3 = XmlApi("PAYE Online",
+    val xmlApi3 = XmlApiWithoutStatus("PAYE Online",
       ServiceName("paye-online"),
       "/government/collections/paye-online-support-for-software-developers",
       "Technical specifications for software developers working with the PAYE online service.",
@@ -120,7 +120,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
       val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithNoXmlServices))
       result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(xmlApi1, xmlApi2, xmlApi3))
-      XmlApi.xmlApis.intersect(result.xmlApis) should contain only(xmlApi1, xmlApi2, xmlApi3)
+      XmlApiWithoutStatus.xmlApisWithoutStatus.intersect(result.xmlApis) should contain only(xmlApi1, xmlApi2, xmlApi3)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {

@@ -21,7 +21,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{NOT_FOUND, OK}
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApiWithoutStatus._
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 
 class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
@@ -59,7 +59,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
       "respond with 200 and return all Apis" in {
         val result = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
-        result.body mustBe Json.toJson(xmlApis).toString
+        result.body mustBe Json.toJson(xmlApisWithoutStatus).toString
       }
 
       "respond with 404 when invalid path" in {
@@ -71,7 +71,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
 
     "GET /xml/api/:name" should {
       val apiName = "Charities Online"
-      val charitiesOnlineApi = xmlApis.find(_.name == apiName)
+      val charitiesOnlineApi = xmlApisWithoutStatus.find(_.name == apiName)
 
       "respond with 200 and return the API" in {
         val result = callGetEndpoint(s"$url/xml/api/$apiName")
@@ -86,7 +86,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
 
     "GET /xml/api?serviceName=charities-online" should {
       val apiName = "charities-online"
-      val charitiesOnlineApi = xmlApis.find(_.serviceName.value == apiName)
+      val charitiesOnlineApi = xmlApisWithoutStatus.find(_.serviceName.value == apiName)
 
       "respond with 200 and return the API" in {
         val result = callGetEndpoint(s"$url/xml/api?serviceName=$apiName")

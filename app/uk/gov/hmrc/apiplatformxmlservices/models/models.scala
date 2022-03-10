@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformxmlservices.models
 
 import enumeratum._
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 import java.{util => ju}
@@ -35,19 +36,49 @@ object OrganisationSortBy extends Enum[OrganisationSortBy] {
 
 }
 
+sealed trait ApiStatus extends EnumEntry
+
+object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
+
+  val values = findValues
+
+  case object LIVE extends ApiStatus
+  case object RETIRED extends ApiStatus
+
+}
+
+case class XmlApiWithStatus(name: String, serviceName: ServiceName, context: String,
+                            description: String, categories: Option[Seq[ApiCategory]] = None,
+                            status: ApiStatus = ApiStatus.LIVE)
+
+object XmlApiWithStatus extends JsonFormatters {
+
+  def xmlApisWithStatus: List[XmlApiWithStatus] =
+    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApiWithStatus]]
+
+  def toXmlApiWithoutStatus(xmlApiWithStatus: XmlApiWithStatus) : XmlApiWithoutStatus = {
+    XmlApiWithoutStatus(
+      name = xmlApiWithStatus.name,
+      serviceName = xmlApiWithStatus.serviceName,
+      context = xmlApiWithStatus.context,
+      description = xmlApiWithStatus.description,
+      categories = xmlApiWithStatus.categories
+    )
+  }
+}
+
+case class XmlApiWithoutStatus(name: String, serviceName: ServiceName, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
+
+object XmlApiWithoutStatus extends JsonFormatters {
+  import uk.gov.hmrc.apiplatformxmlservices.models.XmlApiWithStatus._
+
+  def xmlApisWithoutStatus: List[XmlApiWithoutStatus] =
+    xmlApisWithStatus.map(toXmlApiWithoutStatus)
+}
 
 case class UserId(value: ju.UUID)
 
-
-case class XmlApi(name: String, serviceName: ServiceName, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
-
-object XmlApi extends JsonFormatters {
-
-  def xmlApis: List[XmlApi] =
-    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
-}
-
-case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[XmlApi])
+case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[XmlApiWithoutStatus])
 
 case class OrganisationId(value: ju.UUID) extends AnyVal
 
