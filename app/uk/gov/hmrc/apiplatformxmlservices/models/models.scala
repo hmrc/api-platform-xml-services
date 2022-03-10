@@ -56,6 +56,8 @@ object XmlApi extends JsonFormatters {
   def xmlApis: List[XmlApi] =
     Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
 
+  def liveXmlApis:List[XmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
+
   def toXmlApiWithoutStatus(xmlApi: XmlApi) : XmlApiWithoutStatus = {
     XmlApiWithoutStatus(
       name = xmlApi.name,
@@ -72,8 +74,8 @@ case class XmlApiWithoutStatus(name: String, serviceName: ServiceName, context: 
 object XmlApiWithoutStatus extends JsonFormatters {
   import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
 
-  def xmlApisWithoutStatus: List[XmlApiWithoutStatus] =
-    xmlApis.map(toXmlApiWithoutStatus)
+  def liveXmlApisWithoutStatus: List[XmlApiWithoutStatus] =
+    liveXmlApis.map(toXmlApiWithoutStatus)
 }
 
 case class UserId(value: ju.UUID)

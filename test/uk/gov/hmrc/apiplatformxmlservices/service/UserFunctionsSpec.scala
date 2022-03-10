@@ -120,7 +120,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
       val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithNoXmlServices))
       result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(xmlApi1, xmlApi2, xmlApi3))
-      XmlApiWithoutStatus.xmlApisWithoutStatus.intersect(result.xmlApis) should contain only(xmlApi1, xmlApi2, xmlApi3)
+      XmlApiWithoutStatus.liveXmlApisWithoutStatus.intersect(result.xmlApis) should contain only(xmlApi1, xmlApi2, xmlApi3)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {
