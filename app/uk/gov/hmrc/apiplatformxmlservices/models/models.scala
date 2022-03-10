@@ -47,22 +47,22 @@ object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
 
 }
 
-case class XmlApiWithStatus(name: String, serviceName: ServiceName, context: String,
-                            description: String, categories: Option[Seq[ApiCategory]] = None,
-                            status: ApiStatus = ApiStatus.LIVE)
+case class XmlApi(name: String, serviceName: ServiceName, context: String,
+                  description: String, categories: Option[Seq[ApiCategory]] = None,
+                  status: ApiStatus = ApiStatus.LIVE)
 
-object XmlApiWithStatus extends JsonFormatters {
+object XmlApi extends JsonFormatters {
 
-  def xmlApisWithStatus: List[XmlApiWithStatus] =
-    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApiWithStatus]]
+  def xmlApis: List[XmlApi] =
+    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
 
-  def toXmlApiWithoutStatus(xmlApiWithStatus: XmlApiWithStatus) : XmlApiWithoutStatus = {
+  def toXmlApiWithoutStatus(xmlApi: XmlApi) : XmlApiWithoutStatus = {
     XmlApiWithoutStatus(
-      name = xmlApiWithStatus.name,
-      serviceName = xmlApiWithStatus.serviceName,
-      context = xmlApiWithStatus.context,
-      description = xmlApiWithStatus.description,
-      categories = xmlApiWithStatus.categories
+      name = xmlApi.name,
+      serviceName = xmlApi.serviceName,
+      context = xmlApi.context,
+      description = xmlApi.description,
+      categories = xmlApi.categories
     )
   }
 }
@@ -70,10 +70,10 @@ object XmlApiWithStatus extends JsonFormatters {
 case class XmlApiWithoutStatus(name: String, serviceName: ServiceName, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
 
 object XmlApiWithoutStatus extends JsonFormatters {
-  import uk.gov.hmrc.apiplatformxmlservices.models.XmlApiWithStatus._
+  import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
 
   def xmlApisWithoutStatus: List[XmlApiWithoutStatus] =
-    xmlApisWithStatus.map(toXmlApiWithoutStatus)
+    xmlApis.map(toXmlApiWithoutStatus)
 }
 
 case class UserId(value: ju.UUID)
