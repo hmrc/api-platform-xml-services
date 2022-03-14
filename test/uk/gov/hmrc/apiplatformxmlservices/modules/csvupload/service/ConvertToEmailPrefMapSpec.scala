@@ -39,7 +39,7 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
 
     "correctly map servicenames to email preferences when a users api is in multiple categories" in {
       val extraApiInMultipleCategories = XmlApiWithoutStatus("name", api1Name, "context", "description", Some(Seq(ApiCategory.CUSTOMS, ApiCategory.VAT)) )
-      val result = extractEmailPreferencesFromUser(validParsedUser, XmlApiWithoutStatus.liveXmlApisWithoutStatus ++ Seq(extraApiInMultipleCategories))
+      val result = extractEmailPreferencesFromUser(validParsedUser, XmlApiWithoutStatus.stableXmlApisWithoutStatus ++ Seq(extraApiInMultipleCategories))
       result.keySet.toList should contain only (ApiCategory.CHARITIES, ApiCategory.CUSTOMS, ApiCategory.VAT)
       result.getOrElse(ApiCategory.CHARITIES, List.empty) should contain only ServiceName("charities-online")
       result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only (ServiceName("import-control-system"), api1Name)
@@ -52,14 +52,14 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
     }
 
     "return empty map when user has no services" in { // should this throw an exception??
-      val result = extractEmailPreferencesFromUser(validParsedUser.copy(services = List.empty), XmlApiWithoutStatus.liveXmlApisWithoutStatus)
+      val result = extractEmailPreferencesFromUser(validParsedUser.copy(services = List.empty), XmlApiWithoutStatus.stableXmlApisWithoutStatus)
       result shouldBe Map.empty
     }
 
 
     "return correct email preferences when one api has no categories" in { // should this throw an exception??
       val extraApiInMultipleCategories = XmlApiWithoutStatus("name", api1Name, "context", "description", None )
-      val result = extractEmailPreferencesFromUser(validParsedUser, XmlApiWithoutStatus.liveXmlApisWithoutStatus ++ List(extraApiInMultipleCategories))
+      val result = extractEmailPreferencesFromUser(validParsedUser, XmlApiWithoutStatus.stableXmlApisWithoutStatus ++ List(extraApiInMultipleCategories))
       result.keySet.toList should contain only (ApiCategory.CHARITIES, ApiCategory.CUSTOMS)
       result.getOrElse(ApiCategory.CHARITIES, List.empty) should contain only ServiceName("charities-online")
       result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only ServiceName("import-control-system")

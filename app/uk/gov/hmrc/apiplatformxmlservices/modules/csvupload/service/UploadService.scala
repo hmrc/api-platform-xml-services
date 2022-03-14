@@ -97,7 +97,7 @@ class UploadService @Inject() (
     val request =  ImportUserRequest(parsedUser.email,
       parsedUser.firstName,
       parsedUser.lastName,
-      extractEmailPreferencesFromUser(parsedUser, XmlApiWithoutStatus.liveXmlApisWithoutStatus)
+      extractEmailPreferencesFromUser(parsedUser, XmlApiWithoutStatus.stableXmlApisWithoutStatus)
     )
     thirdPartyDeveloperConnector.createVerifiedUser(request)
   }

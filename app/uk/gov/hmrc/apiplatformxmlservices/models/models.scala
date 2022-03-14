@@ -47,16 +47,24 @@ object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
 
 }
 
+sealed trait BaseXmlApi {
+  def name: String
+  def serviceName: ServiceName
+  def context: String
+  def description: String
+  def categories: Option[Seq[ApiCategory]]
+}
+
 case class XmlApi(name: String, serviceName: ServiceName, context: String,
                   description: String, categories: Option[Seq[ApiCategory]] = None,
-                  status: ApiStatus = ApiStatus.STABLE)
+                  status: ApiStatus = ApiStatus.STABLE) extends BaseXmlApi
 
 object XmlApi extends JsonFormatters {
 
   def xmlApis: List[XmlApi] =
     Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
 
-  def liveXmlApis:List[XmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
+  def stableXmlApis:List[XmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
 
   def toXmlApiWithoutStatus(xmlApi: XmlApi) : XmlApiWithoutStatus = {
     XmlApiWithoutStatus(
@@ -69,13 +77,14 @@ object XmlApi extends JsonFormatters {
   }
 }
 
-case class XmlApiWithoutStatus(name: String, serviceName: ServiceName, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
+case class XmlApiWithoutStatus(name: String, serviceName: ServiceName, context: String, description: String,
+                               categories: Option[Seq[ApiCategory]] = None) extends BaseXmlApi
 
 object XmlApiWithoutStatus extends JsonFormatters {
   import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
 
-  def liveXmlApisWithoutStatus: List[XmlApiWithoutStatus] =
-    liveXmlApis.map(toXmlApiWithoutStatus)
+  def stableXmlApisWithoutStatus: List[XmlApiWithoutStatus] =
+    stableXmlApis.map(toXmlApiWithoutStatus)
 }
 
 case class UserId(value: ju.UUID)

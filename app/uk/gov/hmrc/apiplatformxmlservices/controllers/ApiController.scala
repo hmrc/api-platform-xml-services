@@ -31,7 +31,7 @@ class ApiController @Inject() (cc: ControllerComponents)
     extends BackendController(cc) with JsonFormatters {
 
   def getAll(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(Json.toJson(XmlApiWithoutStatus.liveXmlApisWithoutStatus)))
+    Future.successful(Ok(Json.toJson(XmlApiWithoutStatus.stableXmlApisWithoutStatus)))
   }
 
   @deprecated("use getApiByServiceName", since = "0.7.0")

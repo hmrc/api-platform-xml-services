@@ -60,7 +60,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
       "respond with 200 and return all live Apis" in {
         val result = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
-        result.body mustBe Json.toJson(liveXmlApisWithoutStatus).toString
+        result.body mustBe Json.toJson(stableXmlApisWithoutStatus).toString
       }
 
       "respond with 404 when invalid path" in {
@@ -71,13 +71,13 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
     }
 
     "GET /xml/api/:name" should {
-      val liveApiName = "Charities Online"
-      val charitiesOnlineApi = liveXmlApisWithoutStatus.find(_.name == liveApiName)
+      val stableApiName = "Charities Online"
+      val charitiesOnlineApi = stableXmlApisWithoutStatus.find(_.name == stableApiName)
       val retiredApiName = "Employment intermediaries"
       val employmentIntermediariesApi = XmlApi.toXmlApiWithoutStatus(XmlApi.xmlApis.find(_.name == retiredApiName).get)
 
-      "respond with 200 and return the live API" in {
-        val result = callGetEndpoint(s"$url/xml/api/$liveApiName")
+      "respond with 200 and return the stable API" in {
+        val result = callGetEndpoint(s"$url/xml/api/$stableApiName")
         result.status mustBe OK
         result.body mustBe Json.toJson(charitiesOnlineApi).toString
       }
@@ -95,13 +95,13 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
     }
 
     "GET /xml/api?serviceName=charities-online" should {
-      val apiName = "charities-online"
-      val charitiesOnlineApi = liveXmlApisWithoutStatus.find(_.serviceName.value == apiName)
+      val stableApiName = "charities-online"
+      val charitiesOnlineApi = stableXmlApisWithoutStatus.find(_.serviceName.value == stableApiName)
       val retiredApiServiceName = "employment-intermediaries"
       val employmentIntermediariesApi = XmlApi.toXmlApiWithoutStatus(XmlApi.xmlApis.find(_.serviceName.value == retiredApiServiceName).get)
 
-      "respond with 200 and return the live API" in {
-        val result = callGetEndpoint(s"$url/xml/api?serviceName=$apiName")
+      "respond with 200 and return the stable API" in {
+        val result = callGetEndpoint(s"$url/xml/api?serviceName=$stableApiName")
         result.status mustBe OK
         result.body mustBe Json.toJson(charitiesOnlineApi).toString
       }

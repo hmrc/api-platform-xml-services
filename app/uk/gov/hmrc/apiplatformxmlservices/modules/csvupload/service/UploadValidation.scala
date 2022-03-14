@@ -53,7 +53,7 @@ trait UploadValidation {
 
 
   def validateServiceNames(user: ParsedUser, rowNumber: Int)(implicit ec: ExecutionContext): Future[ValidatedNel[String, ParsedUser]] = {
-    val allServiceNames = XmlApiWithoutStatus.liveXmlApisWithoutStatus.map(x => x.serviceName.value)
+    val allServiceNames = XmlApiWithoutStatus.stableXmlApisWithoutStatus.map(x => x.serviceName.value)
 
     Future.successful(user.services.isEmpty || user.services.forall(x => allServiceNames.contains(x.value))) map {
       case true => Valid(user)

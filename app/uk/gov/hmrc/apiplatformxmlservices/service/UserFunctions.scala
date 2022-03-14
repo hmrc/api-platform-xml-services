@@ -40,9 +40,9 @@ trait UserFunctions {
 
   def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
 
-    val xmlServiceNames: Set[String] = XmlApiWithoutStatus.liveXmlApisWithoutStatus.map(_.serviceName.value).toSet
+    val xmlServiceNames: Set[String] = XmlApiWithoutStatus.stableXmlApisWithoutStatus.map(_.serviceName.value).toSet
     def getXmlApiByServiceName(serviceName: String): Option[XmlApiWithoutStatus] ={
-      XmlApiWithoutStatus.liveXmlApisWithoutStatus.find(_.serviceName.value == serviceName)
+      XmlApiWithoutStatus.stableXmlApisWithoutStatus.find(_.serviceName.value == serviceName)
     }
 
      val filteredXmlEmailPreferences = for { filteredInterests <- user.emailPreferences.interests.filter(x => x.services.intersect(xmlServiceNames).nonEmpty)
