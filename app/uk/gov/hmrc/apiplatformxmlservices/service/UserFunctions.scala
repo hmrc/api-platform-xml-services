@@ -18,8 +18,9 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, TaxRegimeInterests, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, ExternalXmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -40,9 +41,9 @@ trait UserFunctions {
 
   def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
 
-    val xmlServiceNames: Set[String] = ExternalXmlApi.stableExternalXmlApis.map(_.serviceName.value).toSet
+    val xmlServiceNames: Set[String] = stableExternalXmlApis.map(_.serviceName.value).toSet
     def getXmlApiByServiceName(serviceName: String): Option[ExternalXmlApi] ={
-      ExternalXmlApi.stableExternalXmlApis.find(_.serviceName.value == serviceName)
+      stableExternalXmlApis.find(_.serviceName.value == serviceName)
     }
 
      val filteredXmlEmailPreferences = for { filteredInterests <- user.emailPreferences.interests.filter(x => x.services.intersect(xmlServiceNames).nonEmpty)

@@ -23,9 +23,10 @@ import cats.syntax.traverse._
 import play.api.Logging
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{AddUserToOrgFailureResult, CreateOrGetUserFailedResult, CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreateVerifiedUserSuccessResult, CreatedUserResult, InvalidUserResult, ParsedUser, RetrievedUserResult, UploadCreatedUserSuccessResult, UploadExistingUserSuccessResult, UploadSuccessResult, UploadUserResult}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -97,7 +98,7 @@ class UploadService @Inject() (
     val request =  ImportUserRequest(parsedUser.email,
       parsedUser.firstName,
       parsedUser.lastName,
-      extractEmailPreferencesFromUser(parsedUser, ExternalXmlApi.stableExternalXmlApis)
+      extractEmailPreferencesFromUser(parsedUser, stableExternalXmlApis)
     )
     thirdPartyDeveloperConnector.createVerifiedUser(request)
   }

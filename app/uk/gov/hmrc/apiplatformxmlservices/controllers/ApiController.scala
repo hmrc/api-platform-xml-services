@@ -18,8 +18,9 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters, ExternalXmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters}
 import uk.gov.hmrc.apiplatformxmlservices.models.InternalXmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -31,7 +32,7 @@ class ApiController @Inject() (cc: ControllerComponents)
     extends BackendController(cc) with JsonFormatters {
 
   def getAll(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(Json.toJson(ExternalXmlApi.stableExternalXmlApis)))
+    Future.successful(Ok(Json.toJson(stableExternalXmlApis)))
   }
 
   @deprecated("use getApiByServiceName", since = "0.7.0")

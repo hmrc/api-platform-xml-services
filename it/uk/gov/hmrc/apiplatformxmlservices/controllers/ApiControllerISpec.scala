@@ -57,7 +57,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
 
     "GET /xml/apis" should {
 
-      "respond with 200 and return all live Apis" in {
+      "respond with 200 and return all stable Apis" in {
         val result = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
         result.body mustBe Json.toJson(stableExternalXmlApis).toString

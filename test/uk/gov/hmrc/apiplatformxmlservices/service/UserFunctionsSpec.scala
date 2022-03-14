@@ -26,6 +26,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFa
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, EmailTopic, ImportUserRequest, TaxRegimeInterests, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, UserId, ExternalXmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi.stableExternalXmlApis
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreatedUserResult, RetrievedUserResult}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -120,7 +121,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
       val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithNoXmlServices))
       result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(xmlApi1, xmlApi2, xmlApi3))
-      ExternalXmlApi.stableExternalXmlApis.intersect(result.xmlApis) should contain only(xmlApi1, xmlApi2, xmlApi3)
+      stableExternalXmlApis.intersect(result.xmlApis) should contain only(xmlApi1, xmlApi2, xmlApi3)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {
