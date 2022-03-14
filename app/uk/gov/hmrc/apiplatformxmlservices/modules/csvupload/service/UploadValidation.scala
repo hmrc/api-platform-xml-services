@@ -20,7 +20,7 @@ import cats.data.Validated._
 import cats.data.ValidatedNel
 import cats.implicits._
 
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, VendorId, XmlApiWithoutStatus}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, VendorId, ExternalXmlApi}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,7 +53,7 @@ trait UploadValidation {
 
 
   def validateServiceNames(user: ParsedUser, rowNumber: Int)(implicit ec: ExecutionContext): Future[ValidatedNel[String, ParsedUser]] = {
-    val allServiceNames = XmlApiWithoutStatus.stableXmlApisWithoutStatus.map(x => x.serviceName.value)
+    val allServiceNames = ExternalXmlApi.stableExternalXmlApis.map(x => x.serviceName.value)
 
     Future.successful(user.services.isEmpty || user.services.forall(x => allServiceNames.contains(x.value))) map {
       case true => Valid(user)

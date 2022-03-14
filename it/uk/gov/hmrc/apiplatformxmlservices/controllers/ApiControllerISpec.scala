@@ -21,8 +21,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{NOT_FOUND, OK}
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApiWithoutStatus._
+import uk.gov.hmrc.apiplatformxmlservices.models.InternalXmlApi
+import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 
 class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
@@ -60,7 +60,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
       "respond with 200 and return all live Apis" in {
         val result = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
-        result.body mustBe Json.toJson(stableXmlApisWithoutStatus).toString
+        result.body mustBe Json.toJson(stableExternalXmlApis).toString
       }
 
       "respond with 404 when invalid path" in {
@@ -72,9 +72,9 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
 
     "GET /xml/api/:name" should {
       val stableApiName = "Charities Online"
-      val charitiesOnlineApi = stableXmlApisWithoutStatus.find(_.name == stableApiName)
+      val charitiesOnlineApi = stableExternalXmlApis.find(_.name == stableApiName)
       val retiredApiName = "Employment intermediaries"
-      val employmentIntermediariesApi = XmlApi.toXmlApiWithoutStatus(XmlApi.xmlApis.find(_.name == retiredApiName).get)
+      val employmentIntermediariesApi = InternalXmlApi.toExternalXmlApi(InternalXmlApi.xmlApis.find(_.name == retiredApiName).get)
 
       "respond with 200 and return the stable API" in {
         val result = callGetEndpoint(s"$url/xml/api/$stableApiName")
@@ -96,9 +96,9 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
 
     "GET /xml/api?serviceName=charities-online" should {
       val stableApiName = "charities-online"
-      val charitiesOnlineApi = stableXmlApisWithoutStatus.find(_.serviceName.value == stableApiName)
+      val charitiesOnlineApi = stableExternalXmlApis.find(_.serviceName.value == stableApiName)
       val retiredApiServiceName = "employment-intermediaries"
-      val employmentIntermediariesApi = XmlApi.toXmlApiWithoutStatus(XmlApi.xmlApis.find(_.serviceName.value == retiredApiServiceName).get)
+      val employmentIntermediariesApi = InternalXmlApi.toExternalXmlApi(InternalXmlApi.xmlApis.find(_.serviceName.value == retiredApiServiceName).get)
 
       "respond with 200 and return the stable API" in {
         val result = callGetEndpoint(s"$url/xml/api?serviceName=$stableApiName")

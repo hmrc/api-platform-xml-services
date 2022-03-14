@@ -18,8 +18,8 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters, XmlApi, XmlApiWithoutStatus}
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters, ExternalXmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.InternalXmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -31,20 +31,20 @@ class ApiController @Inject() (cc: ControllerComponents)
     extends BackendController(cc) with JsonFormatters {
 
   def getAll(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(Json.toJson(XmlApiWithoutStatus.stableXmlApisWithoutStatus)))
+    Future.successful(Ok(Json.toJson(ExternalXmlApi.stableExternalXmlApis)))
   }
 
   @deprecated("use getApiByServiceName", since = "0.7.0")
   def getApi(name: String): Action[AnyContent] = Action.async {
     xmlApis.find(_.name == name) match {
-      case Some(xmlApi) => Future.successful(Ok(Json.toJson(toXmlApiWithoutStatus(xmlApi))))
+      case Some(xmlApi) => Future.successful(Ok(Json.toJson(toExternalXmlApi(xmlApi))))
       case _ => Future.successful(NotFound(s"XML API with name $name not found."))
     }
   }
 
   def getApiByServiceName(serviceName: ServiceName): Action[AnyContent] = Action.async {
     xmlApis.find(_.serviceName == serviceName) match {
-      case Some(xmlApi) => Future.successful(Ok(Json.toJson(toXmlApiWithoutStatus(xmlApi))))
+      case Some(xmlApi) => Future.successful(Ok(Json.toJson(toExternalXmlApi(xmlApi))))
       case _ => Future.successful(NotFound(s"XML API with serviceName $serviceName not found."))
     }
   }

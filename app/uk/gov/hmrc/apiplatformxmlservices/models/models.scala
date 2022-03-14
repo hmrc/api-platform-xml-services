@@ -47,7 +47,7 @@ object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
 
 }
 
-sealed trait BaseXmlApi {
+sealed trait XmlApi {
   def name: String
   def serviceName: ServiceName
   def context: String
@@ -55,19 +55,19 @@ sealed trait BaseXmlApi {
   def categories: Option[Seq[ApiCategory]]
 }
 
-case class XmlApi(name: String, serviceName: ServiceName, context: String,
-                  description: String, categories: Option[Seq[ApiCategory]] = None,
-                  status: ApiStatus = ApiStatus.STABLE) extends BaseXmlApi
+case class InternalXmlApi(name: String, serviceName: ServiceName, context: String,
+                          description: String, categories: Option[Seq[ApiCategory]] = None,
+                          status: ApiStatus = ApiStatus.STABLE) extends XmlApi
 
-object XmlApi extends JsonFormatters {
+object InternalXmlApi extends JsonFormatters {
 
-  def xmlApis: List[XmlApi] =
-    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
+  def xmlApis: List[InternalXmlApi] =
+    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[InternalXmlApi]]
 
-  def stableXmlApis:List[XmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
+  def stableXmlApis:List[InternalXmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
 
-  def toXmlApiWithoutStatus(xmlApi: XmlApi) : XmlApiWithoutStatus = {
-    XmlApiWithoutStatus(
+  def toExternalXmlApi(xmlApi: InternalXmlApi) : ExternalXmlApi = {
+    ExternalXmlApi(
       name = xmlApi.name,
       serviceName = xmlApi.serviceName,
       context = xmlApi.context,
@@ -77,19 +77,19 @@ object XmlApi extends JsonFormatters {
   }
 }
 
-case class XmlApiWithoutStatus(name: String, serviceName: ServiceName, context: String, description: String,
-                               categories: Option[Seq[ApiCategory]] = None) extends BaseXmlApi
+case class ExternalXmlApi(name: String, serviceName: ServiceName, context: String, description: String,
+                          categories: Option[Seq[ApiCategory]] = None) extends XmlApi
 
-object XmlApiWithoutStatus extends JsonFormatters {
-  import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
+object ExternalXmlApi extends JsonFormatters {
+  import uk.gov.hmrc.apiplatformxmlservices.models.InternalXmlApi._
 
-  def stableXmlApisWithoutStatus: List[XmlApiWithoutStatus] =
-    stableXmlApis.map(toXmlApiWithoutStatus)
+  def stableExternalXmlApis: List[ExternalXmlApi] =
+    stableXmlApis.map(toExternalXmlApi)
 }
 
 case class UserId(value: ju.UUID)
 
-case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[XmlApiWithoutStatus])
+case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[ExternalXmlApi])
 
 case class OrganisationId(value: ju.UUID) extends AnyVal
 

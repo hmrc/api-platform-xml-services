@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApiWithoutStatus
+import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 import cats.implicits._
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 trait ConvertToEmailPrefsMap {
 
-  def extractEmailPreferencesFromUser(parsedUser: ParsedUser, xmlApis: List[XmlApiWithoutStatus]): Map[ApiCategory, List[ServiceName]] = {
+  def extractEmailPreferencesFromUser(parsedUser: ParsedUser, xmlApis: List[ExternalXmlApi]): Map[ApiCategory, List[ServiceName]] = {
 
     val distinctCategories = xmlApis.flatMap(api => api.categories.getOrElse(List.empty)).distinct
 
-    def generateCategoryMaps(category: ApiCategory, apis: List[XmlApiWithoutStatus]): List[Map[ApiCategory, List[ServiceName]]] = {
+    def generateCategoryMaps(category: ApiCategory, apis: List[ExternalXmlApi]): List[Map[ApiCategory, List[ServiceName]]] = {
       apis.map(api => {
         if (api.categories.getOrElse(List.empty).contains(category)) {
           Map(category -> List(api.serviceName))
@@ -40,7 +40,7 @@ trait ConvertToEmailPrefsMap {
       categoryMaps.reduce((x, y) => x.combine(y))
     }
 
-    def apiListToMap(filteredApis: List[XmlApiWithoutStatus]): Map[ApiCategory, List[ServiceName]] = {
+    def apiListToMap(filteredApis: List[ExternalXmlApi]): Map[ApiCategory, List[ServiceName]] = {
       val categoryMaps = for {
         distinctCategory <- distinctCategories
         categoryMaps = generateCategoryMaps(distinctCategory, filteredApis)
@@ -49,7 +49,7 @@ trait ConvertToEmailPrefsMap {
     }
 
     if (parsedUser.services.nonEmpty && xmlApis.nonEmpty) {
-      val apis: List[XmlApiWithoutStatus] = parsedUser.services
+      val apis: List[ExternalXmlApi] = parsedUser.services
         .map(service => xmlApis.filter(x => x.serviceName == service).head)
       apiListToMap(apis)
     } else Map.empty[ApiCategory, List[ServiceName]]
