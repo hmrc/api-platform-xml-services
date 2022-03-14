@@ -42,14 +42,14 @@ object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
 
   val values = findValues
 
-  case object LIVE extends ApiStatus
+  case object STABLE extends ApiStatus
   case object RETIRED extends ApiStatus
 
 }
 
 case class XmlApi(name: String, serviceName: ServiceName, context: String,
                   description: String, categories: Option[Seq[ApiCategory]] = None,
-                  status: ApiStatus = ApiStatus.LIVE)
+                  status: ApiStatus = ApiStatus.STABLE)
 
 object XmlApi extends JsonFormatters {
 
