@@ -23,7 +23,6 @@ import cats.syntax.traverse._
 import play.api.Logging
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._

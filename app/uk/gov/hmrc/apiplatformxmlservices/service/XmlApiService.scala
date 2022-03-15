@@ -31,7 +31,6 @@ case class InternalXmlApi(name: String, serviceName: ServiceName, context: Strin
 
 object InternalXmlApi extends JsonFormatters {
 
-
  implicit val format = Json.format[InternalXmlApi]
 
   def internalToXmlApi(xmlApi: InternalXmlApi) : XmlApi = {

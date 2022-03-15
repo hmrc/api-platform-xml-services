@@ -27,7 +27,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{GetOrganisationF
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{AddUserToOrgFailureResult, CreateOrGetUserFailedResult, CreateVerifiedUserFailedResult, CreatedUserResult, InvalidUserResult, ParsedUser, RetrievedUserResult, UploadCreatedUserSuccessResult, UploadExistingUserSuccessResult}
-import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
+import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService, XmlApiService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.UUID
@@ -41,16 +41,18 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
   val mockOrganisationService: OrganisationService = mock[OrganisationService]
   val mockTeamMemberService: TeamMemberService = mock[TeamMemberService]
+  val mockXmlApiService: XmlApiService = mock[XmlApiService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockThirdPartyDeveloperConnector)
     reset(mockOrganisationService)
     reset(mockTeamMemberService)
+    reset(mockXmlApiService)
   }
 
   trait Setup {
-    val inTest = new UploadService(mockThirdPartyDeveloperConnector, mockOrganisationService, mockTeamMemberService)
+    val inTest = new UploadService(mockThirdPartyDeveloperConnector, mockOrganisationService, mockXmlApiService, mockTeamMemberService)
 
     val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId1 = VendorId(9000)
@@ -83,6 +85,19 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     ApiCategory.CUSTOMS -> List(ServiceName("import-control-system"))
     )
 
+    val xmlApiCharities = XmlApi(name = "Charities Online",
+      serviceName = ServiceName("charities-online"),
+      context = "context",
+      description = "description",
+      categories = Some(Seq(ApiCategory.CHARITIES)))
+    val xmlApiImport = xmlApiCharities.copy(
+      name = "Import Control System",
+      serviceName = ServiceName("import-control-system"),
+      categories = Some(Seq(ApiCategory.CUSTOMS))
+    )
+    val stableXmlApis = List(xmlApiCharities, xmlApiImport)
+
+    when(mockXmlApiService.getStableApis()).thenReturn(stableXmlApis)
 
     val parsedUser = ParsedUser(
       email = emailOne,
@@ -109,7 +124,6 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
       when(mockTeamMemberService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response1))
       when(mockTeamMemberService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response2))
-
     }
 
     def verifyAddCollaboratorToOrgFailure(){

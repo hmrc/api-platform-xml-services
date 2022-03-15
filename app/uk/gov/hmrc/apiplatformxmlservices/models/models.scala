@@ -17,12 +17,9 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import enumeratum._
-import play.api.libs.json.Json
-
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 import java.{util => ju}
-import scala.io.Source
 
 
 sealed trait OrganisationSortBy extends EnumEntry
