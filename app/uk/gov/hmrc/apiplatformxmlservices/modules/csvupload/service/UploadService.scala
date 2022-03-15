@@ -23,11 +23,11 @@ import cats.syntax.traverse._
 import play.api.Logging
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
-import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
+import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService, XmlApiService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -38,6 +38,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class UploadService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     organisationService: OrganisationService,
+    override val xmlApiService: XmlApiService,
     teamMemberService: TeamMemberService
   )(implicit val ec: ExecutionContext)
     extends Logging
@@ -98,7 +99,7 @@ class UploadService @Inject() (
     val request =  ImportUserRequest(parsedUser.email,
       parsedUser.firstName,
       parsedUser.lastName,
-      extractEmailPreferencesFromUser(parsedUser, stableExternalXmlApis)
+      extractEmailPreferencesFromUser(parsedUser, xmlApiService.getStableApis())
     )
     thirdPartyDeveloperConnector.createVerifiedUser(request)
   }

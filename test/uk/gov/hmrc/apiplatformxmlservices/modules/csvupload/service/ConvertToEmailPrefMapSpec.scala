@@ -19,13 +19,15 @@ package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi
-import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi.stableExternalXmlApis
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
+import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 
 class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with ConvertToEmailPrefsMap {
 
+val xmlApiService = new XmlApiService()
+val stableXmlApis = xmlApiService.getStableApis()
 
   "extractEmailPreferencesFromUser" should {
     val api1Name = ServiceName("api-1")
@@ -39,8 +41,8 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
     )
 
     "correctly map servicenames to email preferences when a users api is in multiple categories" in {
-      val extraApiInMultipleCategories = ExternalXmlApi("name", api1Name, "context", "description", Some(Seq(ApiCategory.CUSTOMS, ApiCategory.VAT)) )
-      val result = extractEmailPreferencesFromUser(validParsedUser, stableExternalXmlApis ++ Seq(extraApiInMultipleCategories))
+      val extraApiInMultipleCategories = XmlApi("name", api1Name, "context", "description", Some(Seq(ApiCategory.CUSTOMS, ApiCategory.VAT)) )
+      val result = extractEmailPreferencesFromUser(validParsedUser, stableXmlApis ++ Seq(extraApiInMultipleCategories))
       result.keySet.toList should contain only (ApiCategory.CHARITIES, ApiCategory.CUSTOMS, ApiCategory.VAT)
       result.getOrElse(ApiCategory.CHARITIES, List.empty) should contain only ServiceName("charities-online")
       result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only (ServiceName("import-control-system"), api1Name)
@@ -53,14 +55,14 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
     }
 
     "return empty map when user has no services" in { // should this throw an exception??
-      val result = extractEmailPreferencesFromUser(validParsedUser.copy(services = List.empty), stableExternalXmlApis)
+      val result = extractEmailPreferencesFromUser(validParsedUser.copy(services = List.empty), stableXmlApis)
       result shouldBe Map.empty
     }
 
 
     "return correct email preferences when one api has no categories" in { // should this throw an exception??
-      val extraApiInMultipleCategories = ExternalXmlApi("name", api1Name, "context", "description", None )
-      val result = extractEmailPreferencesFromUser(validParsedUser, stableExternalXmlApis ++ List(extraApiInMultipleCategories))
+      val extraApiInMultipleCategories = XmlApi("name", api1Name, "context", "description", None )
+      val result = extractEmailPreferencesFromUser(validParsedUser, stableXmlApis ++ List(extraApiInMultipleCategories))
       result.keySet.toList should contain only (ApiCategory.CHARITIES, ApiCategory.CUSTOMS)
       result.getOrElse(ApiCategory.CHARITIES, List.empty) should contain only ServiceName("charities-online")
       result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only ServiceName("import-control-system")

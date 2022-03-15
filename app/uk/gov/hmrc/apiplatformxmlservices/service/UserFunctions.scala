@@ -19,8 +19,8 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, ExternalXmlApi}
-import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, XmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait UserFunctions {
   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-
+  val xmlApiService: XmlApiService
   def handleGetOrCreateUser(email: String, firstName: String, lastName: String)
                                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[GetOrCreateUserFailedResult, UserResponse]] = {
 
@@ -40,10 +40,10 @@ trait UserFunctions {
   }
 
   def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
-
-    val xmlServiceNames: Set[String] = stableExternalXmlApis.map(_.serviceName.value).toSet
-    def getXmlApiByServiceName(serviceName: String): Option[ExternalXmlApi] ={
-      stableExternalXmlApis.find(_.serviceName.value == serviceName)
+    val stableApis = xmlApiService.getStableApis()
+    val xmlServiceNames: Set[String] = stableApis.map(_.serviceName.value).toSet
+    def getXmlApiByServiceName(serviceName: String): Option[XmlApi] ={
+      stableApis.find(_.serviceName.value == serviceName)
     }
 
      val filteredXmlEmailPreferences = for { filteredInterests <- user.emailPreferences.interests.filter(x => x.services.intersect(xmlServiceNames).nonEmpty)

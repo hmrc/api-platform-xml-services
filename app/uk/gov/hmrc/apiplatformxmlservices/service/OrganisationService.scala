@@ -34,7 +34,8 @@ class OrganisationService @Inject() (
     organisationRepository: OrganisationRepository,
     uuidService: UuidService,
     vendorIdService: VendorIdService,
-    override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
+    override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
+    override val xmlApiService: XmlApiService
   )(implicit val ec: ExecutionContext) extends UserFunctions {
 
   def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {

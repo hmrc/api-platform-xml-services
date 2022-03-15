@@ -47,49 +47,12 @@ object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
 
 }
 
-sealed trait XmlApi {
-  def name: String
-  def serviceName: ServiceName
-  def context: String
-  def description: String
-  def categories: Option[Seq[ApiCategory]]
-}
-
-case class InternalXmlApi(name: String, serviceName: ServiceName, context: String,
-                          description: String, categories: Option[Seq[ApiCategory]] = None,
-                          status: ApiStatus = ApiStatus.STABLE) extends XmlApi
-
-object InternalXmlApi extends JsonFormatters {
-
-  def xmlApis: List[InternalXmlApi] =
-    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[InternalXmlApi]]
-
-  def stableXmlApis:List[InternalXmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
-
-  def toExternalXmlApi(xmlApi: InternalXmlApi) : ExternalXmlApi = {
-    ExternalXmlApi(
-      name = xmlApi.name,
-      serviceName = xmlApi.serviceName,
-      context = xmlApi.context,
-      description = xmlApi.description,
-      categories = xmlApi.categories
-    )
-  }
-}
-
-case class ExternalXmlApi(name: String, serviceName: ServiceName, context: String, description: String,
-                          categories: Option[Seq[ApiCategory]] = None) extends XmlApi
-
-object ExternalXmlApi extends JsonFormatters {
-  import uk.gov.hmrc.apiplatformxmlservices.models.InternalXmlApi._
-
-  def stableExternalXmlApis: List[ExternalXmlApi] =
-    stableXmlApis.map(toExternalXmlApi)
-}
+case class XmlApi(name: String, serviceName: ServiceName, context: String, description: String,
+                  categories: Option[Seq[ApiCategory]] = None)
 
 case class UserId(value: ju.UUID)
 
-case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[ExternalXmlApi])
+case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[XmlApi])
 
 case class OrganisationId(value: ju.UUID) extends AnyVal
 

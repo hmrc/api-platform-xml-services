@@ -43,6 +43,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   val mockUuidService: UuidService = mock[UuidService]
   val mockVendorIdService: VendorIdService = mock[VendorIdService]
   val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
+  val xmlApiService: XmlApiService = new XmlApiService()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -53,7 +54,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   }
 
   trait Setup {
-    val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService, mockThirdPartyDeveloperConnector)
+    val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService, mockThirdPartyDeveloperConnector, xmlApiService)
 
     val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId = VendorId(9000)

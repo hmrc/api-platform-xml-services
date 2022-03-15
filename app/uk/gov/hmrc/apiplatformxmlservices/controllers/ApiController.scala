@@ -18,34 +18,33 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters}
-import uk.gov.hmrc.apiplatformxmlservices.models.InternalXmlApi._
-import uk.gov.hmrc.apiplatformxmlservices.models.ExternalXmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters
 import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton()
-class ApiController @Inject() (cc: ControllerComponents)
+class ApiController @Inject() (xmlService: XmlApiService, cc: ControllerComponents)
     extends BackendController(cc) with JsonFormatters {
 
   def getAll(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(Json.toJson(stableExternalXmlApis)))
+    Future.successful(Ok(Json.toJson(xmlService.getStableApis())))
   }
 
   @deprecated("use getApiByServiceName", since = "0.7.0")
   def getApi(name: String): Action[AnyContent] = Action.async {
-    xmlApis.find(_.name == name) match {
-      case Some(xmlApi) => Future.successful(Ok(Json.toJson(toExternalXmlApi(xmlApi))))
+    xmlService.getUnfilteredApis().find(_.name == name) match {
+      case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
       case _ => Future.successful(NotFound(s"XML API with name $name not found."))
     }
   }
 
   def getApiByServiceName(serviceName: ServiceName): Action[AnyContent] = Action.async {
-    xmlApis.find(_.serviceName == serviceName) match {
-      case Some(xmlApi) => Future.successful(Ok(Json.toJson(toExternalXmlApi(xmlApi))))
+    xmlService.getUnfilteredApis.find(_.serviceName == serviceName) match {
+      case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
       case _ => Future.successful(NotFound(s"XML API with serviceName $serviceName not found."))
     }
   }

@@ -31,8 +31,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TeamMemberService @Inject()(organisationRepository: OrganisationRepository,
-                                  override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
-
+                                  override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
+                                  override val xmlApiService: XmlApiService
                                  )(implicit val ec: ExecutionContext) extends UserFunctions {
 
   def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
