@@ -4,125 +4,143 @@
     "serviceName": "agent-authorisation-online",
     "context": "/government/collections/agent-authorisation-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the Agent Authorisation Online service. This API is not part of the Making Tax Digital initiative.",
-    "categories": ["AGENTS"]
+    "categories": ["AGENTS"],
+    "status": "STABLE"
   },
   {
     "name": "Alcohol and Tobacco Warehouse Declaration Online",
     "serviceName": "alcohol-and-tobacco-warehouse-declaration-online",
     "context": "/government/collections/alcohol-and-tobacco-warehouse-declaration-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the Alcohol and Tobacco Warehousing Declaration Online service.",
-    "categories": ["CUSTOMS"]
+    "categories": ["CUSTOMS"],
+    "status": "STABLE"
   },
   {
     "name": "Automatic Exchange of Information",
     "serviceName": "automatic-exchange-of-information",
     "context": "/government/publications/foreign-account-tax-compliance-act-schema-and-supporting-documents",
     "description": "Find the schema and supporting documents for software developers who use Automatic Exchange of Information (AEOI).",
-    "categories": ["OTHER"]
+    "categories": ["OTHER"],
+    "status": "STABLE"
   },
   {
     "name": "Charities Online",
     "serviceName": "charities-online",
     "context": "/government/collections/charities-online-support-for-software-developers",
     "description": "Charities repayment claims technical specifications for software developers working with the Charities Online service.",
-    "categories": ["CHARITIES"]
+    "categories": ["CHARITIES"],
+    "status": "STABLE"
   },
   {
     "name": "Construction Industry Scheme Online",
     "serviceName": "construction-industry-scheme-online",
     "context": "/government/collections/construction-industry-scheme-online-support-for-software-developers",
     "description": "<p class='govuk-body'>The <a class='govuk-link' href=\"../service/cis-deductions-api/1.0\">Construction Industry Scheme (CIS) deductions</a> REST API is listed under Income Tax (Making Tax Digital) on our <a class='govuk-link' href=\"../service/cis-deductions-api/1.0\">API documentation</a> page.</p>\n<p class='govuk-body'>Technical specifications for software developers working with the Construction Industry Scheme Online service.</p>",
-    "categories": ["CONSTRUCTION_INDUSTRY_SCHEME"]
+    "categories": ["CONSTRUCTION_INDUSTRY_SCHEME"],
+    "status": "STABLE"
   },
   {
     "name": "Corporation Tax Online",
     "serviceName": "corporation-tax-online",
     "context": "/government/collections/corporation-tax-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the Corporation Tax online service. This API is not part of the Making Tax Digital initiative.",
-    "categories": ["CORPORATION_TAX"]
+    "categories": ["CORPORATION_TAX"],
+    "status": "STABLE"
   },
   {
     "name": "Employment intermediaries",
     "serviceName": "employment-intermediaries",
     "context": "/government/publications/employment-intermediaries-support-for-software-developers",
     "description": "Employment intermediaries, data requirements for software developers.",
-    "categories": ["PAYE"]
+    "categories": ["PAYE"],
+    "status": "RETIRED"
   },
   {
     "name": "Excise Movement Control System",
     "serviceName": "excise-movement-control",
     "context": "/government/collections/excise-movement-control-system-fs31-support-for-software-developers",
     "description": "Technical specifications for the Excise Movement Control System (EMCS).",
-    "categories": ["CUSTOMS"]
+    "categories": ["CUSTOMS"],
+    "status": "STABLE"
   },
   {
     "name": "Exchange rates from HMRC",
     "serviceName": "exchange-rates-for-customs-and-vat",
     "context": "/government/collections/exchange-rates-for-customs-and-vat",
     "description": "Check the foreign exchange monthly rates, yearly averages, spot rates and weekly amendments to rates (from HMRC in CSV and XML format).",
-    "categories": ["CUSTOMS"]
+    "categories": ["CUSTOMS"],
+    "status": "STABLE"
   },
   {
     "name": "Import Control System",
     "serviceName": "import-control-system",
     "context": "/government/collections/import-control-system-support-for-software-developers",
     "description": "Technical specifications for Import Control System software developers.",
-    "categories": ["CUSTOMS"]
+    "categories": ["CUSTOMS"],
+    "status": "STABLE"
   },
   {
     "name": "National Export System",
     "serviceName": "national-export-system",
     "context": "/government/collections/national-export-system-xml-channel-support-for-software-developers",
     "description": "Technical specifications for National Export System (NES) XML channel software developers.",
-    "categories": ["CUSTOMS"]
+    "categories": ["CUSTOMS"],
+    "status": "STABLE"
   },
   {
     "name": "New Computerised Transit System",
     "serviceName": "new-computerised-transit-system",
     "context": "/government/collections/new-computerised-transit-system-support-for-software-developers",
     "description": "Technical specifications for New Computerised Transit System (NCTS) software developers.",
-    "categories": ["CUSTOMS"]
+    "categories": ["CUSTOMS"],
+    "status": "STABLE"
   },
   {
     "name": "PAYE Online",
     "serviceName": "paye-online",
     "context": "/government/collections/paye-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the PAYE online service.",
-    "categories": ["PAYE"]
+    "categories": ["PAYE"],
+    "status": "STABLE"
   },
   {
     "name": "Pension Schemes Online",
     "serviceName": "pension-schemes-online",
     "context": "/government/collections/pension-schemes-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the Pension Schemes Online service.",
-    "categories": ["PENSIONS"]
+    "categories": ["PENSIONS"],
+    "status": "STABLE"
   },
   {
     "name": "Real Time Information online",
     "serviceName": "real-time-information-online",
     "context": "/government/collections/real-time-information-online-internet-submissions-support-for-software-developers",
     "description": "Technical specifications for software developers working with the Real Time Information online service.",
-    "categories": ["PAYE"]
+    "categories": ["PAYE"],
+    "status": "STABLE"
   },
   {
     "name": "Self Assessment Online",
     "serviceName": "self-assessment-online",
     "context": "/government/collections/self-assessment-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the Self Assessment Online service. This API is not part of the Making Tax Digital initiative.",
-    "categories": ["SELF_ASSESSMENT"]
+    "categories": ["SELF_ASSESSMENT"],
+    "status": "STABLE"
   },
   {
     "name": "Stamp Taxes Online",
     "serviceName": "stamp-taxes-online",
     "context": "/government/collections/stamp-taxes-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the Stamp Taxes Online service.",
-    "categories": ["STAMP_DUTY"]
+    "categories": ["STAMP_DUTY"],
+    "status": "STABLE"
   },
   {
     "name": "EC Sales List Online",
     "serviceName": "vat-and-ec-sales-list",
     "context": "/government/collections/vat-and-ec-sales-list-online-support-for-software-developers",
     "description": "Technical specifications for software developers working with the EC Sales List Online service. This API is not part of the Making Tax Digital initiative.",
-    "categories": ["CUSTOMS"]
+    "categories": ["CUSTOMS"],
+    "status": "STABLE"
   }
 ]

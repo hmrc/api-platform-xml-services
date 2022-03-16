@@ -17,11 +17,9 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import enumeratum._
-import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 import java.{util => ju}
-import scala.io.Source
 
 
 sealed trait OrganisationSortBy extends EnumEntry
@@ -35,17 +33,21 @@ object OrganisationSortBy extends Enum[OrganisationSortBy] {
 
 }
 
+sealed trait ApiStatus extends EnumEntry
+
+object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
+
+  val values = findValues
+
+  case object STABLE extends ApiStatus
+  case object RETIRED extends ApiStatus
+
+}
+
+case class XmlApi(name: String, serviceName: ServiceName, context: String, description: String,
+                  categories: Option[Seq[ApiCategory]] = None)
 
 case class UserId(value: ju.UUID)
-
-
-case class XmlApi(name: String, serviceName: ServiceName, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
-
-object XmlApi extends JsonFormatters {
-
-  def xmlApis: List[XmlApi] =
-    Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[XmlApi]]
-}
 
 case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[XmlApi])
 

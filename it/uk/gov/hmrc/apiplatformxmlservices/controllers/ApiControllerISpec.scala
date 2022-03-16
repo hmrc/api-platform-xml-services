@@ -21,10 +21,11 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{NOT_FOUND, OK}
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters
+import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 
-class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
+class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -52,14 +53,24 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
       .get()
       .futureValue
 
+  trait Setup extends JsonFormatters {
+
+    val xmlApiService = new XmlApiService
+
+    val stableApis = xmlApiService.getStableApis
+    val unfilteredApis = xmlApiService.getUnfilteredApis()
+    val employmentIntermediariesJson = Json.toJson(unfilteredApis.filter(_.serviceName.value == "employment-intermediaries").head).toString
+    val charitiesOnlineJson = Json.toJson(stableApis.filter(_.serviceName.value == "charities-online").head).toString
+  }
+
   "ApiController" when {
 
     "GET /xml/apis" should {
 
-      "respond with 200 and return all Apis" in {
+      "respond with 200 and return all stable Apis" in new Setup {
         val result = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
-        result.body mustBe Json.toJson(xmlApis).toString
+        result.body mustBe Json.toJson(stableApis).toString
       }
 
       "respond with 404 when invalid path" in {
@@ -70,14 +81,21 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
     }
 
     "GET /xml/api/:name" should {
-      val apiName = "Charities Online"
-      val charitiesOnlineApi = xmlApis.find(_.name == apiName)
+      val stableApiName = "Charities Online"
+      val retiredApiName = "Employment intermediaries"
 
-      "respond with 200 and return the API" in {
-        val result = callGetEndpoint(s"$url/xml/api/$apiName")
+      "respond with 200 and return the stable API" in new Setup {
+        val result = callGetEndpoint(s"$url/xml/api/$stableApiName")
         result.status mustBe OK
-        result.body mustBe Json.toJson(charitiesOnlineApi).toString
+        result.body mustBe charitiesOnlineJson
       }
+
+      "respond with 200 and return the retired API" in new Setup {
+        val result = callGetEndpoint(s"$url/xml/api/$retiredApiName")
+        result.status mustBe OK
+        result.body mustBe employmentIntermediariesJson
+      }
+
       "respond with 404 when api not found" in {
         val result = callGetEndpoint(s"$url/xml/api/INVALID_API_NAME")
         result.status mustBe NOT_FOUND
@@ -85,14 +103,21 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach   {
     }
 
     "GET /xml/api?serviceName=charities-online" should {
-      val apiName = "charities-online"
-      val charitiesOnlineApi = xmlApis.find(_.serviceName.value == apiName)
+      val stableApiName = "charities-online"
+      val retiredApiServiceName = "employment-intermediaries"
 
-      "respond with 200 and return the API" in {
-        val result = callGetEndpoint(s"$url/xml/api?serviceName=$apiName")
+      "respond with 200 and return the stable API" in new Setup {
+        val result = callGetEndpoint(s"$url/xml/api?serviceName=$stableApiName")
         result.status mustBe OK
-        result.body mustBe Json.toJson(charitiesOnlineApi).toString
+        result.body mustBe charitiesOnlineJson
       }
+
+      "respond with 200 and return the retired API" in new Setup {
+        val result = callGetEndpoint(s"$url/xml/api?serviceName=$retiredApiServiceName")
+        result.status mustBe OK
+        result.body mustBe employmentIntermediariesJson
+      }
+
       "respond with 404 when api not found" in {
         val result = callGetEndpoint(s"$url/xml/api?serviceName=INVALID_API_NAME")
         result.status mustBe NOT_FOUND

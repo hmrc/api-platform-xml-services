@@ -25,8 +25,8 @@ import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnecto
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{AddUserToOrgFailureResult, CreateOrGetUserFailedResult, CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreateVerifiedUserSuccessResult, CreatedUserResult, InvalidUserResult, ParsedUser, RetrievedUserResult, UploadCreatedUserSuccessResult, UploadExistingUserSuccessResult, UploadSuccessResult, UploadUserResult}
-import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
+import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService, XmlApiService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -37,6 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class UploadService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     organisationService: OrganisationService,
+    override val xmlApiService: XmlApiService,
     teamMemberService: TeamMemberService
   )(implicit val ec: ExecutionContext)
     extends Logging
@@ -97,7 +98,7 @@ class UploadService @Inject() (
     val request =  ImportUserRequest(parsedUser.email,
       parsedUser.firstName,
       parsedUser.lastName,
-      extractEmailPreferencesFromUser(parsedUser, XmlApi.xmlApis)
+      extractEmailPreferencesFromUser(parsedUser, xmlApiService.getStableApis())
     )
     thirdPartyDeveloperConnector.createVerifiedUser(request)
   }

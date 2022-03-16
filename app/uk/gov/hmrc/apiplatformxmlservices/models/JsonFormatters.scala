@@ -22,7 +22,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
 trait JsonFormatters extends CommonJsonFormatters {
 
-  implicit val formatXmlApi = Json.format[XmlApi]
+  implicit val formatExternalXmlApi= Json.format[XmlApi]
 
   implicit val formatUserId = Json.valueFormat[UserId]
   implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
