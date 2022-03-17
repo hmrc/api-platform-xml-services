@@ -45,9 +45,9 @@ class UploadService @Inject() (
     with ConvertToEmailPrefsMap {
 
   def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier): Future[List[UploadUserResult]] = {
-    val batchSize = 10
+    val batchSize = 20
     Future.sequence(users.grouped(batchSize).toList.flatMap(batchOf10Users =>
-      batchOf10Users.zipWithIndex.map(x => {
+      batchOf10Users.zipWithIndex.par.map(x => {
         uploadUser(x._1, x._2 + 1)})
       )
     )
@@ -64,7 +64,7 @@ class UploadService @Inject() (
   }
 
   private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
-    Thread.sleep(500)
+    Thread.sleep(300)
     createOrGetUser(parsedUser) flatMap {
       case result: CreateVerifiedUserSuccessResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
       case e: CreateVerifiedUserFailedResult       =>
