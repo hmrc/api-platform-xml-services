@@ -99,10 +99,11 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
     }
   }
 
-
   private def handleAddCollaboratorToOrg(email: String, userId: UserId, organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    val updatedOrg = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
-    handleUpdateOrganisation(updatedOrg)
+    organisationRepository.addCollaboratorToOrganisation(organisation.organisationId, Collaborator(userId, email)).map {
+      case Right(organisation: Organisation) => Right(organisation)
+      case Left(value) => Left(UpdateCollaboratorFailedResult(value.getMessage))
+    }
   }
 
   private def handleRemoveCollaboratorFromOrg(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {

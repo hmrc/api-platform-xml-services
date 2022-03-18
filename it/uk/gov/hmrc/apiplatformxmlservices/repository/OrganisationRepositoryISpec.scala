@@ -274,7 +274,7 @@ class OrganisationRepositoryISpec
     "return Right(true) when collaborator successfully added to Organisation with no existing Collaborators" in new Setup {
       await(repo.createOrUpdate(organisationToPersist))
       await(repo.addCollaboratorToOrganisation(organisationToPersist.organisationId, collaboratorOne)) match {
-        case Right(true) => succeed
+        case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
         case _           => fail
       }
     }
@@ -283,7 +283,7 @@ class OrganisationRepositoryISpec
       await(repo.createOrUpdate(organisationToPersist.copy(collaborators = List(collaboratorOne))))
 
       await(repo.addCollaboratorToOrganisation(organisationToPersist.organisationId, collaboratorOne)) match {
-        case Right(false) => succeed
+        case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
         case _           => fail
       }
     }
@@ -293,7 +293,7 @@ class OrganisationRepositoryISpec
       await(repo.createOrUpdate(organisationToPersist2.copy(collaborators = List(collaboratorOne))))
 
       await(repo.addCollaboratorToOrganisation(organisationToPersist.organisationId, collaboratorOne)) match {
-        case Right(false) => succeed
+        case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
         case _           => fail
       }
     }

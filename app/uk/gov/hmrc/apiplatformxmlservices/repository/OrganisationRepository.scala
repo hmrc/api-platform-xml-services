@@ -19,7 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.repository
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
-import org.mongodb.scala.model.Updates.{addToSet, push, set, setOnInsert}
+import org.mongodb.scala.model.Updates.{addToSet, set, setOnInsert}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, _}
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
 import uk.gov.hmrc.apiplatformxmlservices.models._
@@ -41,7 +41,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
         IndexModel(ascending("organisationId"), IndexOptions().name("organisationId_index").background(true).unique(true)),
         IndexModel(ascending("vendorId"), IndexOptions().name("vendorId_index").background(true).unique(true)),
         IndexModel(ascending("name"), IndexOptions().name("organisationName_index").background(true).unique(false)),
-        IndexModel(ascending("collaborators.userId"), IndexOptions().name("collaborators_userId_index").background(true).unique(true))
+        IndexModel(ascending("collaborators.userId"), IndexOptions().name("collaborators_userId_index").background(true).unique(false))
       ),
       replaceIndexes = true
     )
@@ -91,11 +91,12 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       .map(_.toList.sorted(caseInsensitiveOrgNameOrdering))
   }
 
-  def addCollaboratorToOrganisation(organisationId: OrganisationId, collaborator: Collaborator): Future[Either[Exception, Boolean]] = {
-    collection.updateOne(equal("organisationId", Codecs.toBson(organisationId)),
-      addToSet("collaborators", Codecs.toBson(collaborator)))
+  def addCollaboratorToOrganisation(organisationId: OrganisationId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
+    collection.findOneAndUpdate(equal("organisationId", Codecs.toBson(organisationId)),
+      addToSet("collaborators", Codecs.toBson(collaborator)),
+      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER))
       .toFuture
-      .map(x => Right(x.wasAcknowledged() && x.getModifiedCount>0))
+      .map(x => Right(x))
       .recover {
         case e: Exception => logger.info("addCollaboratorToOrganisation failed:", e)
           Left(new Exception(s"Failed add collaborator to Organisation with organisationId ${organisationId.value} - ${e.getMessage}"))
