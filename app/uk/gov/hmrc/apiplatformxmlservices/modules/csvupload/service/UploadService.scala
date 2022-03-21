@@ -32,7 +32,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-
 @Singleton
 class UploadService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
@@ -45,12 +44,13 @@ class UploadService @Inject() (
     with ConvertToEmailPrefsMap {
 
   def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier): Future[List[UploadUserResult]] = {
-    val batchSize = 20
-    Future.sequence(users.grouped(batchSize).toList.flatMap(batchOf10Users =>
+    val batchSize = 10
+    Future.sequence(users.grouped(batchSize).toList.flatMap(batchOf10Users => {
+      Thread.sleep(500)
       batchOf10Users.zipWithIndex.par.map(x => {
-        uploadUser(x._1, x._2 + 1)})
-      )
-    )
+        uploadUser(x._1, x._2 + 1)
+      })
+    }))
 
   }
 
