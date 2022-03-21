@@ -19,8 +19,8 @@ package uk.gov.hmrc.apiplatformxmlservices.repository
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
-import org.mongodb.scala.model.Updates.{set, setOnInsert}
-import org.mongodb.scala.model._
+import org.mongodb.scala.model.Updates.{addToSet, set, setOnInsert}
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, _}
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
@@ -89,6 +89,18 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
       .toFuture()
       .map(_.toList.sorted(caseInsensitiveOrgNameOrdering))
+  }
+
+  def addCollaboratorToOrganisation(organisationId: OrganisationId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
+    collection.findOneAndUpdate(equal("organisationId", Codecs.toBson(organisationId)),
+      addToSet("collaborators", Codecs.toBson(collaborator)),
+      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER))
+      .toFuture
+      .map(x => Right(x))
+      .recover {
+        case e: Exception => logger.info("addCollaboratorToOrganisation failed:", e)
+          Left(new Exception(s"Failed add collaborator to Organisation with organisationId ${organisationId.value} - ${e.getMessage}"))
+      }
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
