@@ -53,14 +53,6 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
     } yield updatedOrganisation).value
   }
 
-  def addCollaboratorByVendorId(vendorId: VendorId, email: String, userId: UserId): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    //vendor id should exist and be valid at this point (import flow)
-    (for {
-      organisation <- EitherT(handleFindByVendorId(vendorId))
-      _ <- EitherT(collaboratorCanBeAdded(organisation, email))
-      updatedOrganisation <- EitherT(handleAddCollaboratorToOrg(email, userId, organisation))
-    } yield updatedOrganisation).value
-  }
 
   def getOrganisationUserByOrganisationId(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[OrganisationUser]] = {
     getOrganisationById(organisationId).flatMap {
@@ -92,10 +84,10 @@ class TeamMemberService @Inject()(organisationRepository: OrganisationRepository
     }
   }
 
-  private def handleFindByVendorId(vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
-    organisationRepository.findByVendorId(vendorId).map {
-      case None => Left(GetOrganisationFailedResult(s"Failed to get organisation for Vendor Id: ${vendorId.value}"))
-      case Some(organisation: Organisation) => Right(organisation)
+  def handleAddCollaboratorToOrgByVendorId(email: String, userId: UserId, vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
+    organisationRepository.addCollaboratorByVendorId(vendorId, Collaborator(userId, email)).map {
+      case Right(organisation: Organisation) => Right(organisation)
+      case Left(value) => Left(UpdateCollaboratorFailedResult(value.getMessage))
     }
   }
 

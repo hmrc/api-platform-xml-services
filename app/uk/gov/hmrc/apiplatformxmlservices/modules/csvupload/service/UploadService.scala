@@ -32,7 +32,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-
 @Singleton
 class UploadService @Inject() (
     thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
@@ -45,12 +44,13 @@ class UploadService @Inject() (
     with ConvertToEmailPrefsMap {
 
   def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier): Future[List[UploadUserResult]] = {
-    val batchSize = 20
-    Future.sequence(users.grouped(batchSize).toList.flatMap(batchOf10Users =>
+    val batchSize = 10
+    Future.sequence(users.grouped(batchSize).toList.flatMap(batchOf10Users => {
+      Thread.sleep(500)
       batchOf10Users.zipWithIndex.par.map(x => {
-        uploadUser(x._1, x._2 + 1)})
-      )
-    )
+        uploadUser(x._1, x._2 + 1)
+      })
+    }))
 
   }
 
@@ -82,7 +82,7 @@ class UploadService @Inject() (
 
     val results: Future[List[Either[AddUserToOrgFailureResult, UploadSuccessResult]]] =
       Future.sequence(vendors.map(vendorId => {
-        teamMemberService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
+        teamMemberService.handleAddCollaboratorToOrgByVendorId(result.userResponse.email, result.userResponse.userId, vendorId)
           .map {
             case Right(_: Organisation)                            => Right(mapSuccessResult(result))
             case Left(_: OrganisationAlreadyHasCollaboratorResult) => Right(mapSuccessResult(result))
@@ -102,13 +102,8 @@ class UploadService @Inject() (
   }
 
   private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
-    val request =  ImportUserRequest(parsedUser.email,
-      parsedUser.firstName,
-      parsedUser.lastName,
-      extractEmailPreferencesFromUser(parsedUser, xmlApiService.getStableApis())
-    )
+    val request = ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, extractEmailPreferencesFromUser(parsedUser, xmlApiService.getStableApis()))
     thirdPartyDeveloperConnector.createVerifiedUser(request)
   }
-
 
 }
