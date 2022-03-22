@@ -122,14 +122,14 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
-      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response1))
-      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(response2))
+      when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId1)).thenReturn(Future.successful(response1))
+      when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId2)).thenReturn(Future.successful(response2))
     }
 
     def verifyAddCollaboratorToOrgFailure(){
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockTeamMemberService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+      verify(mockTeamMemberService, times(2)).handleAddCollaboratorToOrgByVendorId( *, *[UserId], *[VendorId])
 
     }
   }
@@ -143,8 +143,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
-      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
-      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
+      when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId1)).thenReturn(Future.successful(Right(organisation1)))
+      when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId2)).thenReturn(Future.successful(Right(organisation2)))
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -158,7 +158,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       }
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockTeamMemberService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+      verify(mockTeamMemberService, times(2)).handleAddCollaboratorToOrgByVendorId( *, *[UserId], *[VendorId])
 
     }
 
@@ -166,8 +166,8 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(RetrievedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
-      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId1, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation1)))
-      when(mockTeamMemberService.addCollaboratorByVendorId(vendorId2, userResponse.email, userResponse.userId)).thenReturn(Future.successful(Right(organisation2)))
+      when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId1)).thenReturn(Future.successful(Right(organisation1)))
+      when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId2)).thenReturn(Future.successful(Right(organisation2)))
 
       val results = await(inTest.uploadUsers(List(parsedUser)))
 
@@ -182,7 +182,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
-      verify(mockTeamMemberService, times(2)).addCollaboratorByVendorId(*[VendorId], *, *[UserId])
+      verify(mockTeamMemberService, times(2)).handleAddCollaboratorToOrgByVendorId(*, *[UserId], *[VendorId])
 
     }
 

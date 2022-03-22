@@ -102,6 +102,18 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
           Left(new Exception(s"Failed add collaborator to Organisation with organisationId ${organisationId.value} - ${e.getMessage}"))
       }
   }
+  def addCollaboratorByVendorId(vendorId: VendorId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
+    collection.findOneAndUpdate(equal("vendorId", Codecs.toBson(vendorId)),
+      addToSet("collaborators", Codecs.toBson(collaborator)),
+      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER))
+      .toFuture
+      .map(x => Right(x))
+      .recover {
+        case e: Exception => logger.info("addCollaboratorByVendorId failed:", e)
+          Left(new Exception(s"Failed add collaborator to Organisation with vendorId ${vendorId} - ${e.getMessage}"))
+      }
+  }
+
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
     val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)), equal("vendorId", Codecs.toBson(organisation.vendorId)))

@@ -82,7 +82,7 @@ class UploadService @Inject() (
 
     val results: Future[List[Either[AddUserToOrgFailureResult, UploadSuccessResult]]] =
       Future.sequence(vendors.map(vendorId => {
-        teamMemberService.addCollaboratorByVendorId(vendorId, result.userResponse.email, result.userResponse.userId)
+        teamMemberService.handleAddCollaboratorToOrgByVendorId(result.userResponse.email, result.userResponse.userId, vendorId)
           .map {
             case Right(_: Organisation)                            => Right(mapSuccessResult(result))
             case Left(_: OrganisationAlreadyHasCollaboratorResult) => Right(mapSuccessResult(result))
@@ -102,13 +102,8 @@ class UploadService @Inject() (
   }
 
   private def createOrGetUser(parsedUser: ParsedUser)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
-    val request =  ImportUserRequest(parsedUser.email,
-      parsedUser.firstName,
-      parsedUser.lastName,
-      extractEmailPreferencesFromUser(parsedUser, xmlApiService.getStableApis())
-    )
+    val request = ImportUserRequest(parsedUser.email, parsedUser.firstName, parsedUser.lastName, extractEmailPreferencesFromUser(parsedUser, xmlApiService.getStableApis()))
     thirdPartyDeveloperConnector.createVerifiedUser(request)
   }
-
 
 }

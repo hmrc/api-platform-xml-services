@@ -270,6 +270,37 @@ class OrganisationRepositoryISpec
     }
   }
 
+  "addCollaboratorByVendorId" should {
+    "return Right(true) when collaborator successfully added to Organisation with no existing Collaborators" in new Setup {
+      await(repo.createOrUpdate(organisationToPersist))
+      await(repo.addCollaboratorByVendorId(organisationToPersist.vendorId, collaboratorOne))  match {
+        case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
+        case _           => fail
+      }
+    }
+
+    "return Right(false) when try to add collaborator to an Organisation on which it already exists" in new Setup {
+      await(repo.createOrUpdate(organisationToPersist.copy(collaborators = List(collaboratorOne))))
+
+      await(repo.addCollaboratorByVendorId(organisationToPersist.vendorId, collaboratorOne)) match {
+        case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
+        case _           => fail
+      }
+    }
+
+    "return Right(false) when same collaborator added to two different Organisations" in new Setup {
+      await(repo.createOrUpdate(organisationToPersist.copy(collaborators = List(collaboratorOne))))
+      await(repo.createOrUpdate(organisationToPersist2.copy(collaborators = List(collaboratorOne))))
+
+      await(repo.addCollaboratorByVendorId(organisationToPersist.vendorId, collaboratorOne)) match {
+        case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
+        case _           => fail
+      }
+    }
+
+
+  }
+
   "addCollaboratorToOrganisation" should {
     "return Right(true) when collaborator successfully added to Organisation with no existing Collaborators" in new Setup {
       await(repo.createOrUpdate(organisationToPersist))
