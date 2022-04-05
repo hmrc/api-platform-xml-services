@@ -80,28 +80,6 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
     }
 
-    "GET /xml/api/:name" should {
-      val stableApiName = "Charities Online"
-      val retiredApiName = "Employment intermediaries"
-
-      "respond with 200 and return the stable API" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/api/$stableApiName")
-        result.status mustBe OK
-        result.body mustBe charitiesOnlineJson
-      }
-
-      "respond with 200 and return the retired API" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/api/$retiredApiName")
-        result.status mustBe OK
-        result.body mustBe employmentIntermediariesJson
-      }
-
-      "respond with 404 when api not found" in {
-        val result = callGetEndpoint(s"$url/xml/api/INVALID_API_NAME")
-        result.status mustBe NOT_FOUND
-      }
-    }
-
     "GET /xml/api?serviceName=charities-online" should {
       val stableApiName = "charities-online"
       val retiredApiServiceName = "employment-intermediaries"
