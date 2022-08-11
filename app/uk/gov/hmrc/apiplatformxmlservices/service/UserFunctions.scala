@@ -18,9 +18,10 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, TaxRegimeInterests, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, XmlApi}
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -40,21 +41,26 @@ trait UserFunctions {
   }
 
   def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
-    val stableApis = xmlApiService.getStableApis()
-    val xmlServiceNames: Set[String] = stableApis.map(_.serviceName.value).toSet
-    def getXmlApiByServiceName(serviceName: String): Option[XmlApi] ={
-      stableApis.find(_.serviceName.value == serviceName)
+      val stableApis = xmlApiService.getStableApis()
+   
+      val xmlServiceNames: Set[String] = stableApis.map(_.serviceName.value).toSet
+      
+       val filteredXmlEmailPreferences = for { filteredInterests <- user.emailPreferences.interests.filter(x => x.services.intersect(xmlServiceNames).nonEmpty)
+                  serviceName <- filteredInterests.services.intersect(xmlServiceNames)
+                  xmlApi <-  xmlApiService.getStableApisByServiceName(serviceName)
+              }  yield xmlApi
+      
+    println(s"user: ${user}")
+      val xmlEMailPreferencesWhereAllforCategory: List[XmlApi] = user.emailPreferences.interests.filter(hasAllApis).flatMap(x=> xmlApiService.getStableApisForCategory(x.regime))
+
+    println(xmlEMailPreferencesWhereAllforCategory)
+    println(filteredXmlEmailPreferences)
+      val combinedApis =  xmlEMailPreferencesWhereAllforCategory ++ filteredXmlEmailPreferences
+      println(combinedApis)
+      if(combinedApis.isEmpty){ OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, List.empty) }
+        else { OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, combinedApis) }
     }
-
-     val filteredXmlEmailPreferences = for { filteredInterests <- user.emailPreferences.interests.filter(x => x.services.intersect(xmlServiceNames).nonEmpty)
-                serviceName <- filteredInterests.services.intersect(xmlServiceNames)
-                xmlApi <-  getXmlApiByServiceName(serviceName)
-            }  yield xmlApi
-
-
-      if(filteredXmlEmailPreferences.isEmpty){ OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, List.empty) }
-      else { OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, filteredXmlEmailPreferences) }
-    }
+  
 
 
 

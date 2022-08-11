@@ -20,6 +20,7 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.apiplatformxmlservices.models.common.ApiCategory
 
 
 class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
@@ -32,6 +33,7 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   trait Setup {
     val inTest = new XmlApiService
     val unfilteredApis = inTest.getUnfilteredApis()
+    val stabelApis = inTest.getStableApis()
     val retiredApi = unfilteredApis.filter(_.serviceName.value == "employment-intermediaries").head
   }
 
@@ -50,6 +52,25 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       val result = inTest.getStableApis
       result should not contain (retiredApi)
 
+    }
+  }
+  
+  "getStableApisByServiceName" should {
+    "return correct xml api when called with a valid service name" in new Setup {
+      
+      val result = inTest.getStableApisByServiceName("agent-authorisation-online")
+      val expectedApi = unfilteredApis.filter(_.serviceName.value == "agent-authorisation-online").head
+      result should contain (expectedApi)
+    }
+  }
+  
+  "getStableApisForCategory" should {
+    "" in new Setup {
+
+      val result = inTest.getStableApisForCategory("PAYE")
+      val expectedApis = unfilteredApis.filter(api =>  api.categories.getOrElse(Seq.empty).contains(ApiCategory.withName("PAYE")))
+      
+      result should contain only (expectedApis: _*)
     }
   }
 }
