@@ -87,24 +87,32 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
   "toOrganisationUser" should {
 
-    val xmlApi1 = XmlApi("Excise Movement Control System",
+    // The expectation data below must match the file $project_dir/resources/xml_apis.json
+    
+    val customs1 = XmlApi("Excise Movement Control System",
       ServiceName("excise-movement-control"),
       "/government/collections/excise-movement-control-system-fs31-support-for-software-developers",
       "Technical specifications for the Excise Movement Control System (EMCS).",
       Some(List(ApiCategory.CUSTOMS)))
 
-    val xmlApi2 = XmlApi("Import Control System",
+    val customs2 = XmlApi("Import Control System",
       ServiceName("import-control-system"),
       "/government/collections/import-control-system-support-for-software-developers",
       "Technical specifications for Import Control System software developers.",
       Some(List(ApiCategory.CUSTOMS)))
 
-    val xmlApi3 = XmlApi("PAYE Online",
+    val paye1 = XmlApi("PAYE Online",
       ServiceName("paye-online"),
       "/government/collections/paye-online-support-for-software-developers",
       "Technical specifications for software developers working with the PAYE online service.",
       Some(List(ApiCategory.PAYE)))
 
+    val paye2 = XmlApi("Real Time Information online",
+      ServiceName("real-time-information-online"),
+      "/government/collections/real-time-information-online-internet-submissions-support-for-software-developers",
+      "Technical specifications for software developers working with the Real Time Information online service.",
+      Some(List(ApiCategory.PAYE)))
+    
     "return OrganisationUser with no services when user has no xml services in preferences" in new Setup {
 
       val interestNoXmlServices = List(TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3")),
@@ -116,13 +124,22 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     }
 
     "return OrganisationUser with only xml Services when user has mix of some xml and non xml services in preferences" in new Setup {
-      val interestNoXmlServices = List(TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3", xmlApi1.serviceName.value, xmlApi2.serviceName.value)),
-        TaxRegimeInterests("PAYE", Set("service-4", "service-6", xmlApi3.serviceName.value)))
-      val emailPreferencesWithNoXmlServices: EmailPreferences = EmailPreferences(interestNoXmlServices, Set(EmailTopic.BUSINESS_AND_POLICY))
+      val interestWithSomeXmlServices = List(TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3", customs1.serviceName.value, customs2.serviceName.value)),
+        TaxRegimeInterests("PAYE", Set("service-4", "service-6", paye1.serviceName.value)))
+      val emailPreferencesWithSomeXmlServices: EmailPreferences = EmailPreferences(interestWithSomeXmlServices, Set(EmailTopic.BUSINESS_AND_POLICY))
 
-      val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithNoXmlServices))
-      result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(xmlApi1, xmlApi2, xmlApi3))
-      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only(xmlApi1, xmlApi2, xmlApi3)
+      val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithSomeXmlServices))
+      result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(customs1, customs2, paye1))
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only(customs1, customs2, paye1)
+    }
+
+    "return OrganisationUser with all xml Services for a category when user has selected the entire category in preferences" in new Setup {
+      val interestedInEntireCategory = List(TaxRegimeInterests("PAYE", Set()))
+      val emailPreferencesForEntireCategory: EmailPreferences = EmailPreferences(interestedInEntireCategory, Set(EmailTopic.BUSINESS_AND_POLICY))
+
+      val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesForEntireCategory))
+      result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(paye1, paye2))
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only(paye1, paye2)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {
