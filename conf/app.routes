@@ -3,6 +3,7 @@
 ->        /csvupload                                csvupload.Routes
 
 GET        /xml/apis                                uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getAll
+GET        /xml/apis/filtered                       uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApisFiltered(categories: String)
 GET        /xml/api                                 uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApiByServiceName(serviceName: uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName)
 GET        /xml/api/:name                           uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApi(name: String)
 
