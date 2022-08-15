@@ -21,6 +21,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFa
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, XmlApi}
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -41,21 +42,21 @@ trait UserFunctions {
 
   def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
     val stableApis = xmlApiService.getStableApis()
+
     val xmlServiceNames: Set[String] = stableApis.map(_.serviceName.value).toSet
-    def getXmlApiByServiceName(serviceName: String): Option[XmlApi] ={
-      stableApis.find(_.serviceName.value == serviceName)
-    }
 
-     val filteredXmlEmailPreferences = for { filteredInterests <- user.emailPreferences.interests.filter(x => x.services.intersect(xmlServiceNames).nonEmpty)
-                serviceName <- filteredInterests.services.intersect(xmlServiceNames)
-                xmlApi <-  getXmlApiByServiceName(serviceName)
-            }  yield xmlApi
+    val stableXmlApisThatUserSelectedSpecifically = for {
+      filteredInterests <- user.emailPreferences.interests.filter(_.services.intersect(xmlServiceNames).nonEmpty)
+      serviceName <- filteredInterests.services.intersect(xmlServiceNames)
+      xmlApi <- xmlApiService.getStableApiByServiceName(serviceName)
+    } yield xmlApi
 
+    val stableXmlApisWhereUserSelectedAllForCategory = user.emailPreferences.interests
+      .filter(hasAllApis).flatMap(x => xmlApiService.getStableApisByCategory(x.regime))
 
-      if(filteredXmlEmailPreferences.isEmpty){ OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, List.empty) }
-      else { OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, filteredXmlEmailPreferences) }
-    }
-
+    val combinedApis = stableXmlApisWhereUserSelectedAllForCategory ++ stableXmlApisThatUserSelectedSpecifically
+    OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, combinedApis)
+  }
 
 
 }

@@ -37,6 +37,7 @@ case class ImportUserRequest(email: String,
 case class TaxRegimeInterests(regime: String, services: Set[String])
 object TaxRegimeInterests {
   implicit val format = Json.format[TaxRegimeInterests]
+  def hasAllApis(taxRegimeInterests: TaxRegimeInterests) = taxRegimeInterests.services.isEmpty
 }
 
 case class EmailPreferences(interests: List[TaxRegimeInterests], topics: Set[EmailTopic])
