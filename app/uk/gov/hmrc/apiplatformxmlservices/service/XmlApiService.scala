@@ -59,7 +59,7 @@ class XmlApiService @Inject()() {
     stableXmlApis.map(internalToXmlApi).find(_.serviceName.value == serviceName)
   }
 
-  def getStableApisFoCategories(categories: List[String]): List[XmlApi]= categories
+  def getStableApisForCategories(categories: List[String]): List[XmlApi]= categories
       .flatMap(getStableApisByCategory)
       .distinct
 
