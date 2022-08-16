@@ -20,8 +20,9 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{NOT_FOUND, OK}
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters
+import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
+import uk.gov.hmrc.apiplatformxmlservices.models.common.ApiCategory
+import uk.gov.hmrc.apiplatformxmlservices.models.{ErrorResponse, JsonFormatters, XmlApi}
 import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 
@@ -46,10 +47,11 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-  def callGetEndpoint(url: String): WSResponse =
+  def callGetEndpoint(url: String, queryParams: List[(String, String)] = List.empty): WSResponse =
     wsClient
       .url(url)
       .withFollowRedirects(false)
+      .withQueryStringParameters(queryParams: _*)
       .get()
       .futureValue
 
@@ -76,6 +78,33 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       "respond with 404 when invalid path" in {
         val result = callGetEndpoint(s"$url/xml")
         result.status mustBe NOT_FOUND
+      }
+
+    }
+
+    "GET /xml/apis/filtered" should {
+
+      "respond with 200 and return APIs for selected category" in new Setup {
+        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categories" -> "PAYE"))
+        result.status mustBe OK
+        val expectedApis: List[XmlApi] = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.PAYE))
+        result.body mustBe Json.toJson(expectedApis).toString
+      }
+
+      "respond with 200 and return nothing when category is not found" in new Setup {
+        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categories" -> "VAT"))
+        result.status mustBe OK
+      
+        result.body mustBe  Json.toJson(List.empty[XmlApi]).toString
+      }
+      
+      "respond with 400 when invalid category" in {
+        val badCategory = "bad"
+        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categories" -> badCategory))
+
+        result.status mustBe BAD_REQUEST
+        val response = Json.parse(result.body).as[ErrorResponse]
+        response.errors.head.message mustBe s"Unable to bind category $badCategory"
       }
 
     }

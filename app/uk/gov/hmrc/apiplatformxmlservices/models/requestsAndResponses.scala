@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
+import play.api.libs.json.Json
+
 case class CreateOrganisationRequest(organisationName: OrganisationName, email: String, firstName: String, lastName: String)
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
@@ -32,4 +34,16 @@ case class CreateOrganisationFailedDuplicateIdResult(message: String) extends Cr
 sealed trait UpdateOrganisationResult
 case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
 case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult
+
+case class ErrorResponseMessage(message: String)
+
+object ErrorResponseMessage {
+  implicit val formatErrorResponseMessage = Json.format[ErrorResponseMessage]
+}
+
+case class ErrorResponse(errors: List[ErrorResponseMessage])
+
+object ErrorResponse {
+  implicit val formatErrorResponse = Json.format[ErrorResponse]
+}
 
