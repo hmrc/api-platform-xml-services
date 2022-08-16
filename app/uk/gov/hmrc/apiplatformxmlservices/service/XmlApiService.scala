@@ -58,7 +58,11 @@ class XmlApiService @Inject()() {
   def getStableApiByServiceName(serviceName: String): Option[XmlApi] = {
     stableXmlApis.map(internalToXmlApi).find(_.serviceName.value == serviceName)
   }
-  
+
+  def getStableApisFoCategories(categories: List[String]): List[XmlApi]= categories
+      .flatMap(getStableApisByCategory)
+      .distinct
+
   def getStableApisByCategory(apiCategory: String): List[XmlApi] = {
     def categoryFilter(categories: Seq[ApiCategory]): Boolean = {
       val categoryToMatch = ApiCategory.withName(apiCategory.toUpperCase)

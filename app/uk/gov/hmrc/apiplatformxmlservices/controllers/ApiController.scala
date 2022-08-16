@@ -35,11 +35,7 @@ class ApiController @Inject() (xmlService: XmlApiService, cc: ControllerComponen
   }
 
   def getApisFiltered(categories: List[String]): Action[AnyContent] = Action.async {
-    Future.successful(Ok(Json.toJson(
-      categories.flatMap { category =>
-        xmlService.getStableApisByCategory(category)
-      }
-    )))
+    Future.successful(Ok(Json.toJson(xmlService.getStableApisFoCategories(categories))))
   }
 
   def getApi(name: String): Action[AnyContent] = Action.async {
