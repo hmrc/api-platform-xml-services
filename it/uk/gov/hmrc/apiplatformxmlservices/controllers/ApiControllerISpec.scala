@@ -85,14 +85,14 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     "GET /xml/apis/filtered" should {
 
       "respond with 200 and return APIs for selected category" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categories" -> "PAYE"))
+        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "PAYE"))
         result.status mustBe OK
         val expectedApis: List[XmlApi] = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.PAYE))
         result.body mustBe Json.toJson(expectedApis).toString
       }
 
       "respond with 200 and return nothing when category is not found" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categories" -> "VAT"))
+        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "VAT"))
         result.status mustBe OK
       
         result.body mustBe  Json.toJson(List.empty[XmlApi]).toString
@@ -100,7 +100,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       
       "respond with 400 when invalid category" in {
         val badCategory = "bad"
-        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categories" -> badCategory))
+        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> badCategory))
 
         result.status mustBe BAD_REQUEST
         val response = Json.parse(result.body).as[ErrorResponse]
