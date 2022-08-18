@@ -22,6 +22,7 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
+import play.api.test.Helpers
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
@@ -154,9 +155,12 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
       }
 
       "respond with 400 if organisationId is not a uuid" in new Setup {
-        val result = callPostEndpoint(s"$url/organisations/:alsjdflaksjdf/add-collaborator", addCollaboratorRequestAsString)
+        val organisationId = ":alsjdflaksjdf"
+        val result = callPostEndpoint(s"$url/organisations/$organisationId/add-collaborator", addCollaboratorRequestAsString)
+
         result.status mustBe BAD_REQUEST
-        result.body.contains("bad request") mustBe true
+        val response = Json.parse(result.body).as[ErrorResponse]
+        response.errors.head.message mustBe s"Cannot accept $organisationId as OrganisationId"
       }
 
       "respond with 404 if organisationId exists" in new Setup {

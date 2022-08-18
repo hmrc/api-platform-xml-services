@@ -19,7 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters
-import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -32,6 +32,10 @@ class ApiController @Inject() (xmlService: XmlApiService, cc: ControllerComponen
 
   def getAll(): Action[AnyContent] = Action.async {
     Future.successful(Ok(Json.toJson(xmlService.getStableApis())))
+  }
+
+  def getApisFiltered(categoryFilter: List[ApiCategory]): Action[AnyContent] = Action.async {
+    Future.successful(Ok(Json.toJson(xmlService.getStableApisForCategories(categoryFilter))))
   }
 
   def getApi(name: String): Action[AnyContent] = Action.async {

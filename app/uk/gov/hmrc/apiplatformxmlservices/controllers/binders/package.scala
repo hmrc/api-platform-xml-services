@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import play.api.mvc.{PathBindable, QueryStringBindable}
-import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, UserId, VendorId}
 
 import java.util.UUID
@@ -64,7 +64,30 @@ package object binders {
         textBinder.unbind(key, vendorId.value.toString)
       }
     }
+    
+  private def categoryFromString(category: String): Either[String, ApiCategory] = {
+    ApiCategory.withNameEither(category.toUpperCase)
+      .toOption
+      .toRight(s"Unable to bind category $category")
+  }
 
+
+  implicit def categoryQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ApiCategory] =
+    new QueryStringBindable[ApiCategory] {
+
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ApiCategory]] = {
+        textBinder.bind(key, params).map {
+          case Right(category) => categoryFromString(category)
+          case _ => Left("Unable to bind category")
+        }
+      }
+
+      override def unbind(key: String, category: ApiCategory): String = {
+        textBinder.unbind(key, category.entryName)
+      }
+
+    }
+  
   private def userIdFromString(text: String): Either[String, UserId] = {
     Try(UUID.fromString(text))
       .toOption
