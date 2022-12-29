@@ -1,8 +1,9 @@
 
 # api-platform-xml-services
 
-This is a placeholder README.md for a new repository
+This is the backend service for [api-gatekeeper-xml-services-frontend](https://github.com/hmrc/api-gatekeeper-xml-services-frontend).
 
-### License
+It has crud operations for XML Organisations and endpoints to 
+bulk upload XML Organisations and bulk upload collaborators to XML Organisations.
 
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
+This service also provides access to [XML APIs](https://github.com/hmrc/api-platform-xml-services/blob/main/resources/xml_apis.json) on the API Platform.
