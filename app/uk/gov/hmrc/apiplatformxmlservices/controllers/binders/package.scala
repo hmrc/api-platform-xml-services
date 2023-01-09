@@ -126,7 +126,7 @@ package object binders {
       }
     }
 
-  private def SortByFromString(text: String): Either[String, OrganisationSortBy] = {
+  private def sortByFromString(text: String): Either[String, OrganisationSortBy] = {
     Try(OrganisationSortBy.withName(text))
       .toOption
       .toRight(s"Cannot accept $text as OrganisationSortBy")
@@ -137,7 +137,7 @@ package object binders {
 
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, OrganisationSortBy]] = {
         textBinder.bind(key, params).map {
-          case Right(sortBy) => SortByFromString(sortBy)
+          case Right(sortBy) => sortByFromString(sortBy)
           case _             => Left("Unable to bind OrganisationSortBy")
         }
       }
