@@ -38,8 +38,8 @@ class UploadService @Inject() (
     organisationService: OrganisationService,
     override val xmlApiService: XmlApiService,
     teamMemberService: TeamMemberService
-  )(implicit val ec: ExecutionContext)
-    extends Logging
+  )(implicit val ec: ExecutionContext
+  ) extends Logging
     with UploadValidation
     with ConvertToEmailPrefsMap {
 

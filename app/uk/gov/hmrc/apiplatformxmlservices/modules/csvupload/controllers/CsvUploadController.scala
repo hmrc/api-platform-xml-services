@@ -35,10 +35,10 @@ class CsvUploadController @Inject() (
     organisationService: OrganisationService,
     uploadService: UploadService,
     cc: ControllerComponents
-  )(implicit val ec: ExecutionContext)
-    extends BackendController(cc)
+  )(implicit val ec: ExecutionContext
+  ) extends BackendController(cc)
     with WithJsonBody
-      with CSVJsonFormats
+    with CSVJsonFormats
     with Logging {
 
   def bulkUploadUsers(): Action[JsValue] = Action.async(parse.tolerantJson) {
@@ -49,24 +49,24 @@ class CsvUploadController @Inject() (
       }
   }
 
-
-
   private def handleUploadUsers(bulkAddUsersRequest: BulkAddUsersRequest)(implicit hc: HeaderCarrier) = {
 
-    def printErrors(results: List[UploadUserResult]) ={
-       val errors = results.flatMap(x => x match {
-         case e: UploadFailedResult => Some(e.message)
-         case _ => None
-       })
-        errors.map(logger.error(_))
+    def printErrors(results: List[UploadUserResult]) = {
+      val errors = results.flatMap(x =>
+        x match {
+          case e: UploadFailedResult => Some(e.message)
+          case _                     => None
+        }
+      )
+      errors.map(logger.error(_))
     }
-    val usersToUpload = bulkAddUsersRequest.users.toList
+    val usersToUpload                                = bulkAddUsersRequest.users.toList
     uploadService.uploadUsers(usersToUpload) map {
       results =>
-          val successful = results.count(x => x.isInstanceOf[UploadSuccessResult])
-          val created = results.count(x => x.isInstanceOf[UploadCreatedUserSuccessResult])
-          val retrieved = results.count(x => x.isInstanceOf[UploadExistingUserSuccessResult])
-          val failure =  results.count(x => x.isInstanceOf[UploadFailedResult])
+        val successful = results.count(x => x.isInstanceOf[UploadSuccessResult])
+        val created    = results.count(x => x.isInstanceOf[UploadCreatedUserSuccessResult])
+        val retrieved  = results.count(x => x.isInstanceOf[UploadExistingUserSuccessResult])
+        val failure    = results.count(x => x.isInstanceOf[UploadFailedResult])
 
         printErrors(results)
         logger.warn(s"Expected to upload ${usersToUpload.size} users. Successfully uploaded $successful; of which $created were created and $retrieved were retrieved. Number of users failed to upload: $failure")

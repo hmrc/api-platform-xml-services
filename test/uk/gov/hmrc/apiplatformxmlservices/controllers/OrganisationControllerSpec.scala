@@ -36,8 +36,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar
-  with GuiceOneAppPerSuite with BeforeAndAfterEach with JsonFormatters with CSVJsonFormats {
+    with GuiceOneAppPerSuite with BeforeAndAfterEach with JsonFormatters with CSVJsonFormats {
 
   private val mockOrgService = mock[OrganisationService]
 
@@ -52,25 +53,25 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
   }
 
   trait Setup {
-    val firstName = "bob"
-    val lastName = "hope"
+    val firstName                 = "bob"
+    val lastName                  = "hope"
     val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"), "some@email.com", firstName, lastName)
 
-    val fakeRequest = FakeRequest("GET", "/organisations")
+    val fakeRequest   = FakeRequest("GET", "/organisations")
     val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
-    val jsonMediaType = "application/json"
-    def getUuid() = UUID.randomUUID()
+    val jsonMediaType  = "application/json"
+    def getUuid()      = UUID.randomUUID()
     val organisationId = OrganisationId(getUuid)
-    val organisation = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId = UserId(UUID.randomUUID())
-    val email = "foo@bar.com"
+    val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
+    val userId         = UserId(UUID.randomUUID())
+    val email          = "foo@bar.com"
 
-    val coreUserDetail = CoreUserDetail(userId, email)
-    val addCollaboratorRequestObj = AddCollaboratorRequest(email, firstName, lastName)
-    val updatedOrganisationName = OrganisationName("updated name")
+    val coreUserDetail                      = CoreUserDetail(userId, email)
+    val addCollaboratorRequestObj           = AddCollaboratorRequest(email, firstName, lastName)
+    val updatedOrganisationName             = OrganisationName("updated name")
     val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrganisationName)
-    val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
+    val organisationWithCollaborator        = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
 
     val addCollaboratorRequest =
       FakeRequest("POST", s"/organisations/${organisation.organisationId.value.toString}/collaborator").withBody(Json.toJson(addCollaboratorRequestObj))
@@ -78,8 +79,8 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     val updateOrganisationDetailsRequest =
       FakeRequest("POST", s"/organisations/${organisationId.value.toString}").withBody(Json.toJson(updateOrganisationDetailsRequestObj))
 
-    val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-    val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+    val orgOne                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+    val orgTwo                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
     val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
@@ -116,8 +117,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     "return 200 with all organisations" in new Setup {
       when(mockOrgService.findAll(None)).thenReturn(Future.successful(List(organisation)))
 
-
-      val result: Future[Result] = controller.findByParams(sortBy= None)(fakeRequest)
+      val result: Future[Result] = controller.findByParams(sortBy = None)(fakeRequest)
       status(result) shouldBe Status.OK
       verify(mockOrgService, times(0)).findByVendorId(*[VendorId])
       verify(mockOrgService, times(1)).findAll(*)
@@ -126,7 +126,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByVendorId(*[VendorId])).thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.findByParams(Some(VendorId(9000)), sortBy= None)(fakeRequest)
+      val result: Future[Result] = controller.findByParams(Some(VendorId(9000)), sortBy = None)(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }

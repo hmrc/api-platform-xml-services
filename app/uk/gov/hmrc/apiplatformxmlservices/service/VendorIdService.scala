@@ -24,22 +24,21 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class VendorIdService @Inject()(organisationRepository: OrganisationRepository,
-                                config: Config)(implicit val ec: ExecutionContext) {
+class VendorIdService @Inject() (organisationRepository: OrganisationRepository, config: Config)(implicit val ec: ExecutionContext) {
 
   def getNextVendorId(): Future[Either[Throwable, VendorId]] = {
 
     organisationRepository.findOrgWithMaxVendorId().map {
-          mayBeOrganisation =>
-            mayBeOrganisation
-              .fold(Right(VendorId(config.startingVendorId)))(x=> Right(calculateNextVendorId(x.vendorId)))
-    }.recover{
+      mayBeOrganisation =>
+        mayBeOrganisation
+          .fold(Right(VendorId(config.startingVendorId)))(x => Right(calculateNextVendorId(x.vendorId)))
+    }.recover {
       case e: Exception => Left(e)
     }
   }
 
-  private def calculateNextVendorId(maxVendorId: VendorId) : VendorId = {
-    if(maxVendorId.value < config.startingVendorId) VendorId(config.startingVendorId)
+  private def calculateNextVendorId(maxVendorId: VendorId): VendorId = {
+    if (maxVendorId.value < config.startingVendorId) VendorId(config.startingVendorId)
     else VendorId(maxVendorId.value + 1)
   }
 }
@@ -47,6 +46,3 @@ class VendorIdService @Inject()(organisationRepository: OrganisationRepository,
 object VendorIdService {
   case class Config(startingVendorId: Long)
 }
-
-
-

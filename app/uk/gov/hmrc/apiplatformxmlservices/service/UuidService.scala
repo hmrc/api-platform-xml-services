@@ -24,7 +24,7 @@ import javax.inject.Singleton
 @Singleton
 class UuidService {
 
-  def newUuid() : UUID = UUID.randomUUID
+  def newUuid(): UUID = UUID.randomUUID
 
 }
 // $COVERAGE-ON$

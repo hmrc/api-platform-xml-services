@@ -22,8 +22,7 @@ import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class VendorIdServiceConfigProvider @Inject()(config: Configuration,
-                          servicesConfig: ServicesConfig) extends Provider[VendorIdService.Config] {
+class VendorIdServiceConfigProvider @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends Provider[VendorIdService.Config] {
 
   override def get(): VendorIdService.Config = {
     lazy val startingVendorId = servicesConfig.getInt("organisation.vendorId.startingValue")

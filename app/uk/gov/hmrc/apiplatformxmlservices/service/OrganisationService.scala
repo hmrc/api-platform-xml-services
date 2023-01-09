@@ -36,7 +36,8 @@ class OrganisationService @Inject() (
     vendorIdService: VendorIdService,
     override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     override val xmlApiService: XmlApiService
-  )(implicit val ec: ExecutionContext) extends UserFunctions {
+  )(implicit val ec: ExecutionContext
+  ) extends UserFunctions {
 
   def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.findByVendorId(vendorId) flatMap {
@@ -53,15 +54,13 @@ class OrganisationService @Inject() (
           case Left(e: GetOrCreateUserFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
       case Left(e: Throwable)        => successful(CreateOrganisationFailedResult(e.getMessage))
-     
+
     }.recover {
       case NonFatal(e: Throwable) => CreateOrganisationFailedResult(e.getMessage)
     }
   }
 
-  def handleCreateOrganisation(organisationName: OrganisationName,
-                               vendorId: VendorId,
-                               collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
+  def handleCreateOrganisation(organisationName: OrganisationName, vendorId: VendorId, collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
 
     def mapError(ex: Exception): CreateOrganisationResult = ex match {
       case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
@@ -108,7 +107,6 @@ class OrganisationService @Inject() (
 
   def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = organisationRepository.findAll(sortBy)
 
-
   private def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.createOrUpdate(
       Organisation(
@@ -118,7 +116,6 @@ class OrganisationService @Inject() (
       )
     )
   }
-
 
   private def generateOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 }

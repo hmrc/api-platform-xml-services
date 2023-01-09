@@ -38,9 +38,9 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
+  val mockOrganisationRepo: OrganisationRepository                   = mock[OrganisationRepository]
   val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
-  val xmlApiService = new XmlApiService()
+  val xmlApiService                                                  = new XmlApiService()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -51,27 +51,27 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
   trait Setup {
     val inTest = new TeamMemberService(mockOrganisationRepo, mockThirdPartyDeveloperConnector, xmlApiService)
 
-    val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
+    val uuid     = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId = VendorId(9000)
 
     def getUuid() = UUID.randomUUID()
 
     val organisationId = OrganisationId(uuid)
-    val organisation = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
+    val organisation   = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
 
-    val userId1 = UserId(UUID.randomUUID())
-    val userId2 = UserId(UUID.randomUUID())
-    val firstName = "bob"
-    val lastName = "hope"
-    val emailOne = "foo@bar.com"
-    val emailTwo = "anotheruser@bar.com"
-    val collaboratorOne = Collaborator(userId1, emailOne)
-    val collaboratorTwo = Collaborator(userId2, emailTwo)
-    val collaborators = List(collaboratorOne, collaboratorTwo)
+    val userId1                       = UserId(UUID.randomUUID())
+    val userId2                       = UserId(UUID.randomUUID())
+    val firstName                     = "bob"
+    val lastName                      = "hope"
+    val emailOne                      = "foo@bar.com"
+    val emailTwo                      = "anotheruser@bar.com"
+    val collaboratorOne               = Collaborator(userId1, emailOne)
+    val collaboratorTwo               = Collaborator(userId2, emailTwo)
+    val collaborators                 = List(collaboratorOne, collaboratorTwo)
     val organisationWithCollaborators = organisation.copy(collaborators = collaborators)
-    val gatekeeperUserId = "John Doe"
-    val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
-    val coreUserDetail = CoreUserDetail(userId1, emailOne)
+    val gatekeeperUserId              = "John Doe"
+    val getOrCreateUserIdRequest      = GetOrCreateUserIdRequest(emailOne)
+    val coreUserDetail                = CoreUserDetail(userId1, emailOne)
 
     val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
 
@@ -204,7 +204,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
       "return Right updated organisation" in new Setup {
         when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
         val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email.equalsIgnoreCase(emailOne))
-        val updatedOrganisation = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
+        val updatedOrganisation  = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
         when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
 
         await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {

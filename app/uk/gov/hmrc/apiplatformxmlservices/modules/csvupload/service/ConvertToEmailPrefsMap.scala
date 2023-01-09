@@ -31,8 +31,7 @@ trait ConvertToEmailPrefsMap {
       apis.map(api => {
         if (api.categories.getOrElse(List.empty).contains(category)) {
           Map(category -> List(api.serviceName))
-        }
-        else Map.empty[ApiCategory, List[ServiceName]]
+        } else Map.empty[ApiCategory, List[ServiceName]]
       })
     }
 
@@ -43,7 +42,7 @@ trait ConvertToEmailPrefsMap {
     def apiListToMap(filteredApis: List[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
       val categoryMaps = for {
         distinctCategory <- distinctCategories
-        categoryMaps = generateCategoryMaps(distinctCategory, filteredApis)
+        categoryMaps      = generateCategoryMaps(distinctCategory, filteredApis)
       } yield categoryMaps
       combineMaps(categoryMaps.flatten)
     }

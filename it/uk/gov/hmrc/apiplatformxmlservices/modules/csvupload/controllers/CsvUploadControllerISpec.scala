@@ -34,7 +34,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
 
-class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] with JsonFormatters with CSVJsonFormats {
+class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with MongoApp[Organisation] with JsonFormatters with CSVJsonFormats {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
@@ -48,15 +48,15 @@ class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
-        "organisation.vendorId.startingValue" -> 9000,
-        "microservice.services.auth.port" -> wireMockPort,
-        "metrics.enabled" -> true,
-        "auditing.enabled" -> false,
-        "auditing.consumer.baseUri.host" -> wireMockHost,
-        "auditing.consumer.baseUri.port" -> wireMockPort,
+        "organisation.vendorId.startingValue"              -> 9000,
+        "microservice.services.auth.port"                  -> wireMockPort,
+        "metrics.enabled"                                  -> true,
+        "auditing.enabled"                                 -> false,
+        "auditing.consumer.baseUri.host"                   -> wireMockHost,
+        "auditing.consumer.baseUri.port"                   -> wireMockPort,
         "microservice.services.third-party-developer.host" -> wireMockHost,
         "microservice.services.third-party-developer.port" -> wireMockPort,
-        "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
+        "mongodb.uri"                                      -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
   val url = s"http://localhost:$port/api-platform-xml-services"
@@ -102,17 +102,17 @@ class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  
 
     val userId: UserId = UserId(getUuid())
 
-    val email = "foo@bar.com"
-    val gatekeeperUserId = "John Doe"
-    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
+    val email                         = "foo@bar.com"
+    val gatekeeperUserId              = "John Doe"
+    val organisation                  = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
     val organisationWithCollaborators = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
-    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
-    val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
+    val organisation2                 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
+    val updatedOrgWithDuplicate       = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
 
     val removeCollaboratorRequest = RemoveCollaboratorRequest(email, gatekeeperUserId)
-    val organisationIdValue = organisation.organisationId.value
-    val vendorIdValue = organisation.vendorId.value
-    val orgAsJsonString = Json.toJson(organisation).toString
+    val organisationIdValue       = organisation.organisationId.value
+    val vendorIdValue             = organisation.vendorId.value
+    val orgAsJsonString           = Json.toJson(organisation).toString
 
     val invalidOrgString =
       """{
@@ -140,10 +140,10 @@ class CsvUploadControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  
 
       "respond with 200 if request body is valid" in new Setup {
 
-        val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-        val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+        val orgOne                         = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+        val orgTwo                         = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
         val bulkUploadOrganisationsRequest = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
-        val payload = Json.toJson(bulkUploadOrganisationsRequest).toString
+        val payload                        = Json.toJson(bulkUploadOrganisationsRequest).toString
 
         val result = callPostEndpoint(s"$url/csvupload/bulkorganisations", payload)
         result.status mustBe OK

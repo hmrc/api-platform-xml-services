@@ -39,11 +39,11 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
-  val mockUuidService: UuidService = mock[UuidService]
-  val mockVendorIdService: VendorIdService = mock[VendorIdService]
+  val mockOrganisationRepo: OrganisationRepository                   = mock[OrganisationRepository]
+  val mockUuidService: UuidService                                   = mock[UuidService]
+  val mockVendorIdService: VendorIdService                           = mock[VendorIdService]
   val mockThirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
-  val xmlApiService: XmlApiService = new XmlApiService()
+  val xmlApiService: XmlApiService                                   = new XmlApiService()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -56,34 +56,34 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   trait Setup {
     val inTest = new OrganisationService(mockOrganisationRepo, mockUuidService, mockVendorIdService, mockThirdPartyDeveloperConnector, xmlApiService)
 
-    val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
+    val uuid     = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
     val vendorId = VendorId(9000)
 
     def getUuid() = UUID.randomUUID()
 
-    val organisationToPersist = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name = OrganisationName("Organisation Name"))
+    val organisationToPersist     = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId, name = OrganisationName("Organisation Name"))
     val createOrganisationRequest = CreateOrganisationRequest(organisationToPersist.name, "some@email.com", "firstName", "lastName")
-    val updatedOrgName = OrganisationName("Updated Organisation Name")
+    val updatedOrgName            = OrganisationName("Updated Organisation Name")
 
   }
 
   trait ManageCollaboratorSetup extends Setup {
     val organisationId = OrganisationId(uuid)
-    val organisation = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
+    val organisation   = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
 
-    val userId = UserId(UUID.randomUUID())
-    val firstName = "bob"
-    val lastName = "hope"
-    val emailOne = "foo@bar.com"
-    val emailTwo = "anotheruser@bar.com"
-    val collaboratorOne = Collaborator(userId, emailOne)
-    val collaboratorTwo = Collaborator(UserId(UUID.randomUUID()), emailTwo)
-    val collaborators = List(collaboratorOne, collaboratorTwo)
+    val userId                           = UserId(UUID.randomUUID())
+    val firstName                        = "bob"
+    val lastName                         = "hope"
+    val emailOne                         = "foo@bar.com"
+    val emailTwo                         = "anotheruser@bar.com"
+    val collaboratorOne                  = Collaborator(userId, emailOne)
+    val collaboratorTwo                  = Collaborator(UserId(UUID.randomUUID()), emailTwo)
+    val collaborators                    = List(collaboratorOne, collaboratorTwo)
     val organisationWithCollaboratorsOne = organisation.copy(collaborators = collaborators)
     val organisationWithCollaboratorsTwo = organisation.copy(collaborators = List(collaboratorOne))
-    val gatekeeperUserId = "John Doe"
-    val getOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
-    val coreUserDetail = CoreUserDetail(userId, emailOne)
+    val gatekeeperUserId                 = "John Doe"
+    val getOrCreateUserIdRequest         = GetOrCreateUserIdRequest(emailOne)
+    val coreUserDetail                   = CoreUserDetail(userId, emailOne)
 
     val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
 
@@ -152,12 +152,24 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "createOrganisation" should {
     "return CreateOrganisationSuccessResult when vendorIdService returns a vendorId and user exists in TPD" in new Setup {
-      val userId = UserId(UUID.randomUUID())
+      val userId                           = UserId(UUID.randomUUID())
       val organistionWithAddedCollaborator = organisationToPersist.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, EmailPreferences.noPreferences))))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(
+        createOrganisationRequest.email,
+        createOrganisationRequest.firstName,
+        createOrganisationRequest.lastName,
+        Map.empty
+      )))(*[HeaderCarrier]))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(
+          createOrganisationRequest.email,
+          createOrganisationRequest.firstName,
+          createOrganisationRequest.lastName,
+          verified = true,
+          userId,
+          EmailPreferences.noPreferences
+        ))))
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(organistionWithAddedCollaborator)))
 
       await(inTest.create(createOrganisationRequest)) match {
@@ -172,12 +184,24 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
 
     "return CreateOrganisationFailed when organisation repo returns MongoCommandException" in new Setup {
-      val userId = UserId(UUID.randomUUID())
+      val userId                           = UserId(UUID.randomUUID())
       val organistionWithAddedCollaborator = organisationToPersist.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, EmailPreferences.noPreferences))))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(
+        createOrganisationRequest.email,
+        createOrganisationRequest.firstName,
+        createOrganisationRequest.lastName,
+        Map.empty
+      )))(*[HeaderCarrier]))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(
+          createOrganisationRequest.email,
+          createOrganisationRequest.firstName,
+          createOrganisationRequest.lastName,
+          verified = true,
+          userId,
+          EmailPreferences.noPreferences
+        ))))
 
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new MongoCommandException(BsonDocument("{\"code\": 11000}"), ServerAddress()))))
 
@@ -193,12 +217,24 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
 
     "return CreateOrganisationFailed when organisation repo returns Exception" in new Setup {
-      val userId = UserId(UUID.randomUUID())
+      val userId                           = UserId(UUID.randomUUID())
       val organistionWithAddedCollaborator = organisationToPersist.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid()).thenReturn(uuid)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, verified = true, userId, EmailPreferences.noPreferences))))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(
+        createOrganisationRequest.email,
+        createOrganisationRequest.firstName,
+        createOrganisationRequest.lastName,
+        Map.empty
+      )))(*[HeaderCarrier]))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(
+          createOrganisationRequest.email,
+          createOrganisationRequest.firstName,
+          createOrganisationRequest.lastName,
+          verified = true,
+          userId,
+          EmailPreferences.noPreferences
+        ))))
 
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new RuntimeException("Something went wrong"))))
 
@@ -215,7 +251,12 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
     "return CreateOrganisationFailed when TPD returns error" in new Setup {
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(createOrganisationRequest.email, createOrganisationRequest.firstName, createOrganisationRequest.lastName, Map.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(
+        createOrganisationRequest.email,
+        createOrganisationRequest.firstName,
+        createOrganisationRequest.lastName,
+        Map.empty
+      )))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("error")))
 
       await(inTest.create(createOrganisationRequest)) match {
@@ -272,7 +313,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   "updateOrganisationDetails" should {
     "returns the result from the repository when called" in new Setup {
       val updatedOrganisationName = OrganisationName("New Organisation Name")
-      val updatedOrganisation = organisationToPersist.copy(name = updatedOrganisationName)
+      val updatedOrganisation     = organisationToPersist.copy(name = updatedOrganisationName)
       when(mockOrganisationRepo.updateOrganisationDetails(eqTo(updatedOrganisation.organisationId), eqTo(updatedOrganisationName)))
         .thenReturn(Future.successful(UpdateOrganisationSuccessResult(updatedOrganisation)))
 

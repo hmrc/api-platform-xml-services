@@ -22,5 +22,3 @@ import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
 case class ParsedUser(email: String, firstName: String, lastName: String, services: List[ServiceName], vendorIds: List[VendorId])
 case class BulkAddUsersRequest(users: Seq[ParsedUser])
 case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
-
-

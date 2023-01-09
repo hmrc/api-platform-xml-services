@@ -58,7 +58,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   implicit val caseInsensitiveOrgNameOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
-  implicit val vendorIdOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.vendorId.value.compare(y.vendorId.value)
+  implicit val vendorIdOrdering: Ordering[Organisation]               = (x: Organisation, y: Organisation) => x.vendorId.value.compare(y.vendorId.value)
 
   def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = {
 
@@ -92,28 +92,34 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def addCollaboratorToOrganisation(organisationId: OrganisationId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
-    collection.findOneAndUpdate(equal("organisationId", Codecs.toBson(organisationId)),
+    collection.findOneAndUpdate(
+      equal("organisationId", Codecs.toBson(organisationId)),
       addToSet("collaborators", Codecs.toBson(collaborator)),
-      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER))
+      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+    )
       .toFuture
       .map(x => Right(x))
       .recover {
-        case e: Exception => logger.info("addCollaboratorToOrganisation failed:", e)
+        case e: Exception =>
+          logger.info("addCollaboratorToOrganisation failed:", e)
           Left(new Exception(s"Failed add collaborator to Organisation with organisationId ${organisationId.value} - ${e.getMessage}"))
       }
   }
+
   def addCollaboratorByVendorId(vendorId: VendorId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
-    collection.findOneAndUpdate(equal("vendorId", Codecs.toBson(vendorId)),
+    collection.findOneAndUpdate(
+      equal("vendorId", Codecs.toBson(vendorId)),
       addToSet("collaborators", Codecs.toBson(collaborator)),
-      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER))
+      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+    )
       .toFuture
       .map(x => Right(x))
       .recover {
-        case e: Exception => logger.info("addCollaboratorByVendorId failed:", e)
+        case e: Exception =>
+          logger.info("addCollaboratorByVendorId failed:", e)
           Left(new Exception(s"Failed add collaborator to Organisation with vendorId ${vendorId} - ${e.getMessage}"))
       }
   }
-
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
     val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)), equal("vendorId", Codecs.toBson(organisation.vendorId)))
@@ -138,7 +144,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     ).toFuture
       .map(x => Right(x))
       .recover {
-        case e: Exception => logger.info("createOrUpdate failed:", e)
+        case e: Exception =>
+          logger.info("createOrUpdate failed:", e)
           Left(new Exception(s"Failed to create or update Organisation with name ${organisation.name.value} - ${e.getMessage}"))
       }
   }
@@ -150,7 +157,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
         case Some(organisation: Organisation) => UpdateOrganisationSuccessResult(organisation)
         case _                                => UpdateOrganisationFailedResult()
       }.recover {
-        case e: Exception => logger.info("UpdateOrganisationFailed:", e)
+        case e: Exception =>
+          logger.info("UpdateOrganisationFailed:", e)
           UpdateOrganisationFailedResult()
       }
 

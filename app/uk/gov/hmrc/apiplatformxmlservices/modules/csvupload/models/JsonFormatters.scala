@@ -19,11 +19,10 @@ package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
-trait CSVJsonFormats extends CommonJsonFormatters{
-
+trait CSVJsonFormats extends CommonJsonFormatters {
 
   implicit val formatBulkUploadOrganisationsRequest = Json.format[BulkUploadOrganisationsRequest]
 
-  implicit val formatParsedUser = Json.format[ParsedUser]
+  implicit val formatParsedUser          = Json.format[ParsedUser]
   implicit val formatBulkAddUsersRequest = Json.format[BulkAddUsersRequest]
 }

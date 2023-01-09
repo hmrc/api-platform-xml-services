@@ -16,7 +16,4 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models.common
 
-
-
 case class ServiceName(value: String) extends AnyVal
-

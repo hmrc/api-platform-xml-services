@@ -64,13 +64,12 @@ package object binders {
         textBinder.unbind(key, vendorId.value.toString)
       }
     }
-    
+
   private def categoryFromString(category: String): Either[String, ApiCategory] = {
     ApiCategory.withNameEither(category.toUpperCase)
       .toOption
       .toRight(s"Unable to bind category $category")
   }
-
 
   implicit def categoryQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ApiCategory] =
     new QueryStringBindable[ApiCategory] {
@@ -78,7 +77,7 @@ package object binders {
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ApiCategory]] = {
         textBinder.bind(key, params).map {
           case Right(category) => categoryFromString(category)
-          case _ => Left("Unable to bind category")
+          case _               => Left("Unable to bind category")
         }
       }
 
@@ -87,7 +86,7 @@ package object binders {
       }
 
     }
-  
+
   private def userIdFromString(text: String): Either[String, UserId] = {
     Try(UUID.fromString(text))
       .toOption

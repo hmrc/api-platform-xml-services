@@ -27,34 +27,33 @@ import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatt
 trait ThirdPartyDeveloperStub {
   val createOrGetUserIdUrl = "/developers/user-id"
 
-def stubCreateOrGetUserIdReturnsResponse(email: String, responseBodyAsString: String) ={
+  def stubCreateOrGetUserIdReturnsResponse(email: String, responseBodyAsString: String) = {
     val requestAsString = Json.toJson(GetOrCreateUserIdRequest(email)).toString
-  
+
     stubPostWithRequestBody("/developers/user-id", OK, requestAsString, responseBodyAsString)
-}
+  }
 
-
-def stubCreateOrGetUserIdReturnsNoResponse(email: String, status: Int) ={
+  def stubCreateOrGetUserIdReturnsNoResponse(email: String, status: Int) = {
     val requestAsString = Json.toJson(GetOrCreateUserIdRequest(email)).toString
-  
+
     stubPostWithRequestBodyNoResponse("/developers/user-id", status, requestAsString)
-}
+  }
 
-def stubGetByEmailsReturnsResponse(emails: List[String], responseAsString: String) ={
+  def stubGetByEmailsReturnsResponse(emails: List[String], responseAsString: String) = {
     val requestAsString = Json.toJson(emails).toString()
 
-     stubPostWithRequestBody("/developers/get-by-emails", OK, requestAsString, responseAsString)
-}
+    stubPostWithRequestBody("/developers/get-by-emails", OK, requestAsString, responseAsString)
+  }
 
-def stubGetByEmailsReturnsNoResponse(emails: List[String], status: Int) ={
+  def stubGetByEmailsReturnsNoResponse(emails: List[String], status: Int) = {
     val requestAsString = Json.toJson(emails).toString()
 
-     stubPostWithRequestBodyNoResponse("/developers/get-by-emails", status, requestAsString)
-}
+    stubPostWithRequestBodyNoResponse("/developers/get-by-emails", status, requestAsString)
+  }
 
-def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: String, userId: UserId, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) ={
+  def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: String, userId: UserId, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) = {
     val createXmlUserRequestObj = ImportUserRequest(email, firstName, lastName, emailPreferences)
-    val requestAsString = Json.toJson(createXmlUserRequestObj).toString
+    val requestAsString         = Json.toJson(createXmlUserRequestObj).toString
 
     val userResponse = UserResponse(
       email = email,
@@ -67,43 +66,39 @@ def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: St
 
     stubPostWithRequestBody("/import-user", status, requestAsString, Json.toJson(userResponse).toString())
 
-}
+  }
 
-def stubCreateVerifiedUserEmptyResponse(email: String, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) ={
+  def stubCreateVerifiedUserEmptyResponse(email: String, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) = {
     val importUserRequestObj = ImportUserRequest(email, firstName, lastName, emailPreferences)
-    val requestAsString = Json.toJson(importUserRequestObj).toString
-
+    val requestAsString      = Json.toJson(importUserRequestObj).toString
 
     stubPostWithRequestBodyNoResponse("/import-user", status, requestAsString)
 
-}
+  }
 
- private def stubPostWithRequestBody(url: String, status: Int, expectedRequestBody: String, responseBodyAsString: String) = {
-      stubFor(
-        post(urlEqualTo(url))
-          .withRequestBody(equalTo(expectedRequestBody))
-          .willReturn(
-            aResponse()
-              .withStatus(status)
-              .withBody(responseBodyAsString)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
-    }
+  private def stubPostWithRequestBody(url: String, status: Int, expectedRequestBody: String, responseBodyAsString: String) = {
+    stubFor(
+      post(urlEqualTo(url))
+        .withRequestBody(equalTo(expectedRequestBody))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBodyAsString)
+            .withHeader("Content-Type", "application/json")
+        )
+    )
+  }
 
-
-     private def stubPostWithRequestBodyNoResponse(url: String, status: Int, expectedRequestBody: String) = {
-      stubFor(
-        post(urlEqualTo(url))
-          .withRequestBody(equalTo(expectedRequestBody))
-          .willReturn(
-            aResponse()
-              .withStatus(status)
-              .withHeader("Content-Type", "application/json")
-          )
-      )
-    }
-
-
+  private def stubPostWithRequestBodyNoResponse(url: String, status: Int, expectedRequestBody: String) = {
+    stubFor(
+      post(urlEqualTo(url))
+        .withRequestBody(equalTo(expectedRequestBody))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json")
+        )
+    )
+  }
 
 }

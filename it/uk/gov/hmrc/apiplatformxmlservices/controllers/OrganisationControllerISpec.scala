@@ -33,7 +33,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
 
-class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] with JsonFormatters {
+class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with MongoApp[Organisation] with JsonFormatters {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
@@ -47,15 +47,15 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
-        "organisation.vendorId.startingValue" -> 9000,
-        "microservice.services.auth.port" -> wireMockPort,
-        "metrics.enabled" -> true,
-        "auditing.enabled" -> false,
-        "auditing.consumer.baseUri.host" -> wireMockHost,
-        "auditing.consumer.baseUri.port" -> wireMockPort,
+        "organisation.vendorId.startingValue"              -> 9000,
+        "microservice.services.auth.port"                  -> wireMockPort,
+        "metrics.enabled"                                  -> true,
+        "auditing.enabled"                                 -> false,
+        "auditing.consumer.baseUri.host"                   -> wireMockHost,
+        "auditing.consumer.baseUri.port"                   -> wireMockPort,
         "microservice.services.third-party-developer.host" -> wireMockHost,
         "microservice.services.third-party-developer.port" -> wireMockPort,
-        "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
+        "mongodb.uri"                                      -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
   val url = s"http://localhost:$port/api-platform-xml-services"
@@ -101,29 +101,29 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
     val userId: UserId = UserId(getUuid())
 
-    val email = "foo@bar.com"
-    val firstName = "bob"
-    val lastName = "hope"
-    val gatekeeperUserId = "John Doe"
-    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
+    val email                         = "foo@bar.com"
+    val firstName                     = "bob"
+    val lastName                      = "hope"
+    val gatekeeperUserId              = "John Doe"
+    val organisation                  = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
     val organisationWithCollaborators = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
-    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
-    val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email, firstName, lastName)
-    val addCollaboratorRequest = AddCollaboratorRequest(email, firstName, lastName)
-    val removeCollaboratorRequest = RemoveCollaboratorRequest(email, gatekeeperUserId)
-    val organisationIdValue = organisation.organisationId.value
-    val vendorIdValue = organisation.vendorId.value
-    val orgAsJsonString = Json.toJson(organisation).toString
+    val organisation2                 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
+    val updatedOrgWithDuplicate       = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
+    val createOrganisationRequest     = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email, firstName, lastName)
+    val addCollaboratorRequest        = AddCollaboratorRequest(email, firstName, lastName)
+    val removeCollaboratorRequest     = RemoveCollaboratorRequest(email, gatekeeperUserId)
+    val organisationIdValue           = organisation.organisationId.value
+    val vendorIdValue                 = organisation.vendorId.value
+    val orgAsJsonString               = Json.toJson(organisation).toString
 
-    val invalidOrgString =
+    val invalidOrgString                  =
       """{
         |    "organisationId": "dd5bda96-46da-11ec-81d3-0242ac130003",
         |    "vendorId": INVALID_VENDOR_ID,
         |    "name": "Organisation Name 3"
         |}""".stripMargin
     val createOrganisationRequestAsString = Json.toJson(createOrganisationRequest).toString
-    val addCollaboratorRequestAsString = Json.toJson(addCollaboratorRequest).toString
+    val addCollaboratorRequestAsString    = Json.toJson(addCollaboratorRequest).toString
     val removeCollaboratorRequestAsString = Json.toJson(removeCollaboratorRequest).toString
 
     def stubThirdPartyDeveloperConnectorWithoutBody(status: Int) = {
@@ -138,7 +138,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       )
     }
 
-    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: String, firstName: String, lastName: String,  status: Int) = {
+    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: String, firstName: String, lastName: String, status: Int) = {
       stubFor(
         post(urlEqualTo("/import-user"))
           .willReturn(

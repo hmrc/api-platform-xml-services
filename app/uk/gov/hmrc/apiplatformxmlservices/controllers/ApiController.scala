@@ -41,14 +41,14 @@ class ApiController @Inject() (xmlService: XmlApiService, cc: ControllerComponen
   def getApi(name: String): Action[AnyContent] = Action.async {
     xmlService.getUnfilteredApis().find(_.name == name) match {
       case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
-      case _ => Future.successful(NotFound(s"XML API with name $name not found."))
+      case _            => Future.successful(NotFound(s"XML API with name $name not found."))
     }
   }
 
   def getApiByServiceName(serviceName: ServiceName): Action[AnyContent] = Action.async {
     xmlService.getUnfilteredApis.find(_.serviceName == serviceName) match {
       case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
-      case _ => Future.successful(NotFound(s"XML API with serviceName $serviceName not found."))
+      case _            => Future.successful(NotFound(s"XML API with serviceName $serviceName not found."))
     }
   }
 }

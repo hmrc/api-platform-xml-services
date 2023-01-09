@@ -27,7 +27,13 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, GetOrCreateUserFailedResult, GetOrganisationFailedResult, OrganisationAlreadyHasCollaboratorResult, UpdateCollaboratorFailedResult}
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{
+  AddCollaboratorRequest,
+  GetOrCreateUserFailedResult,
+  GetOrganisationFailedResult,
+  OrganisationAlreadyHasCollaboratorResult,
+  UpdateCollaboratorFailedResult
+}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{BulkUploadOrganisationsRequest, CSVJsonFormats}
 import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
@@ -37,7 +43,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSugar
-  with GuiceOneAppPerSuite with BeforeAndAfterEach with JsonFormatters with CSVJsonFormats {
+    with GuiceOneAppPerSuite with BeforeAndAfterEach with JsonFormatters with CSVJsonFormats {
 
   private val mockTeamMemberService = mock[TeamMemberService]
 
@@ -52,11 +58,11 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
   }
 
   trait Setup {
-    val firstName = "bob"
-    val lastName = "hope"
+    val firstName                 = "bob"
+    val lastName                  = "hope"
     val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"), "some@email.com", firstName, lastName)
 
-    val fakeRequest = FakeRequest("GET", "/organisations")
+    val fakeRequest   = FakeRequest("GET", "/organisations")
     val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
     val jsonMediaType = "application/json"
@@ -64,15 +70,15 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
     def getUuid() = UUID.randomUUID()
 
     val organisationId = OrganisationId(getUuid)
-    val organisation = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId = UserId(UUID.randomUUID())
-    val email = "foo@bar.com"
+    val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
+    val userId         = UserId(UUID.randomUUID())
+    val email          = "foo@bar.com"
 
-    val coreUserDetail = CoreUserDetail(userId, email)
-    val addCollaboratorRequestObj = AddCollaboratorRequest(email, firstName, lastName)
-    val updatedOrganisationName = OrganisationName("updated name")
+    val coreUserDetail                      = CoreUserDetail(userId, email)
+    val addCollaboratorRequestObj           = AddCollaboratorRequest(email, firstName, lastName)
+    val updatedOrganisationName             = OrganisationName("updated name")
     val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrganisationName)
-    val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
+    val organisationWithCollaborator        = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
 
     val addCollaboratorRequest =
       FakeRequest("POST", s"/organisations/${organisation.organisationId.value.toString}/collaborator").withBody(Json.toJson(addCollaboratorRequestObj))
@@ -80,8 +86,8 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
     val updateOrganisationDetailsRequest =
       FakeRequest("POST", s"/organisations/${organisationId.value.toString}").withBody(Json.toJson(updateOrganisationDetailsRequestObj))
 
-    val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-    val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+    val orgOne                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+    val orgTwo                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
     val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
@@ -138,7 +144,7 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
 
     "getOrganisationUserByOrganisationId" should {
       "return 200 with list of users when service returns a list" in new Setup {
-        val organisationUser = OrganisationUser(organisationId, userId , email, firstName , lastName , List.empty)
+        val organisationUser = OrganisationUser(organisationId, userId, email, firstName, lastName, List.empty)
         when(mockTeamMemberService.getOrganisationUserByOrganisationId(eqTo(organisationId))(*)).thenReturn(Future.successful(List(organisationUser)))
 
         val result: Future[Result] = controller.getOrganisationUserByOrganisationId(organisationId)(fakeRequest)
@@ -148,6 +154,5 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
       }
     }
   }
-
 
 }

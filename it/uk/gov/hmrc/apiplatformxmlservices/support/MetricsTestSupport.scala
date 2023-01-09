@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.support
 
-
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Suite
 import play.api.Application
@@ -30,11 +29,12 @@ trait MetricsTestSupport {
 
   def givenCleanMetricRegistry(): Unit = {
     val registry = app.injector.instanceOf[Metrics].defaultRegistry
-    for (metric <- JavaConverters
-      .asScalaIterator[String](registry.getMetrics.keySet().iterator())) {
+    for (
+      metric <- JavaConverters
+                  .asScalaIterator[String](registry.getMetrics.keySet().iterator())
+    ) {
       registry.remove(metric)
     }
   }
-
 
 }

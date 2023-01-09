@@ -24,16 +24,14 @@ case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
 
 case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
 
-
 sealed trait CreateOrganisationResult
 case class CreateOrganisationSuccessResult(organisation: Organisation) extends CreateOrganisationResult
-case class CreateOrganisationFailedResult(message: String) extends CreateOrganisationResult
-case class CreateOrganisationFailedDuplicateIdResult(message: String) extends CreateOrganisationResult
-
+case class CreateOrganisationFailedResult(message: String)             extends CreateOrganisationResult
+case class CreateOrganisationFailedDuplicateIdResult(message: String)  extends CreateOrganisationResult
 
 sealed trait UpdateOrganisationResult
 case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
-case class UpdateOrganisationFailedResult() extends UpdateOrganisationResult
+case class UpdateOrganisationFailedResult()                            extends UpdateOrganisationResult
 
 case class ErrorResponseMessage(message: String)
 
@@ -46,4 +44,3 @@ case class ErrorResponse(errors: List[ErrorResponseMessage])
 object ErrorResponse {
   implicit val formatErrorResponse = Json.format[ErrorResponse]
 }
-

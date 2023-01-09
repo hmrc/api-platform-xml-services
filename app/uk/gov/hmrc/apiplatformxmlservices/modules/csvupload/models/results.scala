@@ -18,24 +18,23 @@ package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models
 
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 
-
 sealed trait CreateVerifiedUserResult
 
 abstract class CreateVerifiedUserSuccessResult() extends CreateVerifiedUserResult {
   val userResponse: UserResponse
 }
 
-case class CreatedUserResult(userResponse: UserResponse) extends CreateVerifiedUserSuccessResult
+case class CreatedUserResult(userResponse: UserResponse)   extends CreateVerifiedUserSuccessResult
 case class RetrievedUserResult(userResponse: UserResponse) extends CreateVerifiedUserSuccessResult
 case class CreateVerifiedUserFailedResult(message: String) extends CreateVerifiedUserResult
 
-sealed trait ValidateUserResult{
+sealed trait ValidateUserResult {
   val message: String
 }
-case class ValidUserResult(message: String) extends ValidateUserResult
-case class InvalidVendorIdResult(message: String) extends ValidateUserResult
+case class ValidUserResult(message: String)          extends ValidateUserResult
+case class InvalidVendorIdResult(message: String)    extends ValidateUserResult
 case class InvalidServiceNameResult(message: String) extends ValidateUserResult
-case class MissingVendorIdResult(message: String) extends ValidateUserResult
+case class MissingVendorIdResult(message: String)    extends ValidateUserResult
 
 sealed trait UploadUserResult
 
@@ -45,10 +44,9 @@ abstract class UploadFailedResult() extends UploadUserResult {
 
 abstract class UploadSuccessResult() extends UploadUserResult
 
-case class UploadCreatedUserSuccessResult(rowNumber: Int, user: UserResponse) extends UploadSuccessResult
+case class UploadCreatedUserSuccessResult(rowNumber: Int, user: UserResponse)  extends UploadSuccessResult
 case class UploadExistingUserSuccessResult(rowNumber: Int, user: UserResponse) extends UploadSuccessResult
 
-case class InvalidUserResult(message: String) extends UploadFailedResult
-case class AddUserToOrgFailureResult(message: String) extends UploadFailedResult
+case class InvalidUserResult(message: String)           extends UploadFailedResult
+case class AddUserToOrgFailureResult(message: String)   extends UploadFailedResult
 case class CreateOrGetUserFailedResult(message: String) extends UploadFailedResult
-

@@ -40,7 +40,7 @@ import scala.concurrent.Future
 
 class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach with CSVJsonFormats {
 
-  private val mockOrgService = mock[OrganisationService]
+  private val mockOrgService   = mock[OrganisationService]
   private val mockUploadervice = mock[UploadService]
 
   private val controller = new CsvUploadController(
@@ -57,29 +57,29 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   trait Setup {
 
-    val jsonMediaType = "application/json"
-    def getUuid() = UUID.randomUUID()
+    val jsonMediaType  = "application/json"
+    def getUuid()      = UUID.randomUUID()
     val organisationId = OrganisationId(getUuid)
-    val organisation = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId = UserId(UUID.randomUUID())
-    val email = "foo@bar.com"
+    val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
+    val userId         = UserId(UUID.randomUUID())
+    val email          = "foo@bar.com"
     val coreUserDetail = CoreUserDetail(userId, email)
 
-    val updatedOrganisationName = OrganisationName("updated name")
+    val updatedOrganisationName             = OrganisationName("updated name")
     val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrganisationName)
-    val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
+    val organisationWithCollaborator        = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
 
-    val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-    val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+    val orgOne                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+    val orgTwo                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
     val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
       FakeRequest("POST", s"/csvupload/bulkorganisations").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
 
-    val emailOne = "foo@bar.com"
+    val emailOne  = "foo@bar.com"
     val firstName = "Joe"
-    val lastName = "Bloggs"
-    val services = List(ServiceName("service1"), ServiceName("service2"))
+    val lastName  = "Bloggs"
+    val services  = List(ServiceName("service1"), ServiceName("service2"))
     val vendorIds = List(VendorId(1))
 
     val parsedUser = ParsedUser(

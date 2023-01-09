@@ -20,16 +20,15 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
-
 object JsonFormatters extends CommonJsonFormatters {
 
-  implicit val formatUserId = Json.valueFormat[UserId]
+  implicit val formatUserId                   = Json.valueFormat[UserId]
   implicit val formatGetOrCreateUserIdRequest = Json.format[GetOrCreateUserIdRequest]
 
   implicit val formatUserIdResponse = Json.format[UserIdResponse]
 
-  implicit  val formatUserResponse = Json.format[UserResponse]
-  implicit  val formatImportUserRequest = Json.format[ImportUserRequest]
+  implicit val formatUserResponse      = Json.format[UserResponse]
+  implicit val formatImportUserRequest = Json.format[ImportUserRequest]
 
   implicit val formatCoreUserDetail = Json.format[CoreUserDetail]
 }

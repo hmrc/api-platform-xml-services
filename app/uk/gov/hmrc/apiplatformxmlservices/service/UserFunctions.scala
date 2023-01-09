@@ -30,25 +30,31 @@ import scala.concurrent.{ExecutionContext, Future}
 trait UserFunctions {
   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   val xmlApiService: XmlApiService
-  def handleGetOrCreateUser(email: String, firstName: String, lastName: String)
-                                   (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[GetOrCreateUserFailedResult, UserResponse]] = {
 
-    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(email, firstName, lastName, Map.empty)).map{
-        case x: CreateVerifiedUserSuccessResult => Right(x.userResponse)
-        case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
-      }
+  def handleGetOrCreateUser(
+      email: String,
+      firstName: String,
+      lastName: String
+    )(implicit hc: HeaderCarrier,
+      ec: ExecutionContext
+    ): Future[Either[GetOrCreateUserFailedResult, UserResponse]] = {
+
+    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(email, firstName, lastName, Map.empty)).map {
+      case x: CreateVerifiedUserSuccessResult    => Right(x.userResponse)
+      case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
+    }
 
   }
 
-  def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
+  def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser = {
     val stableApis = xmlApiService.getStableApis()
 
     val xmlServiceNames: Set[String] = stableApis.map(_.serviceName.value).toSet
 
     val stableXmlApisThatUserSelectedSpecifically = for {
       filteredInterests <- user.emailPreferences.interests.filter(_.services.intersect(xmlServiceNames).nonEmpty)
-      serviceName <- filteredInterests.services.intersect(xmlServiceNames)
-      xmlApi <- xmlApiService.getStableApiByServiceName(serviceName)
+      serviceName       <- filteredInterests.services.intersect(xmlServiceNames)
+      xmlApi            <- xmlApiService.getStableApiByServiceName(serviceName)
     } yield xmlApi
 
     val stableXmlApisWhereUserSelectedAllForCategory = user.emailPreferences.interests
@@ -57,6 +63,5 @@ trait UserFunctions {
     val combinedApis = stableXmlApisWhereUserSelectedAllForCategory ++ stableXmlApisThatUserSelectedSpecifically
     OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, combinedApis)
   }
-
 
 }

@@ -21,12 +21,9 @@ import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationName, Organisation
 
 trait CommonJsonFormatters {
 
-  implicit val formatServiceName = Json.valueFormat[ServiceName]
-  implicit val formatVendorId = Json.valueFormat[VendorId]
-  implicit val formatOrganisationName = Json.valueFormat[OrganisationName]
+  implicit val formatServiceName                     = Json.valueFormat[ServiceName]
+  implicit val formatVendorId                        = Json.valueFormat[VendorId]
+  implicit val formatOrganisationName                = Json.valueFormat[OrganisationName]
   implicit val formatOrganisationWithNameAndVendorId = Json.format[OrganisationWithNameAndVendorId]
 
-
 }
-
-

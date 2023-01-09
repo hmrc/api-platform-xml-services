@@ -24,16 +24,20 @@ import uk.gov.hmrc.apiplatformxmlservices.service.InternalXmlApi.internalToXmlAp
 import javax.inject.{Inject, Singleton}
 import scala.io.Source
 
-
-case class InternalXmlApi(name: String, serviceName: ServiceName, context: String,
-                          description: String, categories: Option[Seq[ApiCategory]] = None,
-                          status: ApiStatus = ApiStatus.STABLE)
+case class InternalXmlApi(
+    name: String,
+    serviceName: ServiceName,
+    context: String,
+    description: String,
+    categories: Option[Seq[ApiCategory]] = None,
+    status: ApiStatus = ApiStatus.STABLE
+  )
 
 object InternalXmlApi extends JsonFormatters {
 
- implicit val format = Json.format[InternalXmlApi]
+  implicit val format = Json.format[InternalXmlApi]
 
-  def internalToXmlApi(xmlApi: InternalXmlApi) : XmlApi = {
+  def internalToXmlApi(xmlApi: InternalXmlApi): XmlApi = {
     XmlApi(
       name = xmlApi.name,
       serviceName = xmlApi.serviceName,
@@ -45,11 +49,12 @@ object InternalXmlApi extends JsonFormatters {
 }
 
 @Singleton
-class XmlApiService @Inject()() {
+class XmlApiService @Inject() () {
+
   private def xmlApis: List[InternalXmlApi] =
     Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[InternalXmlApi]]
 
-  private def stableXmlApis:List[InternalXmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
+  private def stableXmlApis: List[InternalXmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
 
   def getUnfilteredApis(): List[XmlApi] = xmlApis.map(internalToXmlApi)
 
@@ -62,9 +67,9 @@ class XmlApiService @Inject()() {
   def getStableApisForCategories(categories: List[ApiCategory]): List[XmlApi] = {
     for {
       category <- categories
-      apis <- stableXmlApis.map(internalToXmlApi).filter(categoryFilter(_, category))
+      apis     <- stableXmlApis.map(internalToXmlApi).filter(categoryFilter(_, category))
     } yield apis
-   
+
   }
 
   def getStableApisByCategory(apiCategory: String): List[XmlApi] = {

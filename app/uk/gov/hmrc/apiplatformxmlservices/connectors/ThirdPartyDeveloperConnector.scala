@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.connectors
 
-
 import ThirdPartyDeveloperConnector.Config
 import uk.gov.hmrc.http.{HttpClient, _}
 
@@ -38,7 +37,8 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
         case Some(response) => Right(CoreUserDetail(response.userId, getOrCreateUserIdRequest.email))
         case _              => Left(new InternalServerException("Could not find or create user"))
       }.recover {
-        case NonFatal(e) => logger.error(e.getMessage)
+        case NonFatal(e) =>
+          logger.error(e.getMessage)
           Left(e)
       }
   }
@@ -46,18 +46,20 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
   def getByEmail(emails: List[String])(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
     http.POST[List[String], List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", emails)
       .map(x => Right(x)).recover {
-        case NonFatal(e) => logger.error(e.getMessage)
+        case NonFatal(e) =>
+          logger.error(e.getMessage)
           Left(e)
       }
   }
 
   def createVerifiedUser(request: ImportUserRequest)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
     http.POST[ImportUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/import-user", request)
-      .map { response => response.status match {
+      .map { response =>
+        response.status match {
           case CREATED => CreatedUserResult(response.json.as[UserResponse])
-          case OK => RetrievedUserResult(response.json.as[UserResponse])
-          case _ => CreateVerifiedUserFailedResult("Could not get or create user")
-         }
+          case OK      => RetrievedUserResult(response.json.as[UserResponse])
+          case _       => CreateVerifiedUserFailedResult("Could not get or create user")
+        }
       }.recover {
         case NonFatal(e) => CreateVerifiedUserFailedResult(e.getMessage)
       }

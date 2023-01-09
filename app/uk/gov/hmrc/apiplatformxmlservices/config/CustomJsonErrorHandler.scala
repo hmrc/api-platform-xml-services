@@ -29,18 +29,14 @@ import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class CustomJsonErrorHandler @Inject()(auditConnector: AuditConnector,
-                                       httpAuditEvent: HttpAuditEvent,
-                                       configuration: Configuration)
-                                      (implicit ec: ExecutionContext)
-  extends JsonErrorHandler(auditConnector, httpAuditEvent, configuration) {
-
+class CustomJsonErrorHandler @Inject() (auditConnector: AuditConnector, httpAuditEvent: HttpAuditEvent, configuration: Configuration)(implicit ec: ExecutionContext)
+    extends JsonErrorHandler(auditConnector, httpAuditEvent, configuration) {
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
     Future.successful {
       statusCode match {
-        case NOT_FOUND => NotFound(Json.toJson(ErrorResponse(List( ErrorResponseMessage(s"URI not found ${request.path}")))))
-        case _ => Status(statusCode)(Json.toJson(ErrorResponse(List(ErrorResponseMessage(message)))))
+        case NOT_FOUND => NotFound(Json.toJson(ErrorResponse(List(ErrorResponseMessage(s"URI not found ${request.path}")))))
+        case _         => Status(statusCode)(Json.toJson(ErrorResponse(List(ErrorResponseMessage(message)))))
       }
     }
 
