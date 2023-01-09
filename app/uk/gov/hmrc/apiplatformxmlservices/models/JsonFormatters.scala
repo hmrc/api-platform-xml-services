@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 

@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
+import javax.inject.{Inject, Singleton}
+import scala.io.Source
+
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.{ApiStatus, JsonFormatters, XmlApi}
 import uk.gov.hmrc.apiplatformxmlservices.service.InternalXmlApi.internalToXmlApi
-
-import javax.inject.{Inject, Singleton}
-import scala.io.Source
 
 case class InternalXmlApi(
     name: String,

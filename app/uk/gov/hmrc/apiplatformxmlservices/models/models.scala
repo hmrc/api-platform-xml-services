@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import enumeratum._
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-
 import java.{util => ju}
+
+import enumeratum._
+
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 sealed trait OrganisationSortBy extends EnumEntry
 

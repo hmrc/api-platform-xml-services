@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.models.common
 
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationName, OrganisationWithNameAndVendorId, VendorId}
 
 trait CommonJsonFormatters {

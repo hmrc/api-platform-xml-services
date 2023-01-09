@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models
 
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationWithNameAndVendorId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationWithNameAndVendorId, VendorId}
 
 case class ParsedUser(email: String, firstName: String, lastName: String, services: List[ServiceName], vendorIds: List[VendorId])
 case class BulkAddUsersRequest(users: Seq[ParsedUser])

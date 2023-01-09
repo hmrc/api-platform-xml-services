@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import cats.data.Validated._
 import cats.data.ValidatedNel
 import cats.implicits._
+
 import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
-
-import scala.concurrent.{ExecutionContext, Future}
 
 trait UploadValidation {
 

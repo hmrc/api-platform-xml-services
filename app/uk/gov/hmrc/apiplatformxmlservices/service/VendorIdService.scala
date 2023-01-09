@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class VendorIdService @Inject() (organisationRepository: OrganisationRepository, config: Config)(implicit val ec: ExecutionContext) {

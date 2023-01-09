@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 

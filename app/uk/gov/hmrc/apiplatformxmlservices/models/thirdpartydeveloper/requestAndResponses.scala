@@ -17,9 +17,11 @@
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+
 import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 case class GetOrCreateUserIdRequest(email: String)
 

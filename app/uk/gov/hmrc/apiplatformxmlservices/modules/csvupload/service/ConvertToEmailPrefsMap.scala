@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 import cats.implicits._
+
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 
 trait ConvertToEmailPrefsMap {
 

@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.connectors
 
-import ThirdPartyDeveloperConnector.Config
-import uk.gov.hmrc.http.{HttpClient, _}
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+
 import play.api.Logging
 import play.api.http.Status.{CREATED, OK}
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, GetOrCreateUserIdRequest, ImportUserRequest, UserIdResponse, UserResponse}
+import uk.gov.hmrc.http.{HttpClient, _}
+
+import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector.Config
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, GetOrCreateUserIdRequest, ImportUserRequest, UserIdResponse, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreatedUserResult, RetrievedUserResult}
 
 @Singleton

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models
 
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
 trait CSVJsonFormats extends CommonJsonFormatters {

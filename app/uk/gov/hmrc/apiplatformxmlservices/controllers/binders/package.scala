@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import play.api.mvc.{PathBindable, QueryStringBindable}
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, UserId, VendorId}
-
 import java.util.UUID
 import scala.util.Try
+
+import play.api.mvc.{PathBindable, QueryStringBindable}
+
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, UserId, VendorId}
 
 package object binders {
 

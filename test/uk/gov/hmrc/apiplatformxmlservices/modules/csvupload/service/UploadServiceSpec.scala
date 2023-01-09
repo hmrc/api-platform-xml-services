@@ -16,33 +16,25 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{GetOrganisationFailedResult, ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{
-  AddUserToOrgFailureResult,
-  CreateOrGetUserFailedResult,
-  CreateVerifiedUserFailedResult,
-  CreatedUserResult,
-  InvalidUserResult,
-  ParsedUser,
-  RetrievedUserResult,
-  UploadCreatedUserSuccessResult,
-  UploadExistingUserSuccessResult
-}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService, XmlApiService}
-import uk.gov.hmrc.http.HeaderCarrier
-
-import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
