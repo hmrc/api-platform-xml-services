@@ -69,7 +69,7 @@ class UploadService @Inject() (
 
   private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
     // scalastyle:off magic.number
-    Thread.sleep(300)  // artificial delay to reduce hammering third-party-developer
+    Thread.sleep(300) // artificial delay to reduce hammering third-party-developer
     // scalastyle:on magic.number
     createOrGetUser(parsedUser) flatMap {
       case result: CreateVerifiedUserSuccessResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
