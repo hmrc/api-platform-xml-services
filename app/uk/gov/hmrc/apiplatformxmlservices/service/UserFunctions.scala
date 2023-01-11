@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,45 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
-import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, XmlApi}
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult}
+import scala.concurrent.{ExecutionContext, Future}
+
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult}
 
 trait UserFunctions {
   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   val xmlApiService: XmlApiService
-  def handleGetOrCreateUser(email: String, firstName: String, lastName: String)
-                                   (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[GetOrCreateUserFailedResult, UserResponse]] = {
 
-    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(email, firstName, lastName, Map.empty)).map{
-        case x: CreateVerifiedUserSuccessResult => Right(x.userResponse)
-        case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
-      }
+  def handleGetOrCreateUser(
+      email: String,
+      firstName: String,
+      lastName: String
+    )(implicit hc: HeaderCarrier,
+      ec: ExecutionContext
+    ): Future[Either[GetOrCreateUserFailedResult, UserResponse]] = {
+
+    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(email, firstName, lastName, Map.empty)).map {
+      case x: CreateVerifiedUserSuccessResult    => Right(x.userResponse)
+      case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
+    }
 
   }
 
-  def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser ={
+  def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser = {
     val stableApis = xmlApiService.getStableApis()
 
     val xmlServiceNames: Set[String] = stableApis.map(_.serviceName.value).toSet
 
     val stableXmlApisThatUserSelectedSpecifically = for {
       filteredInterests <- user.emailPreferences.interests.filter(_.services.intersect(xmlServiceNames).nonEmpty)
-      serviceName <- filteredInterests.services.intersect(xmlServiceNames)
-      xmlApi <- xmlApiService.getStableApiByServiceName(serviceName)
+      serviceName       <- filteredInterests.services.intersect(xmlServiceNames)
+      xmlApi            <- xmlApiService.getStableApiByServiceName(serviceName)
     } yield xmlApi
 
     val stableXmlApisWhereUserSelectedAllForCategory = user.emailPreferences.interests
@@ -57,6 +63,5 @@ trait UserFunctions {
     val combinedApis = stableXmlApisWhereUserSelectedAllForCategory ++ stableXmlApisThatUserSelectedSpecifically
     OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, combinedApis)
   }
-
 
 }

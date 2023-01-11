@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +33,15 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
   }
 
   implicit def mat: akka.stream.Materializer = app.injector.instanceOf[akka.stream.Materializer]
+
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
         "microservice.services.auth.port" -> wireMockPort,
-        "metrics.enabled" -> true,
-        "auditing.enabled" -> false,
-        "auditing.consumer.baseUri.host" -> wireMockHost,
-        "auditing.consumer.baseUri.port" -> wireMockPort
+        "metrics.enabled"                 -> true,
+        "auditing.enabled"                -> false,
+        "auditing.consumer.baseUri.host"  -> wireMockHost,
+        "auditing.consumer.baseUri.port"  -> wireMockPort
       )
 
   val url = s"http://localhost:$port/api-platform-xml-services"
@@ -59,10 +60,10 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
     val xmlApiService = new XmlApiService
 
-    val stableApis = xmlApiService.getStableApis
-    val unfilteredApis = xmlApiService.getUnfilteredApis()
+    val stableApis                   = xmlApiService.getStableApis
+    val unfilteredApis               = xmlApiService.getUnfilteredApis()
     val employmentIntermediariesJson = Json.toJson(unfilteredApis.filter(_.serviceName.value == "employment-intermediaries").head).toString
-    val charitiesOnlineJson = Json.toJson(stableApis.filter(_.serviceName.value == "charities-online").head).toString
+    val charitiesOnlineJson          = Json.toJson(stableApis.filter(_.serviceName.value == "charities-online").head).toString
   }
 
   "ApiController" when {
@@ -85,7 +86,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     "GET /xml/apis/filtered" should {
 
       "respond with 200 and return APIs for selected category" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "PAYE"))
+        val result                     = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "PAYE"))
         result.status mustBe OK
         val expectedApis: List[XmlApi] = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.PAYE))
         result.body mustBe Json.toJson(expectedApis).toString
@@ -94,13 +95,13 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       "respond with 200 and return nothing when category is not found" in new Setup {
         val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "VAT"))
         result.status mustBe OK
-      
-        result.body mustBe  Json.toJson(List.empty[XmlApi]).toString
+
+        result.body mustBe Json.toJson(List.empty[XmlApi]).toString
       }
-      
+
       "respond with 400 when invalid category" in {
         val badCategory = "bad"
-        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> badCategory))
+        val result      = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> badCategory))
 
         result.status mustBe BAD_REQUEST
         val response = Json.parse(result.body).as[ErrorResponse]
@@ -110,7 +111,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     }
 
     "GET /xml/api/:name" should {
-      val stableApiName = "Charities Online"
+      val stableApiName  = "Charities Online"
       val retiredApiName = "Employment intermediaries"
 
       "respond with 200 and return the stable API" in new Setup {
@@ -132,7 +133,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     }
 
     "GET /xml/api?serviceName=charities-online" should {
-      val stableApiName = "charities-online"
+      val stableApiName         = "charities-online"
       val retiredApiServiceName = "employment-intermediaries"
 
       "respond with 200 and return the stable API" in new Setup {

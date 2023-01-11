@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import play.api.Application
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 
 abstract class ServerBaseISpec
-  extends BaseISpec with GuiceOneServerPerSuite with TestApplication with ScalaFutures with DefaultAwaitTimeout with FutureAwaits {
+    extends BaseISpec with GuiceOneServerPerSuite with TestApplication with ScalaFutures with DefaultAwaitTimeout with FutureAwaits {
 
   override implicit lazy val app: Application = appBuilder.build()
 

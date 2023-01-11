@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import play.api.mvc.{PathBindable, QueryStringBindable}
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, UserId, VendorId}
-
 import java.util.UUID
 import scala.util.Try
+
+import play.api.mvc.{PathBindable, QueryStringBindable}
+
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, UserId, VendorId}
 
 package object binders {
 
@@ -64,13 +65,12 @@ package object binders {
         textBinder.unbind(key, vendorId.value.toString)
       }
     }
-    
+
   private def categoryFromString(category: String): Either[String, ApiCategory] = {
     ApiCategory.withNameEither(category.toUpperCase)
       .toOption
       .toRight(s"Unable to bind category $category")
   }
-
 
   implicit def categoryQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ApiCategory] =
     new QueryStringBindable[ApiCategory] {
@@ -78,7 +78,7 @@ package object binders {
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ApiCategory]] = {
         textBinder.bind(key, params).map {
           case Right(category) => categoryFromString(category)
-          case _ => Left("Unable to bind category")
+          case _               => Left("Unable to bind category")
         }
       }
 
@@ -87,7 +87,7 @@ package object binders {
       }
 
     }
-  
+
   private def userIdFromString(text: String): Either[String, UserId] = {
     Try(UUID.fromString(text))
       .toOption
@@ -126,7 +126,7 @@ package object binders {
       }
     }
 
-  private def SortByFromString(text: String): Either[String, OrganisationSortBy] = {
+  private def sortByFromString(text: String): Either[String, OrganisationSortBy] = {
     Try(OrganisationSortBy.withName(text))
       .toOption
       .toRight(s"Cannot accept $text as OrganisationSortBy")
@@ -137,7 +137,7 @@ package object binders {
 
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, OrganisationSortBy]] = {
         textBinder.bind(key, params).map {
-          case Right(sortBy) => SortByFromString(sortBy)
+          case Right(sortBy) => sortByFromString(sortBy)
           case _             => Left("Unable to bind OrganisationSortBy")
         }
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
-import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 import cats.implicits._
+
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.ParsedUser
 
 trait ConvertToEmailPrefsMap {
 
@@ -31,8 +32,7 @@ trait ConvertToEmailPrefsMap {
       apis.map(api => {
         if (api.categories.getOrElse(List.empty).contains(category)) {
           Map(category -> List(api.serviceName))
-        }
-        else Map.empty[ApiCategory, List[ServiceName]]
+        } else Map.empty[ApiCategory, List[ServiceName]]
       })
     }
 
@@ -43,7 +43,7 @@ trait ConvertToEmailPrefsMap {
     def apiListToMap(filteredApis: List[XmlApi]): Map[ApiCategory, List[ServiceName]] = {
       val categoryMaps = for {
         distinctCategory <- distinctCategories
-        categoryMaps = generateCategoryMaps(distinctCategory, filteredApis)
+        categoryMaps      = generateCategoryMaps(distinctCategory, filteredApis)
       } yield categoryMaps
       combineMaps(categoryMaps.flatten)
     }

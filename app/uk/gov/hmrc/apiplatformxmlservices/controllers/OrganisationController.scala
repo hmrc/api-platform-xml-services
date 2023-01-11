@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
 @Singleton
 class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
@@ -37,31 +38,36 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.findByOrgId(organisationId) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(organisation))
-      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _                                => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
-  def findByParams(vendorId: Option[VendorId] = None, organisationName: Option[OrganisationName] = None, userId: Option[UserId] = None, sortBy: Option[OrganisationSortBy]): Action[AnyContent] = Action.async {
+  def findByParams(
+      vendorId: Option[VendorId] = None,
+      organisationName: Option[OrganisationName] = None,
+      userId: Option[UserId] = None,
+      sortBy: Option[OrganisationSortBy]
+    ): Action[AnyContent] = Action.async {
     request =>
       (vendorId, organisationName, userId) match {
         case (Some(v: VendorId), None, None)               => handleFindOrganisationByVendorId(v)
         case (None, Some(orgName: OrganisationName), None) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))
-        case (None, None, Some(usrId: UserId)) => organisationService.findByUserId(usrId).map(x => Ok(Json.toJson(x)))
-        case _                                       => organisationService.findAll(sortBy).map(x => Ok(Json.toJson(x)))
+        case (None, None, Some(usrId: UserId))             => organisationService.findByUserId(usrId).map(x => Ok(Json.toJson(x)))
+        case _                                             => organisationService.findAll(sortBy).map(x => Ok(Json.toJson(x)))
       }
   }
 
   private def handleFindOrganisationByVendorId(v: VendorId) = {
     organisationService.findByVendorId(v) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(Seq(organisation)))
-      case _ => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
+      case _                                => NotFound(s"XML Organisation with vendorId ${v.value} not found.")
     }
   }
 
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
-      case _ => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _    => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
     }
   }
 
@@ -70,9 +76,9 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       if (createOrganisationRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not create Organisation with empty name"))
       else organisationService.create(createOrganisationRequest).map {
         case CreateOrganisationSuccessResult(organisation: Organisation) => Created(Json.toJson(organisation))
-        case _: CreateOrganisationFailedDuplicateIdResult =>
+        case _: CreateOrganisationFailedDuplicateIdResult                =>
           Conflict(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - Duplicate ID")
-        case e: CreateOrganisationFailedResult =>
+        case e: CreateOrganisationFailedResult                           =>
           BadRequest(s"Could not create Organisation with name ${createOrganisationRequest.organisationName} - ${e.message}")
       }
     }
@@ -82,7 +88,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     withJsonBody[Organisation] { organisation =>
       organisationService.update(organisation).map {
         case Right(_) => Ok(Json.toJson(organisation))
-        case _ => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
+        case _        => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
       }
     }
   }
@@ -92,7 +98,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       if (organisationDetailsRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not update Organisation with empty name"))
       else organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName).map {
         case UpdateOrganisationSuccessResult(organisation: Organisation) => Ok(Json.toJson(organisation))
-        case _: UpdateOrganisationFailedResult => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
+        case _: UpdateOrganisationFailedResult                           => InternalServerError(s"Unable to update details for organisation: ${organisationId.value}")
       }
     }
   }

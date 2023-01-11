@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,33 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.controllers
 
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.http.InternalServerException
+
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, EmailPreferences, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service.UploadService
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
-import uk.gov.hmrc.http.InternalServerException
-
-import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach with CSVJsonFormats {
 
-  private val mockOrgService = mock[OrganisationService]
+  private val mockOrgService   = mock[OrganisationService]
   private val mockUploadervice = mock[UploadService]
 
   private val controller = new CsvUploadController(
@@ -57,29 +59,29 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   trait Setup {
 
-    val jsonMediaType = "application/json"
-    def getUuid() = UUID.randomUUID()
+    val jsonMediaType  = "application/json"
+    def getUuid()      = UUID.randomUUID()
     val organisationId = OrganisationId(getUuid)
-    val organisation = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId = UserId(UUID.randomUUID())
-    val email = "foo@bar.com"
+    val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
+    val userId         = UserId(UUID.randomUUID())
+    val email          = "foo@bar.com"
     val coreUserDetail = CoreUserDetail(userId, email)
 
-    val updatedOrganisationName = OrganisationName("updated name")
+    val updatedOrganisationName             = OrganisationName("updated name")
     val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrganisationName)
-    val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
+    val organisationWithCollaborator        = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
 
-    val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-    val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+    val orgOne                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+    val orgTwo                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
     val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
       FakeRequest("POST", s"/csvupload/bulkorganisations").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
 
-    val emailOne = "foo@bar.com"
+    val emailOne  = "foo@bar.com"
     val firstName = "Joe"
-    val lastName = "Bloggs"
-    val services = List(ServiceName("service1"), ServiceName("service2"))
+    val lastName  = "Bloggs"
+    val services  = List(ServiceName("service1"), ServiceName("service2"))
     val vendorIds = List(VendorId(1))
 
     val parsedUser = ParsedUser(

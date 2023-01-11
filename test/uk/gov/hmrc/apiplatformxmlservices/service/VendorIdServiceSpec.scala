@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,25 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, VendorId}
+
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import java.util.UUID
-import scala.concurrent.Future
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationName
 
 class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
   val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
-  val mockConfig: Config = mock[Config]
+  val mockConfig: Config                           = mock[Config]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -47,12 +48,12 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
     val configStartingVendorIdValue = 9000
     when(mockConfig.startingVendorId).thenReturn(configStartingVendorIdValue)
 
-    val configStartingVendorId = VendorId(configStartingVendorIdValue)
-    val vendorId9001 = VendorId(9001)
-    val vendorId4001 = VendorId(4001)
-    val uuid = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
-    val organisationWithStartingVendorId = Organisation(organisationId = OrganisationId(uuid), vendorId = configStartingVendorId, name =  OrganisationName("Organisation Name"))
-    val organisationWithVendorId4001 = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId4001, name =  OrganisationName("Organisation Name"))
+    val configStartingVendorId           = VendorId(configStartingVendorIdValue)
+    val vendorId9001                     = VendorId(9001)
+    val vendorId4001                     = VendorId(4001)
+    val uuid                             = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
+    val organisationWithStartingVendorId = Organisation(organisationId = OrganisationId(uuid), vendorId = configStartingVendorId, name = OrganisationName("Organisation Name"))
+    val organisationWithVendorId4001     = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
 
   }
 

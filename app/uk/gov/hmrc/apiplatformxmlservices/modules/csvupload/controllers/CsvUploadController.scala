@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,30 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.controllers
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service.UploadService
-import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
+import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service.UploadService
+import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
 @Singleton
 class CsvUploadController @Inject() (
     organisationService: OrganisationService,
     uploadService: UploadService,
     cc: ControllerComponents
-  )(implicit val ec: ExecutionContext)
-    extends BackendController(cc)
+  )(implicit val ec: ExecutionContext
+  ) extends BackendController(cc)
     with WithJsonBody
-      with CSVJsonFormats
+    with CSVJsonFormats
     with Logging {
 
   def bulkUploadUsers(): Action[JsValue] = Action.async(parse.tolerantJson) {
@@ -49,24 +50,24 @@ class CsvUploadController @Inject() (
       }
   }
 
-
-
   private def handleUploadUsers(bulkAddUsersRequest: BulkAddUsersRequest)(implicit hc: HeaderCarrier) = {
 
-    def printErrors(results: List[UploadUserResult]) ={
-       val errors = results.flatMap(x => x match {
-         case e: UploadFailedResult => Some(e.message)
-         case _ => None
-       })
-        errors.map(logger.error(_))
+    def printErrors(results: List[UploadUserResult]) = {
+      val errors = results.flatMap(x =>
+        x match {
+          case e: UploadFailedResult => Some(e.message)
+          case _                     => None
+        }
+      )
+      errors.map(logger.error(_))
     }
-    val usersToUpload = bulkAddUsersRequest.users.toList
+    val usersToUpload                                = bulkAddUsersRequest.users.toList
     uploadService.uploadUsers(usersToUpload) map {
       results =>
-          val successful = results.count(x => x.isInstanceOf[UploadSuccessResult])
-          val created = results.count(x => x.isInstanceOf[UploadCreatedUserSuccessResult])
-          val retrieved = results.count(x => x.isInstanceOf[UploadExistingUserSuccessResult])
-          val failure =  results.count(x => x.isInstanceOf[UploadFailedResult])
+        val successful = results.count(x => x.isInstanceOf[UploadSuccessResult])
+        val created    = results.count(x => x.isInstanceOf[UploadCreatedUserSuccessResult])
+        val retrieved  = results.count(x => x.isInstanceOf[UploadExistingUserSuccessResult])
+        val failure    = results.count(x => x.isInstanceOf[UploadFailedResult])
 
         printErrors(results)
         logger.warn(s"Expected to upload ${usersToUpload.size} users. Successfully uploaded $successful; of which $created were created and $retrieved were retrieved. Number of users failed to upload: $failure")

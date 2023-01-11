@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
 import play.api.libs.json._
+
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
-object MongoFormatters extends CommonJsonFormatters{
+object MongoFormatters extends CommonJsonFormatters {
 
   implicit val organisationIdFormats: Format[OrganisationId] = Json.valueFormat[OrganisationId]
-  implicit val userIdFormats: Format[UserId] = Json.valueFormat[UserId]
-  implicit val collaboratorFormats: OFormat[Collaborator] = Json.format[Collaborator]
-  implicit val organisationFormats: OFormat[Organisation] = Json.format[Organisation]
+  implicit val userIdFormats: Format[UserId]                 = Json.valueFormat[UserId]
+  implicit val collaboratorFormats: OFormat[Collaborator]    = Json.format[Collaborator]
+  implicit val organisationFormats: OFormat[Organisation]    = Json.format[Organisation]
 }

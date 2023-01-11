@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,11 @@ package uk.gov.hmrc.apiplatformxmlservices.models.collaborators
 case class AddCollaboratorRequest(email: String, firstName: String, lastName: String)
 case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
 
-
-sealed trait ManageCollaboratorResult{
-    val message: String
+sealed trait ManageCollaboratorResult {
+  val message: String
 }
 case class OrganisationAlreadyHasCollaboratorResult(message: String) extends ManageCollaboratorResult
-case class GetOrganisationFailedResult(message: String) extends ManageCollaboratorResult
-case class GetOrCreateUserFailedResult(message: String) extends ManageCollaboratorResult
-case class UpdateCollaboratorFailedResult(message: String) extends ManageCollaboratorResult
-case class ValidateCollaboratorFailureResult(message: String) extends ManageCollaboratorResult
-
-
-
-
-
-
+case class GetOrganisationFailedResult(message: String)              extends ManageCollaboratorResult
+case class GetOrCreateUserFailedResult(message: String)              extends ManageCollaboratorResult
+case class UpdateCollaboratorFailedResult(message: String)           extends ManageCollaboratorResult
+case class ValidateCollaboratorFailureResult(message: String)        extends ManageCollaboratorResult

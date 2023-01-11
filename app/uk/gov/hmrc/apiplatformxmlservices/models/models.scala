@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import enumeratum._
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-
 import java.{util => ju}
 
+import enumeratum._
+
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 sealed trait OrganisationSortBy extends EnumEntry
 
@@ -28,7 +28,7 @@ object OrganisationSortBy extends Enum[OrganisationSortBy] {
 
   val values = findValues
 
-  case object VENDOR_ID extends OrganisationSortBy
+  case object VENDOR_ID         extends OrganisationSortBy
   case object ORGANISATION_NAME extends OrganisationSortBy
 
 }
@@ -39,17 +39,16 @@ object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
 
   val values = findValues
 
-  case object STABLE extends ApiStatus
+  case object STABLE  extends ApiStatus
   case object RETIRED extends ApiStatus
 
 }
 
-case class XmlApi(name: String, serviceName: ServiceName, context: String, description: String,
-                  categories: Option[Seq[ApiCategory]] = None)
+case class XmlApi(name: String, serviceName: ServiceName, context: String, description: String, categories: Option[Seq[ApiCategory]] = None)
 
 case class UserId(value: ju.UUID)
 
-case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName:String, lastName: String, xmlApis: List[XmlApi])
+case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName: String, lastName: String, xmlApis: List[XmlApi])
 
 case class OrganisationId(value: ju.UUID) extends AnyVal
 
@@ -59,4 +58,10 @@ case class OrganisationName(value: String) extends AnyVal
 
 case class Collaborator(userId: UserId, email: String)
 
-case class Organisation(organisationId: OrganisationId, vendorId: VendorId, name: OrganisationName, collaborators: List[Collaborator] = List.empty, services: List[ServiceName] =List.empty)
+case class Organisation(
+    organisationId: OrganisationId,
+    vendorId: VendorId,
+    name: OrganisationName,
+    collaborators: List[Collaborator] = List.empty,
+    services: List[ServiceName] = List.empty
+  )

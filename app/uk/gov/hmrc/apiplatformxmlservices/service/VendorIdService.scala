@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,29 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-
 @Singleton
-class VendorIdService @Inject()(organisationRepository: OrganisationRepository,
-                                config: Config)(implicit val ec: ExecutionContext) {
+class VendorIdService @Inject() (organisationRepository: OrganisationRepository, config: Config)(implicit val ec: ExecutionContext) {
 
   def getNextVendorId(): Future[Either[Throwable, VendorId]] = {
 
     organisationRepository.findOrgWithMaxVendorId().map {
-          mayBeOrganisation =>
-            mayBeOrganisation
-              .fold(Right(VendorId(config.startingVendorId)))(x=> Right(calculateNextVendorId(x.vendorId)))
-    }.recover{
+      mayBeOrganisation =>
+        mayBeOrganisation
+          .fold(Right(VendorId(config.startingVendorId)))(x => Right(calculateNextVendorId(x.vendorId)))
+    }.recover {
       case e: Exception => Left(e)
     }
   }
 
-  private def calculateNextVendorId(maxVendorId: VendorId) : VendorId = {
-    if(maxVendorId.value < config.startingVendorId) VendorId(config.startingVendorId)
+  private def calculateNextVendorId(maxVendorId: VendorId): VendorId = {
+    if (maxVendorId.value < config.startingVendorId) VendorId(config.startingVendorId)
     else VendorId(maxVendorId.value + 1)
   }
 }
@@ -47,6 +46,3 @@ class VendorIdService @Inject()(organisationRepository: OrganisationRepository,
 object VendorIdService {
   case class Config(startingVendorId: Long)
 }
-
-
-

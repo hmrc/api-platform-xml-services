@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,9 +57,9 @@ class OrganisationRepositoryISpec
     new GuiceApplicationBuilder()
       .configure("mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}")
 
-  override implicit lazy val app: Application = appBuilder.build()
+  override implicit lazy val app: Application         = appBuilder.build()
   val caseInsensitiveOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)
-  val vendorIdOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.vendorId.value.compareTo(y.vendorId.value)
+  val vendorIdOrdering: Ordering[Organisation]        = (x: Organisation, y: Organisation) => x.vendorId.value.compareTo(y.vendorId.value)
 
   def repo: OrganisationRepository = app.injector.instanceOf[OrganisationRepository]
 
@@ -70,18 +70,18 @@ class OrganisationRepositoryISpec
   }
 
   trait Setup {
-    def getUuid() = UUID.randomUUID()
-    val userIdOne = UserId(getUuid())
-    val userIdTwo = UserId(getUuid())
+    def getUuid()   = UUID.randomUUID()
+    val userIdOne   = UserId(getUuid())
+    val userIdTwo   = UserId(getUuid())
     val userIdThree = UserId(getUuid())
 
-    val collaboratorOne = Collaborator(userIdOne, email = "test@collaborators.com")
-    val collaboratorTwo = collaboratorOne.copy(userId = userIdTwo)
+    val collaboratorOne   = Collaborator(userIdOne, email = "test@collaborators.com")
+    val collaboratorTwo   = collaboratorOne.copy(userId = userIdTwo)
     val collaboratorThree = collaboratorOne.copy(userId = userIdThree)
 
-    val organisationToPersist = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = OrganisationName(" Organisation Name "))
+    val organisationToPersist       = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = OrganisationName(" Organisation Name "))
     val organisationWithTrimmedName = organisationToPersist.copy(name = OrganisationName(organisationToPersist.name.value.trim))
-    val organisationToPersist2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
+    val organisationToPersist2      = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
 
     val org3 = Organisation(
       organisationId = OrganisationId(getUuid),
@@ -105,16 +105,16 @@ class OrganisationRepositoryISpec
     }
 
     def createUnsortedListOfOrganisations(): List[Organisation] = {
-      val orgOne = Organisation(OrganisationId(randomUUID()), VendorId(1111L), OrganisationName("1 Trading"))
-      val orgTwo = Organisation(OrganisationId(randomUUID()), VendorId(1112L), OrganisationName("Global Trans Inc"))
+      val orgOne   = Organisation(OrganisationId(randomUUID()), VendorId(1111L), OrganisationName("1 Trading"))
+      val orgTwo   = Organisation(OrganisationId(randomUUID()), VendorId(1112L), OrganisationName("Global Trans Inc"))
       val orgThree = Organisation(OrganisationId(randomUUID()), VendorId(1113L), OrganisationName("23rd Street Inc"))
-      val orgFour = Organisation(OrganisationId(randomUUID()), VendorId(1114L), OrganisationName("! Exclamation Trading"))
-      val orgFive = Organisation(OrganisationId(randomUUID()), VendorId(1115L), OrganisationName("$ Dollar and Co"))
-      val orgSix = Organisation(OrganisationId(randomUUID()), VendorId(1116L), OrganisationName("Zone 5 Corp"))
+      val orgFour  = Organisation(OrganisationId(randomUUID()), VendorId(1114L), OrganisationName("! Exclamation Trading"))
+      val orgFive  = Organisation(OrganisationId(randomUUID()), VendorId(1115L), OrganisationName("$ Dollar and Co"))
+      val orgSix   = Organisation(OrganisationId(randomUUID()), VendorId(1116L), OrganisationName("Zone 5 Corp"))
       val orgSeven = Organisation(OrganisationId(randomUUID()), VendorId(1117L), OrganisationName("Criterion Games"))
       val orgEight = Organisation(OrganisationId(randomUUID()), VendorId(1118L), OrganisationName("abcl corp"))
-      val orgNine = Organisation(OrganisationId(randomUUID()), VendorId(1119L), OrganisationName("exile dog inc"))
-      val orgTen = Organisation(OrganisationId(randomUUID()), VendorId(1120L), OrganisationName("yo yachets"))
+      val orgNine  = Organisation(OrganisationId(randomUUID()), VendorId(1119L), OrganisationName("exile dog inc"))
+      val orgTen   = Organisation(OrganisationId(randomUUID()), VendorId(1120L), OrganisationName("yo yachets"))
 
       await(repo.createOrUpdate(orgOne))
       await(repo.createOrUpdate(orgTwo))
@@ -134,21 +134,21 @@ class OrganisationRepositoryISpec
   "findAll" should {
     "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by vendorId by default" in new Setup {
       val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(vendorIdOrdering)
-      val actualResult: List[Organisation] = await(repo.findAll(None))
+      val actualResult: List[Organisation]   = await(repo.findAll(None))
 
       actualResult shouldBe expectedResult
     }
 
     "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by orgname by when requested" in new Setup {
       val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitiveOrdering)
-      val actualResult: List[Organisation] = await(repo.findAll(Some(OrganisationSortBy.ORGANISATION_NAME)))
+      val actualResult: List[Organisation]   = await(repo.findAll(Some(OrganisationSortBy.ORGANISATION_NAME)))
 
       actualResult shouldBe expectedResult
     }
 
     "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by vendorId when requested" in new Setup {
       val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(vendorIdOrdering)
-      val actualResult: List[Organisation] = await(repo.findAll(Some(OrganisationSortBy.VENDOR_ID)))
+      val actualResult: List[Organisation]   = await(repo.findAll(Some(OrganisationSortBy.VENDOR_ID)))
 
       actualResult shouldBe expectedResult
     }
@@ -248,7 +248,7 @@ class OrganisationRepositoryISpec
 
     "return organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
       val expectedResult: List[Organisation] = createUnsortedListOfOrganisations().sorted(caseInsensitiveOrdering)
-      val actualResult: List[Organisation] = await(repo.findByOrganisationName(OrganisationName("")))
+      val actualResult: List[Organisation]   = await(repo.findByOrganisationName(OrganisationName("")))
 
       actualResult shouldBe expectedResult
     }
@@ -273,9 +273,9 @@ class OrganisationRepositoryISpec
   "addCollaboratorByVendorId" should {
     "return Right(true) when collaborator successfully added to Organisation with no existing Collaborators" in new Setup {
       await(repo.createOrUpdate(organisationToPersist))
-      await(repo.addCollaboratorByVendorId(organisationToPersist.vendorId, collaboratorOne))  match {
+      await(repo.addCollaboratorByVendorId(organisationToPersist.vendorId, collaboratorOne)) match {
         case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
-        case _           => fail
+        case _                                 => fail
       }
     }
 
@@ -284,7 +284,7 @@ class OrganisationRepositoryISpec
 
       await(repo.addCollaboratorByVendorId(organisationToPersist.vendorId, collaboratorOne)) match {
         case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
-        case _           => fail
+        case _                                 => fail
       }
     }
 
@@ -294,10 +294,9 @@ class OrganisationRepositoryISpec
 
       await(repo.addCollaboratorByVendorId(organisationToPersist.vendorId, collaboratorOne)) match {
         case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
-        case _           => fail
+        case _                                 => fail
       }
     }
-
 
   }
 
@@ -306,7 +305,7 @@ class OrganisationRepositoryISpec
       await(repo.createOrUpdate(organisationToPersist))
       await(repo.addCollaboratorToOrganisation(organisationToPersist.organisationId, collaboratorOne)) match {
         case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
-        case _           => fail
+        case _                                 => fail
       }
     }
 
@@ -315,7 +314,7 @@ class OrganisationRepositoryISpec
 
       await(repo.addCollaboratorToOrganisation(organisationToPersist.organisationId, collaboratorOne)) match {
         case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
-        case _           => fail
+        case _                                 => fail
       }
     }
 
@@ -325,7 +324,7 @@ class OrganisationRepositoryISpec
 
       await(repo.addCollaboratorToOrganisation(organisationToPersist.organisationId, collaboratorOne)) match {
         case Right(organisation: Organisation) => organisation.organisationId shouldBe organisationToPersist.organisationId
-        case _           => fail
+        case _                                 => fail
       }
     }
 

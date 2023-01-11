@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,23 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import cats.data.{NonEmptyList, Validated}
 import cats.instances.list._
 import cats.syntax.either._
 import cats.syntax.traverse._
+
 import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{ManageCollaboratorResult, OrganisationAlreadyHasCollaboratorResult}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, TeamMemberService, XmlApiService}
-import uk.gov.hmrc.http.HeaderCarrier
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UploadService @Inject() (
@@ -38,15 +40,17 @@ class UploadService @Inject() (
     organisationService: OrganisationService,
     override val xmlApiService: XmlApiService,
     teamMemberService: TeamMemberService
-  )(implicit val ec: ExecutionContext)
-    extends Logging
+  )(implicit val ec: ExecutionContext
+  ) extends Logging
     with UploadValidation
     with ConvertToEmailPrefsMap {
 
   def uploadUsers(users: List[ParsedUser])(implicit hc: HeaderCarrier): Future[List[UploadUserResult]] = {
     val batchSize = 10
     Future.sequence(users.grouped(batchSize).toList.flatMap(batchOf10Users => {
-      Thread.sleep(500)
+      // scalastyle:off magic.number
+      Thread.sleep(500) // artificial delay to handle large import files. and reduce hammering third-party-developer
+      // scalastyle:on magic.number
       batchOf10Users.zipWithIndex.par.map(x => {
         uploadUser(x._1, x._2 + 1)
       })
@@ -64,7 +68,9 @@ class UploadService @Inject() (
   }
 
   private def handleCreateOrGetUserResult(parsedUser: ParsedUser, rowNumber: Int)(implicit hc: HeaderCarrier): Future[UploadUserResult] = {
-    Thread.sleep(300)
+    // scalastyle:off magic.number
+    Thread.sleep(300) // artificial delay to reduce hammering third-party-developer
+    // scalastyle:on magic.number
     createOrGetUser(parsedUser) flatMap {
       case result: CreateVerifiedUserSuccessResult => handleAddCollaboratorToOrgs(result, parsedUser.vendorIds, rowNumber)
       case e: CreateVerifiedUserFailedResult       =>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models
 
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationWithNameAndVendorId, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationWithNameAndVendorId, VendorId}
 
 case class ParsedUser(email: String, firstName: String, lastName: String, services: List[ServiceName], vendorIds: List[VendorId])
 case class BulkAddUsersRequest(users: Seq[ParsedUser])
 case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
-
-

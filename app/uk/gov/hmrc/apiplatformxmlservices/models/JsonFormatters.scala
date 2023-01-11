@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,15 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
 trait JsonFormatters extends CommonJsonFormatters {
 
-  implicit val formatExternalXmlApi= Json.format[XmlApi]
+  implicit val formatExternalXmlApi = Json.format[XmlApi]
 
-  implicit val formatUserId = Json.valueFormat[UserId]
+  implicit val formatUserId         = Json.valueFormat[UserId]
   implicit val formatOrganisationId = Json.valueFormat[OrganisationId]
 
   implicit val formatCollaborator = Json.format[Collaborator]
@@ -34,10 +35,8 @@ trait JsonFormatters extends CommonJsonFormatters {
 
   implicit val formatUpdateOrganisationDetailsRequest = Json.format[UpdateOrganisationDetailsRequest]
 
-  implicit val formatAddCollaboratorRequest = Json.format[AddCollaboratorRequest]
+  implicit val formatAddCollaboratorRequest     = Json.format[AddCollaboratorRequest]
   implicit val formatRemovedCollaboratorRequest = Json.format[RemoveCollaboratorRequest]
 
   implicit val formatOrganisationUser = Json.format[OrganisationUser]
 }
-
-

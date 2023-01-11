@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,19 @@
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
 import play.api.libs.json.Json
+
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
-
 object JsonFormatters extends CommonJsonFormatters {
 
-  implicit val formatUserId = Json.valueFormat[UserId]
+  implicit val formatUserId                   = Json.valueFormat[UserId]
   implicit val formatGetOrCreateUserIdRequest = Json.format[GetOrCreateUserIdRequest]
 
   implicit val formatUserIdResponse = Json.format[UserIdResponse]
 
-  implicit  val formatUserResponse = Json.format[UserResponse]
-  implicit  val formatImportUserRequest = Json.format[ImportUserRequest]
+  implicit val formatUserResponse      = Json.format[UserResponse]
+  implicit val formatImportUserRequest = Json.format[ImportUserRequest]
 
   implicit val formatCoreUserDetail = Json.format[CoreUserDetail]
 }

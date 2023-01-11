@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+
 import com.mongodb.MongoCommandException
+
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.http.HeaderCarrier
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future.successful
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 @Singleton
 class OrganisationService @Inject() (
@@ -36,7 +38,8 @@ class OrganisationService @Inject() (
     vendorIdService: VendorIdService,
     override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     override val xmlApiService: XmlApiService
-  )(implicit val ec: ExecutionContext) extends UserFunctions {
+  )(implicit val ec: ExecutionContext
+  ) extends UserFunctions {
 
   def findAndCreateOrUpdate(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.findByVendorId(vendorId) flatMap {
@@ -53,15 +56,13 @@ class OrganisationService @Inject() (
           case Left(e: GetOrCreateUserFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
       case Left(e: Throwable)        => successful(CreateOrganisationFailedResult(e.getMessage))
-     
+
     }.recover {
       case NonFatal(e: Throwable) => CreateOrganisationFailedResult(e.getMessage)
     }
   }
 
-  def handleCreateOrganisation(organisationName: OrganisationName,
-                               vendorId: VendorId,
-                               collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
+  def handleCreateOrganisation(organisationName: OrganisationName, vendorId: VendorId, collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
 
     def mapError(ex: Exception): CreateOrganisationResult = ex match {
       case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
@@ -108,7 +109,6 @@ class OrganisationService @Inject() (
 
   def findAll(sortBy: Option[OrganisationSortBy] = None): Future[List[Organisation]] = organisationRepository.findAll(sortBy)
 
-
   private def createOrganisation(organisationName: OrganisationName, vendorId: VendorId): Future[Either[Exception, Organisation]] = {
     organisationRepository.createOrUpdate(
       Organisation(
@@ -118,7 +118,6 @@ class OrganisationService @Inject() (
       )
     )
   }
-
 
   private def generateOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
 }

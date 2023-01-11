@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,29 @@
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+
 import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+
 import uk.gov.hmrc.apiplatformxmlservices.models.UserId
+import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 
 case class GetOrCreateUserIdRequest(email: String)
 
 case class UserIdResponse(userId: UserId)
 
-
 case class CoreUserDetail(userId: UserId, email: String)
 
-case class ImportUserRequest(email: String,
-                               firstName: String,
-                               lastName: String,
-                               emailPreferences: Map[ApiCategory, List[ServiceName]]
-                              )
+case class ImportUserRequest(email: String, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]])
 
 case class TaxRegimeInterests(regime: String, services: Set[String])
+
 object TaxRegimeInterests {
-  implicit val format = Json.format[TaxRegimeInterests]
+  implicit val format                                    = Json.format[TaxRegimeInterests]
   def hasAllApis(taxRegimeInterests: TaxRegimeInterests) = taxRegimeInterests.services.isEmpty
 }
 
 case class EmailPreferences(interests: List[TaxRegimeInterests], topics: Set[EmailTopic])
+
 object EmailPreferences {
   implicit val format = Json.format[EmailPreferences]
 
@@ -54,13 +53,8 @@ object EmailTopic extends Enum[EmailTopic] with PlayJsonEnum[EmailTopic] {
   val values = findValues
 
   case object BUSINESS_AND_POLICY extends EmailTopic
-  case object TECHNICAL extends EmailTopic
-  case object RELEASE_SCHEDULES extends EmailTopic
-  case object EVENT_INVITES extends EmailTopic
+  case object TECHNICAL           extends EmailTopic
+  case object RELEASE_SCHEDULES   extends EmailTopic
+  case object EVENT_INVITES       extends EmailTopic
 }
-case class UserResponse(email: String,
-                        firstName: String,
-                        lastName: String,
-                        verified: Boolean = false,
-                        userId: UserId,
-                        emailPreferences: EmailPreferences)
+case class UserResponse(email: String, firstName: String, lastName: String, verified: Boolean = false, userId: UserId, emailPreferences: EmailPreferences)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.{AddCollaboratorRequest, RemoveCollaboratorRequest}
@@ -34,7 +33,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.UUID
 
-class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach  with MongoApp[Organisation] with JsonFormatters {
+class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with MongoApp[Organisation] with JsonFormatters {
 
   override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
@@ -48,15 +47,15 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
-        "organisation.vendorId.startingValue" -> 9000,
-        "microservice.services.auth.port" -> wireMockPort,
-        "metrics.enabled" -> true,
-        "auditing.enabled" -> false,
-        "auditing.consumer.baseUri.host" -> wireMockHost,
-        "auditing.consumer.baseUri.port" -> wireMockPort,
+        "organisation.vendorId.startingValue"              -> 9000,
+        "microservice.services.auth.port"                  -> wireMockPort,
+        "metrics.enabled"                                  -> true,
+        "auditing.enabled"                                 -> false,
+        "auditing.consumer.baseUri.host"                   -> wireMockHost,
+        "auditing.consumer.baseUri.port"                   -> wireMockPort,
         "microservice.services.third-party-developer.host" -> wireMockHost,
         "microservice.services.third-party-developer.port" -> wireMockPort,
-        "mongodb.uri" -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
+        "mongodb.uri"                                      -> s"mongodb://127.0.0.1:27017/test-${this.getClass.getSimpleName}"
       )
 
   val url = s"http://localhost:$port/api-platform-xml-services"
@@ -73,8 +72,6 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
       .post(body)
       .futureValue
 
-
-
   trait Setup {
     def orgRepo: OrganisationRepository = app.injector.instanceOf[OrganisationRepository]
 
@@ -82,29 +79,29 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
     val userId: UserId = UserId(getUuid())
 
-    val email = "foo@bar.com"
-    val firstName = "bob"
-    val lastName = "hope"
-    val gatekeeperUserId = "John Doe"
-    val organisation = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
+    val email                         = "foo@bar.com"
+    val firstName                     = "bob"
+    val lastName                      = "hope"
+    val gatekeeperUserId              = "John Doe"
+    val organisation                  = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2001), name = OrganisationName("I am the first"))
     val organisationWithCollaborators = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
-    val organisation2 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
-    val updatedOrgWithDuplicate = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email, firstName, lastName)
-    val addCollaboratorRequest = AddCollaboratorRequest(email, firstName, lastName)
-    val removeCollaboratorRequest = RemoveCollaboratorRequest(email, gatekeeperUserId)
-    val organisationIdValue = organisation.organisationId.value
-    val vendorIdValue = organisation.vendorId.value
-    val orgAsJsonString = Json.toJson(organisation).toString
+    val organisation2                 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
+    val updatedOrgWithDuplicate       = Organisation(organisationId = organisation.organisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
+    val createOrganisationRequest     = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), email, firstName, lastName)
+    val addCollaboratorRequest        = AddCollaboratorRequest(email, firstName, lastName)
+    val removeCollaboratorRequest     = RemoveCollaboratorRequest(email, gatekeeperUserId)
+    val organisationIdValue           = organisation.organisationId.value
+    val vendorIdValue                 = organisation.vendorId.value
+    val orgAsJsonString               = Json.toJson(organisation).toString
 
-    val invalidOrgString =
+    val invalidOrgString                  =
       """{
         |    "organisationId": "dd5bda96-46da-11ec-81d3-0242ac130003",
         |    "vendorId": INVALID_VENDOR_ID,
         |    "name": "Organisation Name 3"
         |}""".stripMargin
     val createOrganisationRequestAsString = Json.toJson(createOrganisationRequest).toString
-    val addCollaboratorRequestAsString = Json.toJson(addCollaboratorRequest).toString
+    val addCollaboratorRequestAsString    = Json.toJson(addCollaboratorRequest).toString
     val removeCollaboratorRequestAsString = Json.toJson(removeCollaboratorRequest).toString
 
     def stubThirdPartyDeveloperConnectorWithoutBody(status: Int) = {
@@ -119,7 +116,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
       )
     }
 
-    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: String, firstName: String, lastName: String,  status: Int) = {
+    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: String, firstName: String, lastName: String, status: Int) = {
       stubFor(
         post(urlEqualTo("/import-user"))
           .willReturn(
@@ -134,9 +131,6 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
   }
 
   "TeamMemberController" when {
-
-
-
 
     "POST /organisations/:organisationId/add-collaborator" should {
 
@@ -156,7 +150,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       "respond with 400 if organisationId is not a uuid" in new Setup {
         val organisationId = ":alsjdflaksjdf"
-        val result = callPostEndpoint(s"$url/organisations/$organisationId/add-collaborator", addCollaboratorRequestAsString)
+        val result         = callPostEndpoint(s"$url/organisations/$organisationId/add-collaborator", addCollaboratorRequestAsString)
 
         result.status mustBe BAD_REQUEST
         val response = Json.parse(result.body).as[ErrorResponse]
@@ -171,7 +165,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       "respond with 400 if third party developer connector returns and error" in new Setup {
         await(orgRepo.createOrUpdate(organisation))
-        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName,  BAD_REQUEST)
+        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName, BAD_REQUEST)
         val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe BAD_REQUEST
         result.body.contains("Bad Request") mustBe true
@@ -179,7 +173,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       "respond with 200 if organisationId exists" in new Setup {
         await(orgRepo.createOrUpdate(organisation))
-        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName,  OK)
+        stubThirdPartyDeveloperConnectorWithBody(userId, email, firstName, lastName, OK)
         val result = callPostEndpoint(s"$url/organisations/${organisation.organisationId.value}/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe OK
         result.body mustBe Json.toJson(organisationWithCollaborators).toString()
