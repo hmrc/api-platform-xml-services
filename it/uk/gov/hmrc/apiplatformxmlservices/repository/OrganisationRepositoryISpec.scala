@@ -237,7 +237,7 @@ class OrganisationRepositoryISpec
 
       val results = await(repo.findByOrganisationName(OrganisationName("DEF")))
 
-      results should contain allOf List(org3, org4)
+      results should contain allOf (org3, org4)
     }
 
     "return no organisations when there are no matches" in new Setup {
