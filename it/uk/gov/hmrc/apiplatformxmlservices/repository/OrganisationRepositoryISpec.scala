@@ -31,7 +31,6 @@ import uk.gov.hmrc.apiplatformxmlservices.models.{
   OrganisationName,
   OrganisationSortBy,
   UpdateOrganisationFailedResult,
-  UpdateOrganisationResult,
   UpdateOrganisationSuccessResult,
   UserId,
   VendorId
