@@ -27,8 +27,8 @@ import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 
 class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with ConvertToEmailPrefsMap {
 
-  val xmlApiService               = new XmlApiService()
-  val stableXmlApis: List[XmlApi] = xmlApiService.getStableApis()
+  val xmlApiService = new XmlApiService()
+  val stableXmlApis = xmlApiService.getStableApis()
 
   "extractEmailPreferencesFromUser" should {
     val api1Name        = ServiceName("api-1")

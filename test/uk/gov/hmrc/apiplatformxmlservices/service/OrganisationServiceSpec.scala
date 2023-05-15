@@ -62,20 +62,20 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   trait ManageCollaboratorSetup extends Setup {
 
-    val firstName                                          = "bob"
-    val lastName                                           = "hope"
-    val emailOne                                           = "foo@bar.com"
-    val emailTwo                                           = "anotheruser@bar.com"
-    val collaboratorOne: Collaborator                      = Collaborator(userId, emailOne)
-    val collaboratorTwo: Collaborator                      = Collaborator(UserId(UUID.randomUUID()), emailTwo)
-    val collaborators: List[Collaborator]                  = List(collaboratorOne, collaboratorTwo)
-    val organisationWithCollaboratorsOne: Organisation     = organisation.copy(collaborators = collaborators)
-    val organisationWithCollaboratorsTwo: Organisation     = organisation.copy(collaborators = List(collaboratorOne))
-    val gatekeeperUserId                                   = "John Doe"
-    val getOrCreateUserIdRequest: GetOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
-    val coreUserDetail: CoreUserDetail                     = CoreUserDetail(userId, emailOne)
+    val firstName                        = "bob"
+    val lastName                         = "hope"
+    val emailOne                         = "foo@bar.com"
+    val emailTwo                         = "anotheruser@bar.com"
+    val collaboratorOne                  = Collaborator(userId, emailOne)
+    val collaboratorTwo                  = Collaborator(UserId(UUID.randomUUID()), emailTwo)
+    val collaborators                    = List(collaboratorOne, collaboratorTwo)
+    val organisationWithCollaboratorsOne = organisation.copy(collaborators = collaborators)
+    val organisationWithCollaboratorsTwo = organisation.copy(collaborators = List(collaboratorOne))
+    val gatekeeperUserId                 = "John Doe"
+    val getOrCreateUserIdRequest         = GetOrCreateUserIdRequest(emailOne)
+    val coreUserDetail                   = CoreUserDetail(userId, emailOne)
 
-    val removeCollaboratorRequest: RemoveCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
+    val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
 
     val organistionWithAddedCollaborator: Organisation = organisation.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
   }
@@ -83,7 +83,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   "findAndCreateOrUpdate" should {
     "return Right(Organisation) when vendorId exists and organisation successfully updated" in new Setup {
       when(mockOrganisationRepo.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisation)))
-      val modifiedOrganisation: Organisation = organisation.copy(name = updatedOrgName)
+      val modifiedOrganisation = organisation.copy(name = updatedOrgName)
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(modifiedOrganisation)))
 
       await(inTest.findAndCreateOrUpdate(updatedOrgName, organisation.vendorId)) match {
@@ -113,7 +113,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return Right(Organisation) when vendorId does not exist and organisation successfully created" in new Setup {
       when(mockOrganisationRepo.findByVendorId(*[VendorId])).thenReturn(Future.successful(None))
       when(mockUuidService.newUuid()).thenReturn(uuidVal)
-      val newOrganisation: Organisation = organisation.copy(name = updatedOrgName)
+      val newOrganisation = organisation.copy(name = updatedOrgName)
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(newOrganisation)))
 
       await(inTest.findAndCreateOrUpdate(updatedOrgName, newOrganisation.vendorId)) match {
@@ -143,7 +143,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "createOrganisation" should {
     "return CreateOrganisationSuccessResult when vendorIdService returns a vendorId and user exists in TPD" in new Setup {
-      val organistionWithAddedCollaborator: Organisation = organisation.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
+      val organistionWithAddedCollaborator = organisation.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid()).thenReturn(uuidVal)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(
@@ -174,7 +174,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
 
     "return CreateOrganisationFailed when organisation repo returns MongoCommandException" in new Setup {
-      val organistionWithAddedCollaborator: Organisation = organisation.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
+      val organistionWithAddedCollaborator = organisation.copy(collaborators = List(Collaborator(userId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid()).thenReturn(uuidVal)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(vendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(
@@ -287,10 +287,10 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "update" should {
     "return true when update successful" in new Setup {
-      val updatedOrganisation: Organisation = organisation.copy(name = OrganisationName("New Organisation Name"))
+      val updatedOrganisation = organisation.copy(name = OrganisationName("New Organisation Name"))
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
 
-      val result: Either[Exception, Organisation] = await(inTest.update(updatedOrganisation))
+      val result = await(inTest.update(updatedOrganisation))
       result shouldBe Right(updatedOrganisation)
 
       verify(mockOrganisationRepo).createOrUpdate(updatedOrganisation)
@@ -300,12 +300,12 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "updateOrganisationDetails" should {
     "returns the result from the repository when called" in new Setup {
-      val updatedOrganisationName: OrganisationName = OrganisationName("New Organisation Name")
-      val updatedOrganisation: Organisation         = organisation.copy(name = updatedOrganisationName)
+      val updatedOrganisationName = OrganisationName("New Organisation Name")
+      val updatedOrganisation     = organisation.copy(name = updatedOrganisationName)
       when(mockOrganisationRepo.updateOrganisationDetails(eqTo(updatedOrganisation.organisationId), eqTo(updatedOrganisationName)))
         .thenReturn(Future.successful(UpdateOrganisationSuccessResult(updatedOrganisation)))
 
-      val result: UpdateOrganisationResult = await(inTest.updateOrganisationDetails(updatedOrganisation.organisationId, updatedOrganisationName))
+      val result = await(inTest.updateOrganisationDetails(updatedOrganisation.organisationId, updatedOrganisationName))
       result match {
         case UpdateOrganisationSuccessResult(_) => succeed
         case _                                  => fail()
@@ -320,7 +320,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return an true when delete successful" in new Setup {
       when(mockOrganisationRepo.deleteByOrgId(*[OrganisationId])).thenReturn(Future.successful(true))
 
-      val result: Boolean = await(inTest.deleteByOrgId(organisation.organisationId))
+      val result = await(inTest.deleteByOrgId(organisation.organisationId))
       result shouldBe true
 
       verify(mockOrganisationRepo).deleteByOrgId(organisation.organisationId)
@@ -332,7 +332,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return an Organisation when organisationId exists" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
 
-      val result: Option[Organisation] = await(inTest.findByOrgId(organisation.organisationId))
+      val result = await(inTest.findByOrgId(organisation.organisationId))
       result shouldBe Some(organisation)
 
       verify(mockOrganisationRepo).findByOrgId(organisation.organisationId)
@@ -344,7 +344,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return an Organisation when vendorId exists" in new Setup {
       when(mockOrganisationRepo.findByVendorId(*[VendorId])).thenReturn(Future.successful(Some(organisation)))
 
-      val result: Option[Organisation] = await(inTest.findByVendorId(organisation.vendorId))
+      val result = await(inTest.findByVendorId(organisation.vendorId))
       result shouldBe Some(organisation)
 
       verify(mockOrganisationRepo).findByVendorId(organisation.vendorId)
@@ -356,7 +356,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return a List of Organisations when at least one exists" in new Setup {
       when(mockOrganisationRepo.findAll(eqTo(Some(OrganisationSortBy.ORGANISATION_NAME)))).thenReturn(Future.successful(List(organisation)))
 
-      val result: List[Organisation] = await(inTest.findAll(Some(OrganisationSortBy.ORGANISATION_NAME)))
+      val result = await(inTest.findAll(Some(OrganisationSortBy.ORGANISATION_NAME)))
       result shouldBe List(organisation)
 
       verify(mockOrganisationRepo).findAll(*)
@@ -366,10 +366,10 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "findByOrganisationName" should {
     "return a List of Organisations when at least one exists" in new Setup {
-      val orgName: OrganisationName = OrganisationName("orgname")
+      val orgName = OrganisationName("orgname")
       when(mockOrganisationRepo.findByOrganisationName(eqTo(orgName))).thenReturn(Future.successful(List(organisation)))
 
-      val result: List[Organisation] = await(inTest.findByOrganisationName(orgName))
+      val result = await(inTest.findByOrganisationName(orgName))
       result shouldBe List(organisation)
 
       verify(mockOrganisationRepo).findByOrganisationName(eqTo(orgName))
@@ -382,7 +382,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       when(mockOrganisationRepo.findByUserId(eqTo(collaboratorOne.userId)))
         .thenReturn(Future.successful(List(organisationWithCollaboratorsOne, organisationWithCollaboratorsTwo)))
 
-      val result: List[Organisation] = await(inTest.findByUserId(collaboratorOne.userId))
+      val result = await(inTest.findByUserId(collaboratorOne.userId))
       result shouldBe List(organisationWithCollaboratorsOne, organisationWithCollaboratorsTwo)
 
       verify(mockOrganisationRepo).findByUserId(eqTo(collaboratorOne.userId))

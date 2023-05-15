@@ -48,14 +48,12 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
     val configStartingVendorIdValue = 9000
     when(mockConfig.startingVendorId).thenReturn(configStartingVendorIdValue)
 
-    val configStartingVendorId: VendorId = VendorId(configStartingVendorIdValue)
-    val vendorId9001: VendorId           = VendorId(9001)
-    val vendorId4001: VendorId           = VendorId(4001)
-    val uuid: UUID                       = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
-
-    val organisationWithStartingVendorId: Organisation =
-      Organisation(organisationId = OrganisationId(uuid), vendorId = configStartingVendorId, name = OrganisationName("Organisation Name"))
-    val organisationWithVendorId4001: Organisation     = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
+    val configStartingVendorId           = VendorId(configStartingVendorIdValue)
+    val vendorId9001                     = VendorId(9001)
+    val vendorId4001                     = VendorId(4001)
+    val uuid                             = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
+    val organisationWithStartingVendorId = Organisation(organisationId = OrganisationId(uuid), vendorId = configStartingVendorId, name = OrganisationName("Organisation Name"))
+    val organisationWithVendorId4001     = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
 
   }
 
@@ -63,7 +61,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
     "return (maxVendorId + 1) when max vendorId from repo is greater than or equal to config startingVendorId" in new Setup {
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(organisationWithStartingVendorId)))
 
-      val result: Either[Throwable, VendorId] = await(inTest.getNextVendorId())
+      val result = await(inTest.getNextVendorId())
       result shouldBe Right(vendorId9001)
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId()
@@ -73,7 +71,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
     "return config startingVendorId when max vendorId from repo is less than config startingVendorId" in new Setup {
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(organisationWithVendorId4001)))
 
-      val result: Either[Throwable, VendorId] = await(inTest.getNextVendorId())
+      val result = await(inTest.getNextVendorId())
       result shouldBe Right(configStartingVendorId)
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId()
@@ -83,7 +81,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
     "return config startingVendorId when repo returns None" in new Setup {
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(None))
 
-      val result: Either[Throwable, VendorId] = await(inTest.getNextVendorId())
+      val result = await(inTest.getNextVendorId())
       result shouldBe Right(configStartingVendorId)
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId()
@@ -94,7 +92,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
       val exception = new RuntimeException("some error")
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.failed(exception))
 
-      val result: Either[Throwable, VendorId] = await(inTest.getNextVendorId())
+      val result = await(inTest.getNextVendorId())
       result shouldBe Left(exception)
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId()

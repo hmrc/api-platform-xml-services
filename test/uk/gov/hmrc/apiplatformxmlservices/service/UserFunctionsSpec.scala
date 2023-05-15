@@ -42,10 +42,10 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
   implicit val hc: HeaderCarrier                                          = HeaderCarrier()
 
   trait Setup extends CommonTestData {
-    val email                  = "a@b.com"
-    val firstName              = "bob"
-    val lastName               = "hope"
-    val response: UserResponse = UserResponse(email, firstName, lastName, verified = true, userId = userId, emailPreferences = EmailPreferences.noPreferences)
+    val email     = "a@b.com"
+    val firstName = "bob"
+    val lastName  = "hope"
+    val response  = UserResponse(email, firstName, lastName, verified = true, userId = userId, emailPreferences = EmailPreferences.noPreferences)
   }
 
   "handleGetOrCreateUser" should {
@@ -121,8 +121,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
     "return OrganisationUser with no services when user has no xml services in preferences" in new Setup {
 
-      val interestNoXmlServices: List[TaxRegimeInterests]     =
-        List(TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3")), TaxRegimeInterests("VAT", Set("service-4", "service-6")))
+      val interestNoXmlServices                               = List(TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3")), TaxRegimeInterests("VAT", Set("service-4", "service-6")))
       val emailPreferencesWithNoXmlServices: EmailPreferences = EmailPreferences(interestNoXmlServices, Set(EmailTopic.BUSINESS_AND_POLICY))
 
       val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithNoXmlServices))
@@ -130,7 +129,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     }
 
     "return OrganisationUser with only xml Services when user has mix of some xml and non xml services in preferences" in new Setup {
-      val interestWithSomeXmlServices: List[TaxRegimeInterests] = List(
+      val interestWithSomeXmlServices                           = List(
         TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3", customs1.serviceName.value, customs2.serviceName.value)),
         TaxRegimeInterests("PAYE", Set("service-4", "service-6", paye1.serviceName.value))
       )
@@ -142,8 +141,8 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     }
 
     "return OrganisationUser with all xml Services for a category when user has selected the entire category in preferences" in new Setup {
-      val interestedInEntireCategory: List[TaxRegimeInterests] = List(TaxRegimeInterests("PAYE", Set()))
-      val emailPreferencesForEntireCategory: EmailPreferences  = EmailPreferences(interestedInEntireCategory, Set(EmailTopic.BUSINESS_AND_POLICY))
+      val interestedInEntireCategory                          = List(TaxRegimeInterests("PAYE", Set()))
+      val emailPreferencesForEntireCategory: EmailPreferences = EmailPreferences(interestedInEntireCategory, Set(EmailTopic.BUSINESS_AND_POLICY))
 
       val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesForEntireCategory))
       result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(paye1, paye2))

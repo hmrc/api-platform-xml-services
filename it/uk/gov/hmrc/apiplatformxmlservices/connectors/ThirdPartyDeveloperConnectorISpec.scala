@@ -121,7 +121,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Left(_: Upstream5xxResponse) => succeed
-        case _                            => fail
+        case _                            => fail()
       }
 
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
@@ -142,7 +142,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Right(_: List[UserResponse]) => succeed
-        case _                            => fail
+        case _                            => fail()
       }
     }
 
@@ -153,7 +153,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Right(_: List[UserResponse]) => succeed
-        case _                            => fail
+        case _                            => fail()
       }
     }
 
@@ -163,7 +163,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Left(_: NotFoundException) => succeed
-        case _                          => fail
+        case _                          => fail()
       }
     }
 
@@ -174,7 +174,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Left(_: Upstream5xxResponse) => succeed
-        case _                            => fail
+        case _                            => fail()
       }
     }
 
@@ -201,7 +201,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case response: CreatedUserResult => response.userResponse mustBe userResponse
-        case _                           => fail
+        case _                           => fail()
       }
     }
 
@@ -212,7 +212,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case response: RetrievedUserResult => response.userResponse mustBe userResponse
-        case _                             => fail
+        case _                             => fail()
       }
     }
 
@@ -223,7 +223,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case e: CreateVerifiedUserFailedResult => e.message mustBe s"POST of 'http://localhost:$wireMockPort/import-user' returned 409. Response body: ''"
-        case _                                 => fail
+        case _                                 => fail()
       }
     }
 
@@ -234,7 +234,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case e: CreateVerifiedUserFailedResult => e.message mustBe s"Could not get or create user"
-        case _                                 => fail
+        case _                                 => fail()
       }
     }
 
@@ -245,7 +245,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case e: CreateVerifiedUserFailedResult => e.message mustBe s"POST of 'http://localhost:$wireMockPort/import-user' returned 500. Response body: ''"
-        case _                                 => fail
+        case _                                 => fail()
       }
     }
   }
