@@ -29,7 +29,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatt
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreatedUserResult, RetrievedUserResult}
 import uk.gov.hmrc.apiplatformxmlservices.stubs.ThirdPartyDeveloperStub
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse, UpstreamErrorResponse}
 
 import java.{util => ju}
 

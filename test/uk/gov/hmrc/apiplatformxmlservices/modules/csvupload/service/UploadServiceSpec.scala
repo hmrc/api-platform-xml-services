@@ -21,6 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import org.mockito.scalatest.MockitoSugar
+import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -56,39 +57,39 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   trait Setup {
     val inTest = new UploadService(mockThirdPartyDeveloperConnector, mockOrganisationService, mockXmlApiService, mockTeamMemberService)
 
-    val uuid      = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
-    val vendorId1 = VendorId(9000)
-    val vendorId2 = VendorId(9001)
+    val uuid: UUID          = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
+    val vendorId1: VendorId = VendorId(9000)
+    val vendorId2: VendorId = VendorId(9001)
 
-    def getUuid() = UUID.randomUUID()
+    def getUuid: UUID = UUID.randomUUID()
 
-    val organisationId = OrganisationId(uuid)
-    val organisation1  = Organisation(organisationId = organisationId, vendorId = vendorId1, name = OrganisationName("Organisation Name"))
-    val organisation2  = organisation1.copy(vendorId = vendorId2)
+    val organisationId: OrganisationId = OrganisationId(uuid)
+    val organisation1: Organisation    = Organisation(organisationId = organisationId, vendorId = vendorId1, name = OrganisationName("Organisation Name"))
+    val organisation2: Organisation    = organisation1.copy(vendorId = vendorId2)
 
-    val userId          = UserId(UUID.randomUUID())
-    val emailOne        = "foo@bar.com"
-    val firstName       = "Joe"
-    val lastName        = "Bloggs"
-    val services        = List(ServiceName("import-control-system"), ServiceName("charities-online"))
-    val invalidServices = List(ServiceName("service1"), ServiceName("charities-online"))
-    val vendorIds       = ""
+    val userId: UserId                     = UserId(UUID.randomUUID())
+    val emailOne                           = "foo@bar.com"
+    val firstName                          = "Joe"
+    val lastName                           = "Bloggs"
+    val services: List[ServiceName]        = List(ServiceName("import-control-system"), ServiceName("charities-online"))
+    val invalidServices: List[ServiceName] = List(ServiceName("service1"), ServiceName("charities-online"))
+    val vendorIds                          = ""
 
-    val emailTwo                      = "anotheruser@bar.com"
-    val collaboratorOne               = Collaborator(userId, emailOne)
-    val collaboratorTwo               = Collaborator(UserId(UUID.randomUUID()), emailTwo)
-    val collaborators                 = List(collaboratorOne, collaboratorTwo)
-    val organisationWithCollaborators = organisation1.copy(collaborators = collaborators)
-    val gatekeeperUserId              = "John Doe"
-    val getOrCreateUserIdRequest      = GetOrCreateUserIdRequest(emailOne)
-    val coreUserDetail                = CoreUserDetail(userId, emailOne)
+    val emailTwo                                           = "anotheruser@bar.com"
+    val collaboratorOne: Collaborator                      = Collaborator(userId, emailOne)
+    val collaboratorTwo: Collaborator                      = Collaborator(UserId(UUID.randomUUID()), emailTwo)
+    val collaborators: List[Collaborator]                  = List(collaboratorOne, collaboratorTwo)
+    val organisationWithCollaborators: Organisation        = organisation1.copy(collaborators = collaborators)
+    val gatekeeperUserId                                   = "John Doe"
+    val getOrCreateUserIdRequest: GetOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
+    val coreUserDetail: CoreUserDetail                     = CoreUserDetail(userId, emailOne)
 
     val emailPreferences: Map[ApiCategory, List[ServiceName]] = Map(
       ApiCategory.CHARITIES -> List(ServiceName("charities-online")),
       ApiCategory.CUSTOMS   -> List(ServiceName("import-control-system"))
     )
 
-    val xmlApiCharities = XmlApi(
+    val xmlApiCharities: XmlApi = XmlApi(
       name = "Charities Online",
       serviceName = ServiceName("charities-online"),
       context = "context",
@@ -96,16 +97,16 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       categories = Some(Seq(ApiCategory.CHARITIES))
     )
 
-    val xmlApiImport  = xmlApiCharities.copy(
+    val xmlApiImport: XmlApi        = xmlApiCharities.copy(
       name = "Import Control System",
       serviceName = ServiceName("import-control-system"),
       categories = Some(Seq(ApiCategory.CUSTOMS))
     )
-    val stableXmlApis = List(xmlApiCharities, xmlApiImport)
+    val stableXmlApis: List[XmlApi] = List(xmlApiCharities, xmlApiImport)
 
     when(mockXmlApiService.getStableApis()).thenReturn(stableXmlApis)
 
-    val parsedUser = ParsedUser(
+    val parsedUser: ParsedUser = ParsedUser(
       email = emailOne,
       firstName = firstName,
       lastName = lastName,
@@ -113,7 +114,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       vendorIds = List(vendorId1, vendorId2)
     )
 
-    val userResponse = UserResponse(
+    val userResponse: UserResponse = UserResponse(
       email = emailOne,
       firstName = firstName,
       lastName = lastName,
@@ -122,9 +123,12 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       emailPreferences = EmailPreferences.noPreferences
     )
 
-    val importUserRequestObj = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName, emailPreferences = emailPreferences)
+    val importUserRequestObj: ImportUserRequest = ImportUserRequest(email = emailOne, firstName = firstName, lastName = lastName, emailPreferences = emailPreferences)
 
-    def primeMocksForAddCollaboratorToOrgFailure(response1: Either[ManageCollaboratorResult, Organisation], response2: Either[ManageCollaboratorResult, Organisation]) = {
+    def primeMocksForAddCollaboratorToOrgFailure(
+        response1: Either[ManageCollaboratorResult, Organisation],
+        response2: Either[ManageCollaboratorResult, Organisation]
+      ): ScalaOngoingStubbing[Future[Either[ManageCollaboratorResult, Organisation]]] = {
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(importUserRequestObj))(*)).thenReturn(Future.successful(CreatedUserResult(userResponse)))
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
@@ -132,7 +136,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId2)).thenReturn(Future.successful(response2))
     }
 
-    def verifyAddCollaboratorToOrgFailure() {
+    def verifyAddCollaboratorToOrgFailure(): Unit = {
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
       verify(mockTeamMemberService, times(2)).handleAddCollaboratorToOrgByVendorId(*, *[UserId], *[VendorId])
@@ -152,7 +156,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId1)).thenReturn(Future.successful(Right(organisation1)))
       when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId2)).thenReturn(Future.successful(Right(organisation2)))
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
@@ -160,7 +164,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                                                      => fail
+        case _                                                                      => fail()
       }
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
@@ -175,7 +179,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId1)).thenReturn(Future.successful(Right(organisation1)))
       when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId2)).thenReturn(Future.successful(Right(organisation2)))
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
@@ -183,7 +187,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadExistingUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                                                       => fail
+        case _                                                                       => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -195,13 +199,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     "return InvalidUserResult when a service and a vendorId are invalid and validation fails" in new Setup {
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(None))
-      val results = await(inTest.uploadUsers(List(parsedUser.copy(services = invalidServices))))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser.copy(services = invalidServices))))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - Invalid vendorId(s) | RowNumber:1 - Invalid service(s)"
-        case _                                  => fail
+        case _                                  => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -213,13 +217,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(None))
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - Invalid vendorId(s)"
-        case _                                  => fail
+        case _                                  => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -229,13 +233,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
     "return InvalidUserResult when vendorId is missing and so validation fails" in new Setup {
 
-      val results = await(inTest.uploadUsers(List(parsedUser.copy(vendorIds = List.empty))))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser.copy(vendorIds = List.empty))))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - missing vendorIds on user"
-        case _                                  => fail
+        case _                                  => fail()
       }
 
       verifyZeroInteractions(mockOrganisationService)
@@ -250,13 +254,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockOrganisationService.findByVendorId(vendorId1)).thenReturn(Future.successful(Some(organisation1)))
       when(mockOrganisationService.findByVendorId(vendorId2)).thenReturn(Future.successful(Some(organisation2)))
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case e: CreateOrGetUserFailedResult => e.message shouldBe s"RowNumber:1 - failed to get or create User: Unable to register user"
-        case _                              => fail
+        case _                              => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -270,7 +274,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         Right(organisation2)
       )
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
@@ -278,7 +282,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                                                      => fail
+        case _                                                                      => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()
@@ -292,13 +296,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         Right(organisation2)
       )
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case AddUserToOrgFailureResult(error: String) => error shouldBe errorMessageForVendorIdUserId(vendorId1, userId)
-        case _                                        => fail
+        case _                                        => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()
@@ -311,13 +315,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         Left(GetOrganisationFailedResult(message = s"Failed to get organisation for Vendor Id: ${vendorId2.value}"))
       )
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case AddUserToOrgFailureResult(error: String) => error shouldBe errorMessageForVendorIdUserId(vendorId2, userId)
-        case _                                        => fail
+        case _                                        => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()
@@ -330,13 +334,13 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         Left(GetOrganisationFailedResult(message = s"Failed to get organisation for Vendor Id: ${vendorId2.value}"))
       )
 
-      val results = await(inTest.uploadUsers(List(parsedUser)))
+      val results: List[UploadUserResult] = await(inTest.uploadUsers(List(parsedUser)))
 
       results.nonEmpty shouldBe true
       results.size shouldBe 1
       results.head match {
         case AddUserToOrgFailureResult(error: String) => error shouldBe s"${errorMessageForVendorIdUserId(vendorId1, userId)} | ${errorMessageForVendorIdUserId(vendorId2, userId)}"
-        case _                                        => fail
+        case _                                        => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()

@@ -99,7 +99,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       addToSet("collaborators", Codecs.toBson(collaborator)),
       FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
     )
-      .toFuture
+      .toFuture()
       .map(x => Right(x))
       .recover {
         case e: Exception =>
@@ -114,7 +114,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       addToSet("collaborators", Codecs.toBson(collaborator)),
       FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
     )
-      .toFuture
+      .toFuture()
       .map(x => Right(x))
       .recover {
         case e: Exception =>
@@ -143,7 +143,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       filter = query,
       update = Updates.combine(allOps: _*),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-    ).toFuture
+    ).toFuture()
       .map(x => Right(x))
       .recover {
         case e: Exception =>
@@ -154,7 +154,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
   def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName): Future[UpdateOrganisationResult] = {
     val query = equal("organisationId", Codecs.toBson(organisationId))
-    collection.findOneAndUpdate(query, set("name", organisationName.value), options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)).toFutureOption
+    collection.findOneAndUpdate(query, set("name", organisationName.value), options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)).toFutureOption()
       .map {
         case Some(organisation: Organisation) => UpdateOrganisationSuccessResult(organisation)
         case _                                => UpdateOrganisationFailedResult()

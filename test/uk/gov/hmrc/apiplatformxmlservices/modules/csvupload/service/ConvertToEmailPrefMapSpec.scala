@@ -27,8 +27,8 @@ import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 
 class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with ConvertToEmailPrefsMap {
 
-  val xmlApiService = new XmlApiService()
-  val stableXmlApis = xmlApiService.getStableApis()
+  val xmlApiService               = new XmlApiService()
+  val stableXmlApis: List[XmlApi] = xmlApiService.getStableApis()
 
   "extractEmailPreferencesFromUser" should {
     val api1Name        = ServiceName("api-1")
@@ -44,9 +44,9 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
     "correctly map servicenames to email preferences when a users api is in multiple categories" in {
       val extraApiInMultipleCategories = XmlApi("name", api1Name, "context", "description", Some(Seq(ApiCategory.CUSTOMS, ApiCategory.VAT)))
       val result                       = extractEmailPreferencesFromUser(validParsedUser, stableXmlApis ++ Seq(extraApiInMultipleCategories))
-      result.keySet.toList should contain only (ApiCategory.CHARITIES, ApiCategory.CUSTOMS, ApiCategory.VAT)
+      result.keySet.toList should contain only (List(ApiCategory.CHARITIES, ApiCategory.CUSTOMS, ApiCategory.VAT): _*)
       result.getOrElse(ApiCategory.CHARITIES, List.empty) should contain only ServiceName("charities-online")
-      result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only (ServiceName("import-control-system"), api1Name)
+      result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only (List(ServiceName("import-control-system"), api1Name): _*)
       result.getOrElse(ApiCategory.VAT, List.empty) should contain only api1Name
     }
 
@@ -63,7 +63,7 @@ class ConvertToEmailPrefMapSpec extends AnyWordSpec with Matchers with BeforeAnd
     "return correct email preferences when one api has no categories" in { // should this throw an exception??
       val extraApiInMultipleCategories = XmlApi("name", api1Name, "context", "description", None)
       val result                       = extractEmailPreferencesFromUser(validParsedUser, stableXmlApis ++ List(extraApiInMultipleCategories))
-      result.keySet.toList should contain only (ApiCategory.CHARITIES, ApiCategory.CUSTOMS)
+      result.keySet.toList should contain only (List(ApiCategory.CHARITIES, ApiCategory.CUSTOMS): _*)
       result.getOrElse(ApiCategory.CHARITIES, List.empty) should contain only ServiceName("charities-online")
       result.getOrElse(ApiCategory.CUSTOMS, List.empty) should contain only ServiceName("import-control-system")
 

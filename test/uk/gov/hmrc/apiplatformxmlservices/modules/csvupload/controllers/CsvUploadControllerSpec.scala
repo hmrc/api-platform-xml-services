@@ -59,17 +59,17 @@ class CsvUploadControllerSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   trait Setup {
 
-    val jsonMediaType  = "application/json"
-    def getUuid()      = UUID.randomUUID()
-    val organisationId = OrganisationId(getUuid)
-    val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId         = UserId(UUID.randomUUID())
-    val email          = "foo@bar.com"
-    val coreUserDetail = CoreUserDetail(userId, email)
+    val jsonMediaType                  = "application/json"
+    def getUuid: UUID                  = UUID.randomUUID()
+    val organisationId: OrganisationId = OrganisationId(getUuid)
+    val organisation: Organisation     = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
+    val userId: UserId                 = UserId(UUID.randomUUID())
+    val email                          = "foo@bar.com"
+    val coreUserDetail: CoreUserDetail = CoreUserDetail(userId, email)
 
-    val updatedOrganisationName             = OrganisationName("updated name")
-    val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrganisationName)
-    val organisationWithCollaborator        = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
+    val updatedOrganisationName: OrganisationName                             = OrganisationName("updated name")
+    val updateOrganisationDetailsRequestObj: UpdateOrganisationDetailsRequest = UpdateOrganisationDetailsRequest(updatedOrganisationName)
+    val organisationWithCollaborator: Organisation                            = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
 
     val orgOne                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
     val orgTwo                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))

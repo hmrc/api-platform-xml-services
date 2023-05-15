@@ -50,35 +50,26 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
     reset(mockThirdPartyDeveloperConnector)
   }
 
-  trait Setup {
+  trait Setup extends CommonTestData {
     val inTest = new TeamMemberService(mockOrganisationRepo, mockThirdPartyDeveloperConnector, xmlApiService)
 
-    val uuid     = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
-    val vendorId = VendorId(9000)
+    val userId2: UserId                                    = UserId(UUID.randomUUID())
+    val firstName                                          = "bob"
+    val lastName                                           = "hope"
+    val emailOne                                           = "foo@bar.com"
+    val emailTwo                                           = "anotheruser@bar.com"
+    val collaboratorOne: Collaborator                      = Collaborator(userId, emailOne)
+    val collaboratorTwo: Collaborator                      = Collaborator(userId2, emailTwo)
+    val collaborators: List[Collaborator]                  = List(collaboratorOne, collaboratorTwo)
+    val organisationWithCollaborators: Organisation        = organisation.copy(collaborators = collaborators)
+    val gatekeeperUserId                                   = "John Doe"
+    val getOrCreateUserIdRequest: GetOrCreateUserIdRequest = GetOrCreateUserIdRequest(emailOne)
+    val coreUserDetail: CoreUserDetail                     = CoreUserDetail(userId, emailOne)
 
-    def getUuid() = UUID.randomUUID()
+    val removeCollaboratorRequest: RemoveCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
 
-    val organisationId = OrganisationId(uuid)
-    val organisation   = Organisation(organisationId = organisationId, vendorId = vendorId, name = OrganisationName("Organisation Name"))
-
-    val userId1                       = UserId(UUID.randomUUID())
-    val userId2                       = UserId(UUID.randomUUID())
-    val firstName                     = "bob"
-    val lastName                      = "hope"
-    val emailOne                      = "foo@bar.com"
-    val emailTwo                      = "anotheruser@bar.com"
-    val collaboratorOne               = Collaborator(userId1, emailOne)
-    val collaboratorTwo               = Collaborator(userId2, emailTwo)
-    val collaborators                 = List(collaboratorOne, collaboratorTwo)
-    val organisationWithCollaborators = organisation.copy(collaborators = collaborators)
-    val gatekeeperUserId              = "John Doe"
-    val getOrCreateUserIdRequest      = GetOrCreateUserIdRequest(emailOne)
-    val coreUserDetail                = CoreUserDetail(userId1, emailOne)
-
-    val removeCollaboratorRequest = RemoveCollaboratorRequest(emailOne, gatekeeperUserId)
-
-    val userResponse1 = UserResponse(emailOne, firstName + 1, lastName + 1, verified = true, userId1, emailPreferences = EmailPreferences.noPreferences)
-    val userResponse2 = UserResponse(emailTwo, firstName + 2, lastName + 2, verified = true, userId1, emailPreferences = EmailPreferences.noPreferences)
+    val userResponse1: UserResponse = UserResponse(emailOne, firstName + 1, lastName + 1, verified = true, userId, emailPreferences = EmailPreferences.noPreferences)
+    val userResponse2: UserResponse = UserResponse(emailTwo, firstName + 2, lastName + 2, verified = true, userId, emailPreferences = EmailPreferences.noPreferences)
   }
 
   "addCollaborator" should {
@@ -87,7 +78,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
       await(inTest.addCollaborator(organisationId, emailOne, firstName, lastName)) match {
         case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: ${organisationId.value.toString}"
-        case Right(_)                             => fail
+        case Right(_)                             => fail()
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -102,7 +93,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
       await(inTest.addCollaborator(organisationId, emailOne, firstName, lastName)) match {
         case Left(x: GetOrCreateUserFailedResult) => x.message shouldBe s"some error"
-        case _                                    => fail
+        case _                                    => fail()
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -112,14 +103,14 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
     "return Left when Organisation exists but user already assigned to organisation" in new Setup {
 
-      val organisationWithUSer = organisation.copy(collaborators = List(Collaborator(UserId(UUID.randomUUID()), emailOne)))
+      val organisationWithUSer: Organisation = organisation.copy(collaborators = List(Collaborator(UserId(UUID.randomUUID()), emailOne)))
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithUSer)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(emailOne, firstName, lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, EmailPreferences.noPreferences))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId, EmailPreferences.noPreferences))))
 
       await(inTest.addCollaborator(organisationId, emailOne, firstName, lastName)) match {
         case Left(_: OrganisationAlreadyHasCollaboratorResult) => succeed
-        case _                                                 => fail
+        case _                                                 => fail()
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -129,13 +120,13 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
     "return Left when Organisation exists and get User is successful but update Org fails" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(emailOne, firstName, lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, EmailPreferences.noPreferences))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId, EmailPreferences.noPreferences))))
 
       when(mockOrganisationRepo.addCollaboratorToOrganisation(*[OrganisationId], *)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
       await(inTest.addCollaborator(organisationId, emailOne, firstName, lastName)) match {
         case Left(x: UpdateCollaboratorFailedResult) => x.message shouldBe s"Organisation does not exist"
-        case _                                       => fail
+        case _                                       => fail()
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -147,14 +138,14 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
     "return Right when collaborator successfully added to organisation" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(emailOne, firstName, lastName, Map.empty)))(*[HeaderCarrier]))
-        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId1, EmailPreferences.noPreferences))))
+        .thenReturn(Future.successful(CreatedUserResult(UserResponse(emailOne, firstName, lastName, verified = true, userId, EmailPreferences.noPreferences))))
 
-      val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
+      val organisationWithCollaborator: Organisation = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
       when(mockOrganisationRepo.addCollaboratorToOrganisation(*[OrganisationId], *)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
 
       await(inTest.addCollaborator(organisationId, emailOne, firstName, lastName)) match {
         case Right(organisation: Organisation) => organisation.collaborators should contain only collaboratorOne
-        case _                                 => fail
+        case _                                 => fail()
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -169,7 +160,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
         await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
           case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: ${organisationId.value.toString}"
-          case _                                    => fail
+          case _                                    => fail()
         }
 
         verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -182,7 +173,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
         await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
           case Left(x: ValidateCollaboratorFailureResult) => x.message shouldBe s"Collaborator not found on Organisation"
-          case _                                          => fail
+          case _                                          => fail()
         }
 
         verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -195,7 +186,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
         await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
           case Left(x: UpdateCollaboratorFailedResult) => x.message shouldBe s"Organisation does not exist"
-          case _                                       => fail
+          case _                                       => fail()
         }
 
         verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -205,13 +196,13 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
       "return Right updated organisation" in new Setup {
         when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
-        val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email.equalsIgnoreCase(emailOne))
-        val updatedOrganisation  = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
+        val updatedCollaborators: List[Collaborator] = organisationWithCollaborators.collaborators.filterNot(_.email.equalsIgnoreCase(emailOne))
+        val updatedOrganisation: Organisation        = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
         when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
 
         await(inTest.removeCollaborator(organisationId, removeCollaboratorRequest)) match {
           case Right(organisation: Organisation) => organisation.collaborators should contain only collaboratorTwo
-          case _                                 => fail
+          case _                                 => fail()
         }
 
         verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
@@ -224,12 +215,12 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
   "handleAddCollaboratorToOrgByVendorId" should {
 
     "return Right when Organisation exists and get User is successful and update Org is successful" in new Setup {
-      val organisationWithCollaborator = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
+      val organisationWithCollaborator: Organisation = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(coreUserDetail.userId, coreUserDetail.email))
       when(mockOrganisationRepo.addCollaboratorByVendorId(*[VendorId], *)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
 
-      await(inTest.handleAddCollaboratorToOrgByVendorId(emailOne, userId1, vendorId)) match {
+      await(inTest.handleAddCollaboratorToOrgByVendorId(emailOne, userId, vendorId)) match {
         case Right(org: Organisation) => org.collaborators should contain only collaboratorOne
-        case _                        => fail
+        case _                        => fail()
       }
 
       verify(mockOrganisationRepo).addCollaboratorByVendorId(*[VendorId], *)
@@ -239,9 +230,9 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
     "return Left when Organisation exists and get User is successful but update Org fails" in new Setup {
       when(mockOrganisationRepo.addCollaboratorByVendorId(*[VendorId], *)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
-      await(inTest.handleAddCollaboratorToOrgByVendorId(emailOne, userId1, vendorId)) match {
+      await(inTest.handleAddCollaboratorToOrgByVendorId(emailOne, userId, vendorId)) match {
         case Left(x: UpdateCollaboratorFailedResult) => x.message shouldBe s"Organisation does not exist"
-        case _                                       => fail
+        case _                                       => fail()
       }
 
       verify(mockOrganisationRepo).addCollaboratorByVendorId(*[VendorId], *)
@@ -257,7 +248,7 @@ class TeamMemberServiceSpec extends AnyWordSpec with Matchers with MockitoSugar 
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailOne)))(*)).thenReturn(Future.successful(Right(List(userResponse1))))
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List(userResponse2))))
 
-      val result = await(inTest.getOrganisationUserByOrganisationId(organisationId))
+      val result: List[OrganisationUser] = await(inTest.getOrganisationUserByOrganisationId(organisationId))
       result should contain only (OrganisationUser(organisationId, userResponse1.userId, userResponse1.email, userResponse1.firstName, userResponse1.lastName, xmlApis = Nil),
       OrganisationUser(organisationId, userResponse2.userId, userResponse2.email, userResponse2.firstName, userResponse2.lastName, xmlApis = Nil))
     }
