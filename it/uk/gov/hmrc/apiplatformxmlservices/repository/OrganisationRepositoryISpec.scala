@@ -70,33 +70,29 @@ class OrganisationRepositoryISpec
   }
 
   trait Setup {
-    def getUuid: UUID = UUID.randomUUID()
-    val userIdOne     = UserId(getUuid)
-    val userIdTwo     = UserId(getUuid)
-    val userIdThree   = UserId(getUuid)
 
-    val collaboratorOne   = Collaborator(userIdOne, email = "test@collaborators.com")
-    val collaboratorTwo   = collaboratorOne.copy(userId = userIdTwo)
-    val collaboratorThree = collaboratorOne.copy(userId = userIdThree)
+    val collaboratorOne   = Collaborator(UserId.random, email = "test@collaborators.com")
+    val collaboratorTwo   = collaboratorOne.copy(UserId.random)
+    val collaboratorThree = collaboratorOne.copy(UserId.random)
 
-    val organisationToPersist       = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9000), name = OrganisationName(" Organisation Name "))
+    val organisationToPersist       = Organisation(OrganisationId.random, vendorId = VendorId(9000), name = OrganisationName(" Organisation Name "))
     val organisationWithTrimmedName = organisationToPersist.copy(name = OrganisationName(organisationToPersist.name.value.trim))
-    val organisationToPersist2      = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
+    val organisationToPersist2      = Organisation(OrganisationId.random, vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
 
     val org3: Organisation = Organisation(
-      organisationId = OrganisationId(getUuid),
+      OrganisationId.random,
       vendorId = VendorId(9003),
       name = OrganisationName("ABC DEF GHI"),
       collaborators = List(collaboratorOne, collaboratorTwo)
     )
 
-    val org4 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9004), name = OrganisationName("DEF GHI"), collaborators = List(collaboratorThree))
+    val org4 = Organisation(organisationId = OrganisationId.random, vendorId = VendorId(9004), name = OrganisationName("DEF GHI"), collaborators = List(collaboratorThree))
 
     val org5 =
-      Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9005), name = OrganisationName("GHUIUIU"), collaborators = List(collaboratorOne, collaboratorTwo))
-    val org6 = Organisation(organisationId = OrganisationId(getUuid), vendorId = VendorId(9006), name = OrganisationName("GPYGFRTDE"))
+      Organisation(organisationId = OrganisationId.random, vendorId = VendorId(9005), name = OrganisationName("GHUIUIU"), collaborators = List(collaboratorOne, collaboratorTwo))
+    val org6 = Organisation(organisationId = OrganisationId.random, vendorId = VendorId(9006), name = OrganisationName("GPYGFRTDE"))
 
-    def createOrganisations = {
+    def createOrganisations() = {
       await(repo.createOrUpdate(organisationToPersist))
       await(repo.createOrUpdate(organisationToPersist2))
       await(repo.createOrUpdate(org3))
@@ -106,16 +102,16 @@ class OrganisationRepositoryISpec
     }
 
     def createUnsortedListOfOrganisations(): List[Organisation] = {
-      val orgOne   = Organisation(OrganisationId(randomUUID()), VendorId(1111L), OrganisationName("1 Trading"))
-      val orgTwo   = Organisation(OrganisationId(randomUUID()), VendorId(1112L), OrganisationName("Global Trans Inc"))
-      val orgThree = Organisation(OrganisationId(randomUUID()), VendorId(1113L), OrganisationName("23rd Street Inc"))
-      val orgFour  = Organisation(OrganisationId(randomUUID()), VendorId(1114L), OrganisationName("! Exclamation Trading"))
-      val orgFive  = Organisation(OrganisationId(randomUUID()), VendorId(1115L), OrganisationName("$ Dollar and Co"))
-      val orgSix   = Organisation(OrganisationId(randomUUID()), VendorId(1116L), OrganisationName("Zone 5 Corp"))
-      val orgSeven = Organisation(OrganisationId(randomUUID()), VendorId(1117L), OrganisationName("Criterion Games"))
-      val orgEight = Organisation(OrganisationId(randomUUID()), VendorId(1118L), OrganisationName("abcl corp"))
-      val orgNine  = Organisation(OrganisationId(randomUUID()), VendorId(1119L), OrganisationName("exile dog inc"))
-      val orgTen   = Organisation(OrganisationId(randomUUID()), VendorId(1120L), OrganisationName("yo yachets"))
+      val orgOne   = Organisation(OrganisationId.random, VendorId(1111L), OrganisationName("1 Trading"))
+      val orgTwo   = Organisation(OrganisationId.random, VendorId(1112L), OrganisationName("Global Trans Inc"))
+      val orgThree = Organisation(OrganisationId.random, VendorId(1113L), OrganisationName("23rd Street Inc"))
+      val orgFour  = Organisation(OrganisationId.random, VendorId(1114L), OrganisationName("! Exclamation Trading"))
+      val orgFive  = Organisation(OrganisationId.random, VendorId(1115L), OrganisationName("$ Dollar and Co"))
+      val orgSix   = Organisation(OrganisationId.random, VendorId(1116L), OrganisationName("Zone 5 Corp"))
+      val orgSeven = Organisation(OrganisationId.random, VendorId(1117L), OrganisationName("Criterion Games"))
+      val orgEight = Organisation(OrganisationId.random, VendorId(1118L), OrganisationName("abcl corp"))
+      val orgNine  = Organisation(OrganisationId.random, VendorId(1119L), OrganisationName("exile dog inc"))
+      val orgTen   = Organisation(OrganisationId.random, VendorId(1120L), OrganisationName("yo yachets"))
 
       await(repo.createOrUpdate(orgOne))
       await(repo.createOrUpdate(orgTwo))
@@ -188,7 +184,7 @@ class OrganisationRepositoryISpec
     }
 
     "return None when organisationId does not exist" in new Setup {
-      val result = await(repo.findByOrgId(OrganisationId(getUuid)))
+      val result = await(repo.findByOrgId(OrganisationId.random))
 
       result shouldBe None
     }
@@ -213,17 +209,17 @@ class OrganisationRepositoryISpec
   "findByUserId" should {
 
     "return all matching organisations" in new Setup {
-      createOrganisations
+      createOrganisations()
 
-      val results: List[Organisation] = await(repo.findByUserId(userIdOne))
+      val results: List[Organisation] = await(repo.findByUserId(collaboratorOne.userId))
 
       results should contain only (List(org3, org5): _*)
     }
 
     "return no organisations for non-existent userId" in new Setup {
-      createOrganisations
+      createOrganisations()
 
-      val results: List[Organisation] = await(repo.findByUserId(UserId(getUuid)))
+      val results: List[Organisation] = await(repo.findByUserId(UserId.random))
 
       results shouldBe List.empty
     }
@@ -232,7 +228,7 @@ class OrganisationRepositoryISpec
   "findByOrganisationName" should {
 
     "return all matching organisation" in new Setup {
-      createOrganisations
+      createOrganisations()
 
       val results = await(repo.findByOrganisationName(OrganisationName("DEF")))
 
@@ -240,7 +236,7 @@ class OrganisationRepositoryISpec
     }
 
     "return no organisations when there are no matches" in new Setup {
-      createOrganisations
+      createOrganisations()
 
       val results = await(repo.findByOrganisationName(OrganisationName("UNKNOWN")))
 
@@ -351,7 +347,7 @@ class OrganisationRepositoryISpec
     "return Left when vendor Id already exists" in new Setup {
       await(repo.createOrUpdate(organisationToPersist))
 
-      val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"), organisationId = OrganisationId(getUuid), vendorId = VendorId(9000))
+      val updatedOrganisation = organisationToPersist.copy(name = OrganisationName("New organisation name"), organisationId = OrganisationId.random, vendorId = VendorId(9000))
 
       await(repo.createOrUpdate(updatedOrganisation)) match {
         case Right(_)           => fail()

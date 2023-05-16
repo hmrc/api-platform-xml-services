@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -64,11 +63,11 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     val fakeRequest   = FakeRequest("GET", "/organisations")
     val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
-    val jsonMediaType  = "application/json"
-    def getUuid        = UUID.randomUUID()
-    val organisationId = OrganisationId(getUuid)
+    val jsonMediaType = "application/json"
+
+    val organisationId = OrganisationId.random
     val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId         = UserId(UUID.randomUUID())
+    val userId         = UserId.random
     val email          = "foo@bar.com"
 
     val coreUserDetail                      = CoreUserDetail(userId, email)
@@ -83,9 +82,9 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     val updateOrganisationDetailsRequest =
       FakeRequest("POST", s"/organisations/${organisationId.value.toString}").withBody(Json.toJson(updateOrganisationDetailsRequestObj))
 
-    val orgOne: OrganisationWithNameAndVendorId = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-    val orgTwo: OrganisationWithNameAndVendorId = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-    val bulkFindAndCreateOrUpdateRequestObj     = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
+    val orgOne                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+    val orgTwo                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+    val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
 
     val bulkFindAndCreateOrUpdateRequest =
       FakeRequest("POST", s"/organisations/bulk").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
@@ -103,7 +102,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.findByOrgId(OrganisationId(getUuid))(fakeRequest)
+      val result: Future[Result] = controller.findByOrgId(OrganisationId.random)(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }
