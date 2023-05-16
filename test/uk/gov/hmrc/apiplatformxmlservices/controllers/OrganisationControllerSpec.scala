@@ -65,9 +65,9 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
     val jsonMediaType = "application/json"
 
-    val organisationId = OrganisationId.random
+    val organisationId = OrganisationId.random()
     val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId         = UserId.random
+    val userId         = UserId.random()
     val email          = "foo@bar.com"
 
     val coreUserDetail                      = CoreUserDetail(userId, email)
@@ -102,7 +102,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.findByOrgId(OrganisationId.random)(fakeRequest)
+      val result: Future[Result] = controller.findByOrgId(OrganisationId.random())(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }

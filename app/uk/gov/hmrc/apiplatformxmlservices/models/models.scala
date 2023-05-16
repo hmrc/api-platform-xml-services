@@ -50,7 +50,7 @@ case class XmlApi(name: String, serviceName: ServiceName, context: String, descr
 case class UserId(value: ju.UUID)
 
 object UserId {
-  def random: UserId = UserId(UUID.randomUUID())
+  def random(): UserId = UserId(UUID.randomUUID())
 }
 
 case class OrganisationUser(organisationId: OrganisationId, userId: UserId, email: String, firstName: String, lastName: String, xmlApis: List[XmlApi])
@@ -58,7 +58,7 @@ case class OrganisationUser(organisationId: OrganisationId, userId: UserId, emai
 case class OrganisationId(value: ju.UUID) extends AnyVal
 
 object OrganisationId {
-  def random: OrganisationId = OrganisationId(UUID.randomUUID())
+  def random(): OrganisationId = OrganisationId(UUID.randomUUID())
 }
 
 case class VendorId(value: Long) extends AnyVal
