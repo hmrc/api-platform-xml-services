@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -55,18 +54,20 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
   }
 
   trait Setup {
-    val firstName                 = "bob"
-    val lastName                  = "hope"
-    val createOrganisationRequest = CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"), "some@email.com", firstName, lastName)
+    val firstName = "bob"
+    val lastName  = "hope"
+
+    val createOrganisationRequest =
+      CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"), "some@email.com", firstName, lastName)
 
     val fakeRequest   = FakeRequest("GET", "/organisations")
     val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
-    val jsonMediaType  = "application/json"
-    def getUuid()      = UUID.randomUUID()
-    val organisationId = OrganisationId(getUuid)
+    val jsonMediaType = "application/json"
+
+    val organisationId = OrganisationId.random()
     val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId         = UserId(UUID.randomUUID())
+    val userId         = UserId.random()
     val email          = "foo@bar.com"
 
     val coreUserDetail                      = CoreUserDetail(userId, email)
@@ -101,7 +102,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.findByOrgId(OrganisationId(getUuid))(fakeRequest)
+      val result: Future[Result] = controller.findByOrgId(OrganisationId.random())(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }
@@ -186,7 +187,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
       val invalidRequest = FakeRequest("POST", "/organisations")
         .withBody(Json.toJson(updateOrganisationDetailsRequestObj.copy(organisationName = OrganisationName("   "))))
 
-      val result: Future[Result] = controller.updateOrganisationDetails(organisation.organisationId)(invalidRequest)
+      val result = controller.updateOrganisationDetails(organisation.organisationId)(invalidRequest)
       status(result) shouldBe Status.BAD_REQUEST
       contentAsString(result) shouldBe "Could not update Organisation with empty name"
 

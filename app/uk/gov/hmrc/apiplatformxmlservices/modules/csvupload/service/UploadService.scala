@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.service
 
 import javax.inject.{Inject, Singleton}
+import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 import cats.data.{NonEmptyList, Validated}

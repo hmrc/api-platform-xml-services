@@ -8,7 +8,7 @@ object AppDependencies {
   lazy val enumeratumVersion = "1.6.2"
   lazy val scalaCheckVersion = "1.14.0"
   lazy val mongoVersion = "0.74.0"
-  lazy val bootstrapVersion = "7.12.0"
+  lazy val bootstrapVersion = "7.15.0"
 
   def apply(): Seq[ModuleID] =
     compile ++ test
@@ -17,7 +17,8 @@ object AppDependencies {
     "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % bootstrapVersion,
     "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-28"         % mongoVersion,
     "com.beachape"            %% "enumeratum-play-json"       % enumeratumVersion,
-    "org.typelevel"           %% "cats-core"                  % "2.4.2"
+    "org.scala-lang.modules"  %% "scala-parallel-collections" % "1.0.4",
+    "org.typelevel"           %% "cats-core"                  % "2.8.0"
   )
 
   lazy val test = Seq(

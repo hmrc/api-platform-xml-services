@@ -47,7 +47,7 @@ class ApiController @Inject() (xmlService: XmlApiService, cc: ControllerComponen
   }
 
   def getApiByServiceName(serviceName: ServiceName): Action[AnyContent] = Action.async {
-    xmlService.getUnfilteredApis.find(_.serviceName == serviceName) match {
+    xmlService.getUnfilteredApis().find(_.serviceName == serviceName) match {
       case Some(xmlApi) => Future.successful(Ok(Json.toJson(xmlApi)))
       case _            => Future.successful(NotFound(s"XML API with serviceName $serviceName not found."))
     }

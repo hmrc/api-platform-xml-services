@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.support
 
 import java.net.ServerSocket
-
+import scala.language.postfixOps
 import play.api.Logger
 
 import scala.annotation.tailrec

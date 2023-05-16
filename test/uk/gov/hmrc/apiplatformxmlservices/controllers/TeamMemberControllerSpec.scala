@@ -69,7 +69,7 @@ class TeamMemberControllerSpec extends AnyWordSpec with Matchers with MockitoSug
 
     val jsonMediaType = "application/json"
 
-    def getUuid() = UUID.randomUUID()
+    def getUuid = UUID.randomUUID()
 
     val organisationId = OrganisationId(getUuid)
     val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))

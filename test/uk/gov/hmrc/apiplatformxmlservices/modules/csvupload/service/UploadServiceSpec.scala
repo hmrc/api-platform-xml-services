@@ -60,7 +60,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     val vendorId1 = VendorId(9000)
     val vendorId2 = VendorId(9001)
 
-    def getUuid() = UUID.randomUUID()
+    def getUuid = UUID.randomUUID()
 
     val organisationId = OrganisationId(uuid)
     val organisation1  = Organisation(organisationId = organisationId, vendorId = vendorId1, name = OrganisationName("Organisation Name"))
@@ -132,7 +132,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       when(mockTeamMemberService.handleAddCollaboratorToOrgByVendorId(userResponse.email, userResponse.userId, vendorId2)).thenReturn(Future.successful(response2))
     }
 
-    def verifyAddCollaboratorToOrgFailure() {
+    def verifyAddCollaboratorToOrgFailure(): Unit = {
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
       verify(mockTeamMemberService, times(2)).handleAddCollaboratorToOrgByVendorId(*, *[UserId], *[VendorId])
@@ -160,7 +160,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                                                      => fail
+        case _                                                                      => fail()
       }
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(eqTo(importUserRequestObj))(*)
@@ -183,7 +183,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadExistingUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                                                       => fail
+        case _                                                                       => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -201,7 +201,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - Invalid vendorId(s) | RowNumber:1 - Invalid service(s)"
-        case _                                  => fail
+        case _                                  => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -219,7 +219,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - Invalid vendorId(s)"
-        case _                                  => fail
+        case _                                  => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -235,7 +235,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case InvalidUserResult(message: String) => message shouldBe "RowNumber:1 - missing vendorIds on user"
-        case _                                  => fail
+        case _                                  => fail()
       }
 
       verifyZeroInteractions(mockOrganisationService)
@@ -256,7 +256,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case e: CreateOrGetUserFailedResult => e.message shouldBe s"RowNumber:1 - failed to get or create User: Unable to register user"
-        case _                              => fail
+        case _                              => fail()
       }
 
       verify(mockOrganisationService, times(2)).findByVendorId(*[VendorId])
@@ -278,7 +278,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
         case UploadCreatedUserSuccessResult(rowNumber: Int, response: UserResponse) =>
           response shouldBe userResponse
           rowNumber shouldBe 1
-        case _                                                                      => fail
+        case _                                                                      => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()
@@ -298,7 +298,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case AddUserToOrgFailureResult(error: String) => error shouldBe errorMessageForVendorIdUserId(vendorId1, userId)
-        case _                                        => fail
+        case _                                        => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()
@@ -317,7 +317,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case AddUserToOrgFailureResult(error: String) => error shouldBe errorMessageForVendorIdUserId(vendorId2, userId)
-        case _                                        => fail
+        case _                                        => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()
@@ -336,7 +336,7 @@ class UploadServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
       results.size shouldBe 1
       results.head match {
         case AddUserToOrgFailureResult(error: String) => error shouldBe s"${errorMessageForVendorIdUserId(vendorId1, userId)} | ${errorMessageForVendorIdUserId(vendorId2, userId)}"
-        case _                                        => fail
+        case _                                        => fail()
       }
 
       verifyAddCollaboratorToOrgFailure()

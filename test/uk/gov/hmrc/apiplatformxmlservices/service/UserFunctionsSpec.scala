@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
-import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -32,7 +31,7 @@ import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnecto
 import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
 import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, EmailTopic, ImportUserRequest, TaxRegimeInterests, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser, UserId, XmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationUser, XmlApi}
 import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreatedUserResult, RetrievedUserResult}
 
 class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
@@ -42,13 +41,11 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
   override val xmlApiService: XmlApiService                               = new XmlApiService()
   implicit val hc: HeaderCarrier                                          = HeaderCarrier()
 
-  trait Setup {
-    val email                          = "a@b.com"
-    val firstName                      = "bob"
-    val lastName                       = "hope"
-    val userId: UserId                 = UserId(UUID.randomUUID())
-    val organisationId: OrganisationId = OrganisationId(UUID.randomUUID())
-    val response: UserResponse         = UserResponse(email, firstName, lastName, verified = true, userId = userId, emailPreferences = EmailPreferences.noPreferences)
+  trait Setup extends CommonTestData {
+    val email     = "a@b.com"
+    val firstName = "bob"
+    val lastName  = "hope"
+    val response  = UserResponse(email, firstName, lastName, verified = true, userId = userId, emailPreferences = EmailPreferences.noPreferences)
   }
 
   "handleGetOrCreateUser" should {
@@ -59,7 +56,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(email, firstName, lastName))
       result match {
         case Right(_: UserResponse) => succeed
-        case _                      => fail
+        case _                      => fail()
       }
     }
 
@@ -70,7 +67,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(email, firstName, lastName))
       result match {
         case Right(_: UserResponse) => succeed
-        case _                      => fail
+        case _                      => fail()
       }
     }
 
@@ -81,7 +78,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(email, firstName, lastName))
       result match {
         case Left(e: GetOrCreateUserFailedResult) => e.message shouldBe "Some error"
-        case _                                    => fail
+        case _                                    => fail()
       }
     }
   }
@@ -140,7 +137,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
       val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithSomeXmlServices))
       result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(customs1, customs2, paye1))
-      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (customs1, customs2, paye1)
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (List(customs1, customs2, paye1): _*)
     }
 
     "return OrganisationUser with all xml Services for a category when user has selected the entire category in preferences" in new Setup {
@@ -149,7 +146,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
 
       val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesForEntireCategory))
       result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(paye1, paye2))
-      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (paye1, paye2)
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (List(paye1, paye2): _*)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {

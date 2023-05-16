@@ -46,7 +46,7 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   "getUnfilteredApis" should {
     "return retired apis" in new Setup {
 
-      val result = inTest.getUnfilteredApis
+      val result = inTest.getUnfilteredApis()
       result should contain(retiredApi)
 
     }
@@ -55,7 +55,7 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   "getStableApis" should {
     "not return retired apis" in new Setup {
 
-      val result = inTest.getStableApis
+      val result = inTest.getStableApis()
       result should not contain (retiredApi)
 
     }
