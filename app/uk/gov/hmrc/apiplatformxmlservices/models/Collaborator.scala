@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models.common
+package uk.gov.hmrc.apiplatformxmlservices.models
 
-case class ServiceName(value: String) extends AnyVal
+import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+
+case class Collaborator(userId: UserId, email: LaxEmailAddress)
+
+object Collaborator {
+  implicit val formatCollaborator = Json.format[Collaborator]
+}

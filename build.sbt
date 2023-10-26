@@ -1,4 +1,7 @@
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
+import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
+import uk.gov.hmrc.DefaultBuildSettings
+import AppDependencies._
+
 import bloop.integrations.sbt.BloopDefaults
 
 val appName = "api-platform-xml-services"
@@ -12,36 +15,42 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin)
   .settings(
+    name := appName,
+    organization := "uk.gov.hmrc",
     majorVersion                     := 0,
     PlayKeys.playDefaultPort         := 11116,
-    routesImport                     += "uk.gov.hmrc.apiplatformxmlservices.controllers.binders._",
-    libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
+    libraryDependencies              ++= AppDependencies(),
+    retrieveManaged := true
   )
-  .settings(scoverageSettings)
+  .settings(ScoverageSettings())
   .settings(Compile / unmanagedResourceDirectories  += baseDirectory.value / "resources")
   .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
-  .settings(headerSettings(IntegrationTest) ++ automateHeaderSettings(IntegrationTest))
-  .settings(resolvers += Resolver.jcenterRepo)
-  .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
+  .settings(DefaultBuildSettings.integrationTestSettings())
   .settings(
-    scalacOptions ++= Seq(
-      "-Wconf:cat=unused&src=views/.*\\.scala:s",
-      "-Wconf:cat=unused&src=.*RoutesPrefix\\.scala:s",
-      "-Wconf:cat=unused&src=.*Routes\\.scala:s",
-      "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
-    )
+    IntegrationTest / testOptions := Seq(Tests.Argument(TestFrameworks.ScalaTest, "-eT")),
+    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
+    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "it",
+    IntegrationTest / parallelExecution := false
   )
+  .settings(
+    Test / fork := false,
+    Test / parallelExecution := false,
+    Test / testOptions := Seq(Tests.Argument(TestFrameworks.ScalaTest, "-eT")),
+    Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
+    Test / unmanagedSourceDirectories += baseDirectory.value / "test"
+  )
+  .settings(
+       routesImport  ++= Seq(
+       "uk.gov.hmrc.apiplatformxmlservices.controllers.binders._",
+       "uk.gov.hmrc.apiplatformxmlservices.models._",
+       "uk.gov.hmrc.apiplatform.modules.common.domain.models._",
+       "uk.gov.hmrc.apiplatform.modules.apis.domain.models._"
+     )
+   )
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
+  .disablePlugins(JUnitXmlReportPlugin)
 
-  lazy val scoverageSettings = {
-  import scoverage.ScoverageKeys
-  Seq(
-    // Semicolon-separated list of regexs matching classes to exclude
-    ScoverageKeys.coverageExcludedPackages := ";.*\\.models\\..*;uk\\.gov\\.hmrc\\.BuildInfo;.*\\.Routes;.*\\.RoutesPrefix;;.*ConfigurationModule;GraphiteStartUp;.*\\.Reverse[^.]*",
-    ScoverageKeys.coverageMinimumStmtTotal := 96,
-    ScoverageKeys.coverageFailOnMinimum := true,
-    ScoverageKeys.coverageHighlighting := true
-  )
-}
+Global / bloopAggregateSourceDependencies := true
+

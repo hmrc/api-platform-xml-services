@@ -18,28 +18,28 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 
 import scala.concurrent.{ExecutionContext, Future}
 
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationUser}
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CreateUserRequest, UserResponse, WrappedApiCategoryServiceMap}
+import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult, GetOrCreateUserFailedResult, OrganisationId, OrganisationUser}
 
 trait UserFunctions {
   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
   val xmlApiService: XmlApiService
 
   def handleGetOrCreateUser(
-      email: String,
+      email: LaxEmailAddress,
       firstName: String,
       lastName: String
     )(implicit hc: HeaderCarrier,
       ec: ExecutionContext
     ): Future[Either[GetOrCreateUserFailedResult, UserResponse]] = {
 
-    thirdPartyDeveloperConnector.createVerifiedUser(ImportUserRequest(email, firstName, lastName, Map.empty)).map {
+    thirdPartyDeveloperConnector.createVerifiedUser(CreateUserRequest(email, firstName, lastName, WrappedApiCategoryServiceMap.empty)).map {
       case x: CreateVerifiedUserSuccessResult    => Right(x.userResponse)
       case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
     }
@@ -49,7 +49,7 @@ trait UserFunctions {
   def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser = {
     val stableApis = xmlApiService.getStableApis()
 
-    val xmlServiceNames: Set[String] = stableApis.map(_.serviceName.value).toSet
+    val xmlServiceNames: Set[ServiceName] = stableApis.map(_.serviceName).toSet
 
     val stableXmlApisThatUserSelectedSpecifically = for {
       filteredInterests <- user.emailPreferences.interests.filter(_.services.intersect(xmlServiceNames).nonEmpty)

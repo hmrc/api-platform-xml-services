@@ -14,10 +14,28 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models.collaborators
+package uk.gov.hmrc.apiplatformxmlservices.models
 
-case class AddCollaboratorRequest(email: String, firstName: String, lastName: String)
-case class RemoveCollaboratorRequest(email: String, gatekeeperUserId: String)
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
+
+sealed trait CreateOrganisationResult
+case class CreateOrganisationSuccessResult(organisation: Organisation) extends CreateOrganisationResult
+case class CreateOrganisationFailedResult(message: String)             extends CreateOrganisationResult
+case class CreateOrganisationFailedDuplicateIdResult(message: String)  extends CreateOrganisationResult
+
+sealed trait UpdateOrganisationResult
+case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
+case class UpdateOrganisationFailedResult()                            extends UpdateOrganisationResult
+
+sealed trait CreateVerifiedUserResult
+
+abstract class CreateVerifiedUserSuccessResult() extends CreateVerifiedUserResult {
+  val userResponse: UserResponse
+}
+
+case class CreatedUserResult(userResponse: UserResponse)   extends CreateVerifiedUserSuccessResult
+case class RetrievedUserResult(userResponse: UserResponse) extends CreateVerifiedUserSuccessResult
+case class CreateVerifiedUserFailedResult(message: String) extends CreateVerifiedUserResult
 
 sealed trait ManageCollaboratorResult {
   val message: String

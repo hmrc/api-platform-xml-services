@@ -22,6 +22,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
@@ -32,7 +33,6 @@ import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
-    with JsonFormatters
     with Logging {
 
   def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
@@ -67,7 +67,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
   def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
-      case _    => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
+      case _    => NotFound(s"XML Organisation with organisationId $organisationId not found.")
     }
   }
 
@@ -88,7 +88,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     withJsonBody[Organisation] { organisation =>
       organisationService.update(organisation).map {
         case Right(_) => Ok(Json.toJson(organisation))
-        case _        => NotFound(s"Could not find Organisation with ID ${organisation.organisationId.value}")
+        case _        => NotFound(s"Could not find Organisation with ID ${organisation.organisationId}")
       }
     }
   }

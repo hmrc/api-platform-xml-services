@@ -19,41 +19,33 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import org.mockito.scalatest.MockitoSugar
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiContext
 import uk.gov.hmrc.http.HeaderCarrier
 
+import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
+import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, EmailTopic, ImportUserRequest, TaxRegimeInterests, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationUser, XmlApi}
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{CreateVerifiedUserFailedResult, CreatedUserResult, RetrievedUserResult}
+import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 
-class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
-    with BeforeAndAfterEach with DefaultAwaitTimeout with FutureAwaits with UserFunctions {
+class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
 
   override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector = mock[ThirdPartyDeveloperConnector]
   override val xmlApiService: XmlApiService                               = new XmlApiService()
   implicit val hc: HeaderCarrier                                          = HeaderCarrier()
 
   trait Setup extends CommonTestData {
-    val email     = "a@b.com"
-    val firstName = "bob"
-    val lastName  = "hope"
-    val response  = UserResponse(email, firstName, lastName, verified = true, userId = userId, emailPreferences = EmailPreferences.noPreferences)
+
+    val response = UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, userId = aUserId, emailPreferences = EmailPreferences.noPreferences)
   }
 
   "handleGetOrCreateUser" should {
     "return right list of user responses when user created result returned" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(email, firstName, lastName, Map.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedApiCategoryServiceMap.empty)))(*))
         .thenReturn(Future.successful(CreatedUserResult(response)))
 
-      val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(email, firstName, lastName))
+      val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))
       result match {
         case Right(_: UserResponse) => succeed
         case _                      => fail()
@@ -61,10 +53,10 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     }
 
     "return right list of user responses when user retrieved result returned" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(email, firstName, lastName, Map.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedApiCategoryServiceMap.empty)))(*))
         .thenReturn(Future.successful(RetrievedUserResult(response)))
 
-      val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(email, firstName, lastName))
+      val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))
       result match {
         case Right(_: UserResponse) => succeed
         case _                      => fail()
@@ -72,10 +64,10 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     }
 
     "return left GetOrCreateUserFailedResult when connector returns failure" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(ImportUserRequest(email, firstName, lastName, Map.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedApiCategoryServiceMap.empty)))(*))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("Some error")))
 
-      val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(email, firstName, lastName))
+      val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))
       result match {
         case Left(e: GetOrCreateUserFailedResult) => e.message shouldBe "Some error"
         case _                                    => fail()
@@ -90,7 +82,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     val customs1 = XmlApi(
       "Excise Movement Control System",
       ServiceName("excise-movement-control"),
-      "/government/collections/excise-movement-control-system-fs31-support-for-software-developers",
+      ApiContext("/government/collections/excise-movement-control-system-fs31-support-for-software-developers"),
       "Technical specifications for the Excise Movement Control System (EMCS).",
       Some(List(ApiCategory.CUSTOMS))
     )
@@ -98,7 +90,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     val customs2 = XmlApi(
       "Import Control System",
       ServiceName("import-control-system"),
-      "/government/collections/import-control-system-support-for-software-developers",
+      ApiContext("/government/collections/import-control-system-support-for-software-developers"),
       "Technical specifications for Import Control System software developers.",
       Some(List(ApiCategory.CUSTOMS))
     )
@@ -106,7 +98,7 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     val paye1 = XmlApi(
       "PAYE Online",
       ServiceName("paye-online"),
-      "/government/collections/paye-online-support-for-software-developers",
+      ApiContext("/government/collections/paye-online-support-for-software-developers"),
       "Technical specifications for software developers working with the PAYE online service.",
       Some(List(ApiCategory.PAYE))
     )
@@ -114,44 +106,48 @@ class UserFunctionsSpec extends AnyWordSpec with Matchers with MockitoSugar
     val paye2 = XmlApi(
       "Real Time Information online",
       ServiceName("real-time-information-online"),
-      "/government/collections/real-time-information-online-internet-submissions-support-for-software-developers",
+      ApiContext("/government/collections/real-time-information-online-internet-submissions-support-for-software-developers"),
       "Technical specifications for software developers working with the Real Time Information online service.",
       Some(List(ApiCategory.PAYE))
     )
 
     "return OrganisationUser with no services when user has no xml services in preferences" in new Setup {
 
-      val interestNoXmlServices                               = List(TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3")), TaxRegimeInterests("VAT", Set("service-4", "service-6")))
+      val interestNoXmlServices                               =
+        List(
+          TaxRegimeInterests(regime = ApiCategory.CUSTOMS, services = Set(ServiceName("service-1"), ServiceName("service3"))),
+          TaxRegimeInterests(ApiCategory.VAT, Set(ServiceName("service-4"), ServiceName("service-6")))
+        )
       val emailPreferencesWithNoXmlServices: EmailPreferences = EmailPreferences(interestNoXmlServices, Set(EmailTopic.BUSINESS_AND_POLICY))
 
-      val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithNoXmlServices))
-      result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = Nil)
+      val result: OrganisationUser = toOrganisationUser(anOrganisationId, response.copy(emailPreferences = emailPreferencesWithNoXmlServices))
+      result shouldBe anOrganisationUserNoServices
     }
 
     "return OrganisationUser with only xml Services when user has mix of some xml and non xml services in preferences" in new Setup {
       val interestWithSomeXmlServices                           = List(
-        TaxRegimeInterests(regime = "CUSTOMS", services = Set("service-1", "service3", customs1.serviceName.value, customs2.serviceName.value)),
-        TaxRegimeInterests("PAYE", Set("service-4", "service-6", paye1.serviceName.value))
+        TaxRegimeInterests(regime = ApiCategory.CUSTOMS, services = Set(ServiceName("service-1"), ServiceName("service3"), customs1.serviceName, customs2.serviceName)),
+        TaxRegimeInterests(ApiCategory.PAYE, Set(ServiceName("service-4"), ServiceName("service-6"), paye1.serviceName))
       )
       val emailPreferencesWithSomeXmlServices: EmailPreferences = EmailPreferences(interestWithSomeXmlServices, Set(EmailTopic.BUSINESS_AND_POLICY))
 
-      val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesWithSomeXmlServices))
-      result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(customs1, customs2, paye1))
+      val result: OrganisationUser = toOrganisationUser(anOrganisationId, response.copy(emailPreferences = emailPreferencesWithSomeXmlServices))
+      result shouldBe anOrganisationUserNoServices.copy(xmlApis = List(customs1, customs2, paye1))
       xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (List(customs1, customs2, paye1): _*)
     }
 
     "return OrganisationUser with all xml Services for a category when user has selected the entire category in preferences" in new Setup {
-      val interestedInEntireCategory                          = List(TaxRegimeInterests("PAYE", Set()))
+      val interestedInEntireCategory                          = List(TaxRegimeInterests(ApiCategory.PAYE, Set.empty))
       val emailPreferencesForEntireCategory: EmailPreferences = EmailPreferences(interestedInEntireCategory, Set(EmailTopic.BUSINESS_AND_POLICY))
 
-      val result: OrganisationUser = toOrganisationUser(organisationId, response.copy(emailPreferences = emailPreferencesForEntireCategory))
-      result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = List(paye1, paye2))
+      val result: OrganisationUser = toOrganisationUser(anOrganisationId, response.copy(emailPreferences = emailPreferencesForEntireCategory))
+      result shouldBe anOrganisationUserNoServices.copy(xmlApis = List(paye1, paye2))
       xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (List(paye1, paye2): _*)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {
-      val result: OrganisationUser = toOrganisationUser(organisationId, response)
-      result shouldBe OrganisationUser(organisationId, userId, email, firstName, lastName, xmlApis = Nil)
+      val result: OrganisationUser = toOrganisationUser(anOrganisationId, response)
+      result shouldBe anOrganisationUserNoServices
     }
   }
 }

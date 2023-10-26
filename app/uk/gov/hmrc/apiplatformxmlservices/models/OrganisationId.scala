@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.models.common
+package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json.Json
+import java.{util => ju}
 
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationName, OrganisationWithNameAndVendorId, VendorId}
+import play.api.libs.json.{Format, Json}
 
-trait CommonJsonFormatters {
+case class OrganisationId(value: ju.UUID) extends AnyVal {
+  override def toString(): String = value.toString
+}
 
-  implicit val formatServiceName                     = Json.valueFormat[ServiceName]
-  implicit val formatVendorId                        = Json.valueFormat[VendorId]
-  implicit val formatOrganisationName                = Json.valueFormat[OrganisationName]
-  implicit val formatOrganisationWithNameAndVendorId = Json.format[OrganisationWithNameAndVendorId]
+object OrganisationId {
+  def random: OrganisationId = new OrganisationId(ju.UUID.randomUUID())
 
+  implicit val format: Format[OrganisationId] = Json.valueFormat[OrganisationId]
 }

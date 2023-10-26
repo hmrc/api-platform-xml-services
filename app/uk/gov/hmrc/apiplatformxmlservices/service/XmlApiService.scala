@@ -20,21 +20,22 @@ import javax.inject.{Inject, Singleton}
 import scala.io.Source
 
 import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ApiStatus, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiContext
 
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-import uk.gov.hmrc.apiplatformxmlservices.models.{ApiStatus, JsonFormatters, XmlApi}
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
 import uk.gov.hmrc.apiplatformxmlservices.service.InternalXmlApi.internalToXmlApi
 
 case class InternalXmlApi(
     name: String,
     serviceName: ServiceName,
-    context: String,
+    context: ApiContext,
     description: String,
     categories: Option[Seq[ApiCategory]] = None,
     status: ApiStatus = ApiStatus.STABLE
   )
 
-object InternalXmlApi extends JsonFormatters {
+object InternalXmlApi {
 
   implicit val format = Json.format[InternalXmlApi]
 
@@ -61,8 +62,8 @@ class XmlApiService @Inject() () {
 
   def getStableApis(): List[XmlApi] = stableXmlApis.map(internalToXmlApi)
 
-  def getStableApiByServiceName(serviceName: String): Option[XmlApi] = {
-    stableXmlApis.map(internalToXmlApi).find(_.serviceName.value == serviceName)
+  def getStableApiByServiceName(serviceName: ServiceName): Option[XmlApi] = {
+    stableXmlApis.map(internalToXmlApi).find(_.serviceName == serviceName)
   }
 
   def getStableApisForCategories(categories: List[ApiCategory]): List[XmlApi] = {
@@ -73,9 +74,8 @@ class XmlApiService @Inject() () {
 
   }
 
-  def getStableApisByCategory(apiCategory: String): List[XmlApi] = {
-    val categoryToMatch = ApiCategory.withName(apiCategory.toUpperCase)
-    stableXmlApis.map(internalToXmlApi).filter(categoryFilter(_, categoryToMatch))
+  def getStableApisByCategory(apiCategory: ApiCategory): List[XmlApi] = {
+    stableXmlApis.map(internalToXmlApi).filter(categoryFilter(_, apiCategory))
   }
 
   private def categoryFilter(api: XmlApi, categoryToMatch: ApiCategory): Boolean = {

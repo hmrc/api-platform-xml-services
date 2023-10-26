@@ -19,12 +19,6 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import org.mockito.scalatest.MockitoSugar
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -32,62 +26,47 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import uk.gov.hmrc.apiplatformxmlservices.common.builder.OrganisationBuilder
+import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
+import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.AddCollaboratorRequest
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
-import uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models.{BulkUploadOrganisationsRequest, CSVJsonFormats}
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
-class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoSugar
-    with GuiceOneAppPerSuite with BeforeAndAfterEach with JsonFormatters with CSVJsonFormats {
-
-  private val mockOrgService = mock[OrganisationService]
-
-  private val controller = new OrganisationController(
-    mockOrgService,
-    Helpers.stubControllerComponents()
-  )
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    reset(mockOrgService)
-  }
+class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with OrganisationBuilder {
 
   trait Setup {
-    val firstName = "bob"
-    val lastName  = "hope"
+    val mockOrgService = mock[OrganisationService]
+
+    val controller = new OrganisationController(
+      mockOrgService,
+      Helpers.stubControllerComponents()
+    )
 
     val createOrganisationRequest =
-      CreateOrganisationRequest(organisationName = OrganisationName("Organisation Name"), "some@email.com", firstName, lastName)
+      CreateOrganisationRequest(organisationName = anOrganisationName, anEmailAddress, aFirstName, aLastName)
 
     val fakeRequest   = FakeRequest("GET", "/organisations")
     val createRequest = FakeRequest("POST", "/organisations").withBody(Json.toJson(createOrganisationRequest))
 
     val jsonMediaType = "application/json"
 
-    val organisationId = OrganisationId.random()
-    val organisation   = Organisation(organisationId, vendorId = VendorId(2001), name = OrganisationName("Organisation Name"))
-    val userId         = UserId.random()
-    val email          = "foo@bar.com"
+    val organisation = buildOrganisation(Some(anOrganisationId), vendorId = VendorId(2001), name = OrganisationName("Organisation Name"), List.empty)
 
-    val coreUserDetail                      = CoreUserDetail(userId, email)
-    val addCollaboratorRequestObj           = AddCollaboratorRequest(email, firstName, lastName)
-    val updatedOrganisationName             = OrganisationName("updated name")
-    val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrganisationName)
-    val organisationWithCollaborator        = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(userId, email))
+    val coreUserDetail            = CoreUserDetail(aUserId, anEmailAddress)
+    val addCollaboratorRequestObj = AddCollaboratorRequest(anEmailAddress, aFirstName, aLastName)
+
+    val updateOrganisationDetailsRequestObj = UpdateOrganisationDetailsRequest(updatedOrgName)
+    val organisationWithCollaborator        = organisation.copy(collaborators = organisation.collaborators :+ Collaborator(aUserId, anEmailAddress))
 
     val addCollaboratorRequest =
-      FakeRequest("POST", s"/organisations/${organisation.organisationId.value.toString}/collaborator").withBody(Json.toJson(addCollaboratorRequestObj))
+      FakeRequest("POST", s"/organisations/${organisation.organisationId.value}/collaborator").withBody(Json.toJson(addCollaboratorRequestObj))
 
     val updateOrganisationDetailsRequest =
-      FakeRequest("POST", s"/organisations/${organisationId.value.toString}").withBody(Json.toJson(updateOrganisationDetailsRequestObj))
+      FakeRequest("POST", s"/organisations/$anOrganisationId").withBody(Json.toJson(updateOrganisationDetailsRequestObj))
 
-    val orgOne                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-    val orgTwo                              = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-    val bulkFindAndCreateOrUpdateRequestObj = BulkUploadOrganisationsRequest(Seq(orgOne, orgTwo))
-
-    val bulkFindAndCreateOrUpdateRequest =
-      FakeRequest("POST", s"/organisations/bulk").withBody(Json.toJson(bulkFindAndCreateOrUpdateRequestObj))
+    val orgOne = OrganisationWithNameAndVendorId(name = anOrganisationName, vendorId = aVendorId)
+    val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
 
   }
 
@@ -95,14 +74,14 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     "return 200" in new Setup {
       when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
 
-      val result: Future[Result] = controller.findByOrgId(organisationId)(fakeRequest)
+      val result: Future[Result] = controller.findByOrgId(anOrganisationId)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 404 when no results returned" in new Setup {
       when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.findByOrgId(OrganisationId.random())(fakeRequest)
+      val result: Future[Result] = controller.findByOrgId(OrganisationId.random)(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }
@@ -161,7 +140,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.CONFLICT
-      contentAsString(result) shouldBe "Could not create Organisation with name OrganisationName(Organisation Name) - Duplicate ID"
+      contentAsString(result) shouldBe s"Could not create Organisation with name $anOrganisationName - Duplicate ID"
     }
 
     "return 400" in new Setup {
@@ -170,12 +149,12 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
 
       val result: Future[Result] = controller.create()(createRequest)
       status(result) shouldBe Status.BAD_REQUEST
-      contentAsString(result) shouldBe "Could not create Organisation with name OrganisationName(Organisation Name) - Failed"
+      contentAsString(result) shouldBe s"Could not create Organisation with name $anOrganisationName - Failed"
     }
   }
   "updateOrganisationDetails" should {
     "return 200 when service returns UpdateOrganisationSuccessResult" in new Setup {
-      when(mockOrgService.updateOrganisationDetails(eqTo(organisationId), eqTo(updatedOrganisationName)))
+      when(mockOrgService.updateOrganisationDetails(eqTo(anOrganisationId), eqTo(updatedOrgName)))
         .thenReturn(Future.successful(UpdateOrganisationSuccessResult(organisation)))
 
       val result = controller.updateOrganisationDetails(organisation.organisationId)(updateOrganisationDetailsRequest)
@@ -195,7 +174,7 @@ class OrganisationControllerSpec extends AnyWordSpec with Matchers with MockitoS
     }
 
     "return 500 when service returns UpdateOrganisationFailedResult" in new Setup {
-      when(mockOrgService.updateOrganisationDetails(eqTo(organisationId), eqTo(updatedOrganisationName)))
+      when(mockOrgService.updateOrganisationDetails(eqTo(anOrganisationId), eqTo(updatedOrgName)))
         .thenReturn(Future.successful(UpdateOrganisationFailedResult()))
 
       val result = controller.updateOrganisationDetails(organisation.organisationId)(updateOrganisationDetailsRequest)

@@ -17,12 +17,16 @@
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
 import play.api.libs.json._
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.common.CommonJsonFormatters
 
-object MongoFormatters extends CommonJsonFormatters {
-
+object MongoFormatters {
+  implicit val formatServiceName                             = Json.valueFormat[ServiceName]
+  implicit val formatVendorId                                = Json.valueFormat[VendorId]
+  implicit val formatOrganisationName                        = Json.valueFormat[OrganisationName]
+  implicit val formatOrganisationWithNameAndVendorId         = Json.format[OrganisationWithNameAndVendorId]
   implicit val organisationIdFormats: Format[OrganisationId] = Json.valueFormat[OrganisationId]
   implicit val userIdFormats: Format[UserId]                 = Json.valueFormat[UserId]
   implicit val collaboratorFormats: OFormat[Collaborator]    = Json.format[Collaborator]

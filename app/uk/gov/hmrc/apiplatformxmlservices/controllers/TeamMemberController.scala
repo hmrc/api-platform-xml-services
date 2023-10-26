@@ -25,14 +25,12 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators._
-import uk.gov.hmrc.apiplatformxmlservices.models.{JsonFormatters, Organisation, OrganisationId}
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
 
 class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
-    with JsonFormatters
     with Logging {
 
   def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>

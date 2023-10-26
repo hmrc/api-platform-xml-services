@@ -23,11 +23,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import cats.data.EitherT
 import cats.implicits._
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
@@ -49,7 +49,7 @@ class TeamMemberService @Inject() (
 
   def addCollaborator(
       organisationId: OrganisationId,
-      email: String,
+      email: LaxEmailAddress,
       firstName: String,
       lastName: String
     )(implicit hc: HeaderCarrier
@@ -86,26 +86,26 @@ class TeamMemberService @Inject() (
 
   private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     getOrganisationById(organisationId).map {
-      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value.toString}"))
+      case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value}"))
       case Some(organisation: Organisation) => Right(organisation)
     }
   }
 
-  def handleAddCollaboratorToOrgByVendorId(email: String, userId: UserId, vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  def handleAddCollaboratorToOrgByVendorId(email: LaxEmailAddress, userId: UserId, vendorId: VendorId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.addCollaboratorByVendorId(vendorId, Collaborator(userId, email)).map {
       case Right(organisation: Organisation) => Right(organisation)
       case Left(value)                       => Left(UpdateCollaboratorFailedResult(value.getMessage))
     }
   }
 
-  private def handleAddCollaboratorToOrg(email: String, userId: UserId, organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  private def handleAddCollaboratorToOrg(email: LaxEmailAddress, userId: UserId, organisation: Organisation): Future[Either[ManageCollaboratorResult, Organisation]] = {
     organisationRepository.addCollaboratorToOrganisation(organisation.organisationId, Collaborator(userId, email)).map {
       case Right(organisation: Organisation) => Right(organisation)
       case Left(value)                       => Left(UpdateCollaboratorFailedResult(value.getMessage))
     }
   }
 
-  private def handleRemoveCollaboratorFromOrg(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  private def handleRemoveCollaboratorFromOrg(organisation: Organisation, emailAddress: LaxEmailAddress): Future[Either[ManageCollaboratorResult, Organisation]] = {
     val updatedOrg = organisation.copy(collaborators =
       organisation.collaborators.filterNot(_.email.equalsIgnoreCase(emailAddress))
     )
@@ -119,16 +119,16 @@ class TeamMemberService @Inject() (
     }
   }
 
-  private def organisationHasCollaborator(organisation: Organisation, emailAddress: String): Boolean = {
+  private def organisationHasCollaborator(organisation: Organisation, emailAddress: LaxEmailAddress): Boolean = {
     organisation.collaborators.exists(_.email.equalsIgnoreCase(emailAddress))
   }
 
-  private def collaboratorCanBeDeleted(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  private def collaboratorCanBeDeleted(organisation: Organisation, emailAddress: LaxEmailAddress): Future[Either[ManageCollaboratorResult, Organisation]] = {
     if (organisationHasCollaborator(organisation, emailAddress)) successful(Right(organisation))
     else successful(Left(ValidateCollaboratorFailureResult("Collaborator not found on Organisation")))
   }
 
-  private def collaboratorCanBeAdded(organisation: Organisation, emailAddress: String): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  private def collaboratorCanBeAdded(organisation: Organisation, emailAddress: LaxEmailAddress): Future[Either[ManageCollaboratorResult, Organisation]] = {
     if (organisationHasCollaborator(organisation, emailAddress)) successful(Left(OrganisationAlreadyHasCollaboratorResult("")))
     else successful(Right(organisation))
   }
