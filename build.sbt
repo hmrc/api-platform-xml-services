@@ -49,8 +49,24 @@ lazy val microservice = Project(appName, file("."))
        "uk.gov.hmrc.apiplatform.modules.apis.domain.models._"
      )
    )
+  .settings(
+    scalacOptions ++= Seq(
+      "-Wconf:cat=unused&src=views/.*\\.scala:s",
+      "-Wconf:cat=unused&src=.*RoutesPrefix\\.scala:s",
+      "-Wconf:cat=unused&src=.*Routes\\.scala:s",
+      "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
+    )
+  )
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
 
 Global / bloopAggregateSourceDependencies := true
 
+commands ++= Seq(
+  Command.command("run-all-tests") { state => "test" :: "it:test" :: state },
+
+  Command.command("clean-and-test") { state => "clean" :: "compile" :: "run-all-tests" :: state },
+
+  // Coverage does not need compile !
+  Command.command("pre-commit") { state => "clean" :: "scalafmtAll" :: "scalafixAll" :: "coverage" :: "run-all-tests" :: "coverageReport" :: state }
+)

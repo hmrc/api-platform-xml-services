@@ -32,7 +32,6 @@ class WrappedApiCategoryServiceMapSpec extends HmrcSpec with FixedClock with Com
       val apiCategoryServicesMap = WrappedApiCategoryServiceMap(Map(ApiCategory.VAT -> List(ServiceName("api1"), ServiceName("api2"))))
       val payload: JsValue       = Json.toJson(apiCategoryServicesMap)
 
-
       val result = Json.fromJson[WrappedApiCategoryServiceMap](payload).asOpt
       result.value.wrapped shouldBe Map(ApiCategory.VAT -> List(ServiceName("api1"), ServiceName("api2")))
     }

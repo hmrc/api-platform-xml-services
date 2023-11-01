@@ -34,7 +34,7 @@ object UserIdResponse {
 }
 case class CoreUserDetail(userId: UserId, email: LaxEmailAddress)
 
-object CoreUserDetail               {
+object CoreUserDetail {
   implicit val format = Json.format[CoreUserDetail]
 }
 case class WrappedApiCategoryServiceMap(wrapped: Map[ApiCategory, List[ServiceName]])
@@ -49,15 +49,11 @@ object WrappedApiCategoryServiceMap {
     }).map(WrappedApiCategoryServiceMap(_))
   }
 
-  val apiCategoryMapWrites: Writes[WrappedApiCategoryServiceMap] = new Writes[WrappedApiCategoryServiceMap] {
-
-    def writes(wrappedObject: WrappedApiCategoryServiceMap): JsValue = {
-      val wrappedMap                 = wrappedObject.wrapped
-      val result: Iterable[JsObject] = wrappedMap map { case (k: ApiCategory, v: List[ServiceName]) =>
-        JsObject(Seq(k.toString -> JsArray(v.map(x => JsString(x.toString)))))
-      }
-      JsArray.apply(result.toList)
+  val apiCategoryMapWrites: Writes[WrappedApiCategoryServiceMap] = wrappedApiCategoryServiceMap => {
+    val apiCategoryServicePairs = wrappedApiCategoryServiceMap.wrapped.map { case (apiCategory, serviceNames) =>
+      apiCategory.toString -> JsArray(serviceNames.map(serviceName => JsString(serviceName.toString)))
     }
+    JsObject(apiCategoryServicePairs.toList)
   }
 
   implicit val format: Format[WrappedApiCategoryServiceMap] = Format(apiCategoryMapReads, apiCategoryMapWrites)
