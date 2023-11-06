@@ -25,12 +25,13 @@ import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.{MongoApp, ServerBaseISpec}
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with MongoApp[Organisation] {
 

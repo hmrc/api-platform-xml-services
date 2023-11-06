@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.repository
 import play.api.libs.json._
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
+
 import uk.gov.hmrc.apiplatformxmlservices.models._
 
 object MongoFormatters {

@@ -21,6 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
 
 trait ThirdPartyDeveloperStub {

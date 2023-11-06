@@ -22,10 +22,11 @@ import scala.concurrent.ExecutionContext
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
+
+import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
 
 class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
     extends BackendController(cc)

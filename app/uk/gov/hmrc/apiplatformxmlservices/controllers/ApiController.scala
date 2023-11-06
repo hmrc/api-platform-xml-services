@@ -22,8 +22,9 @@ import scala.concurrent.Future
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
-import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
+import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 
 @Singleton()
 class ApiController @Inject() (xmlService: XmlApiService, cc: ControllerComponents)

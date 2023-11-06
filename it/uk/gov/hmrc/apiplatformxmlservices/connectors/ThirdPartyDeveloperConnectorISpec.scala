@@ -24,11 +24,12 @@ import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse}
+
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.stubs.ThirdPartyDeveloperStub
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse}
 
 class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAfterEach with ThirdPartyDeveloperStub with CommonTestData {
 

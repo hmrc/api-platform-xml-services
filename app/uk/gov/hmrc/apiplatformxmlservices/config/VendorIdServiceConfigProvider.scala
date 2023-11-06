@@ -19,8 +19,9 @@ package uk.gov.hmrc.apiplatformxmlservices.config
 import javax.inject.{Inject, Provider, Singleton}
 
 import play.api.Configuration
-import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 
 @Singleton
 class VendorIdServiceConfigProvider @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends Provider[VendorIdService.Config] {

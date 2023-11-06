@@ -26,12 +26,13 @@ import org.mongodb.scala.model.Updates.{addToSet, set, setOnInsert}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, _}
 
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
 import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
-import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 @Singleton
 class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)

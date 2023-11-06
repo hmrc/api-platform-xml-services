@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.service
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
+
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 
 class XmlApiServiceSpec extends AsyncHmrcSpec {
