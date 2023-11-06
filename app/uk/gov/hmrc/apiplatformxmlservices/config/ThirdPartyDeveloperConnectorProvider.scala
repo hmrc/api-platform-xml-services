@@ -18,9 +18,8 @@ package uk.gov.hmrc.apiplatformxmlservices.config
 
 import javax.inject.{Inject, Provider, Singleton}
 
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
 class ThirdPartyDeveloperConnectorProvider @Inject() (servicesConfig: ServicesConfig) extends Provider[ThirdPartyDeveloperConnector.Config] {

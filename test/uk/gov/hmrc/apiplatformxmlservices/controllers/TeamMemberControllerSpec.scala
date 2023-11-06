@@ -25,7 +25,6 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
-
 import uk.gov.hmrc.apiplatformxmlservices.common.builder.OrganisationBuilder
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec

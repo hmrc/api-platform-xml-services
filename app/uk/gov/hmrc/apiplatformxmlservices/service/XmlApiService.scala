@@ -22,7 +22,6 @@ import scala.io.Source
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ApiStatus, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiContext
-
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlApi
 import uk.gov.hmrc.apiplatformxmlservices.service.InternalXmlApi.internalToXmlApi
 

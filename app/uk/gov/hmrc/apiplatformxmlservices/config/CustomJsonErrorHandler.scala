@@ -24,11 +24,10 @@ import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import play.api.mvc.Results.{NotFound, Status}
 import play.api.mvc.{RequestHeader, Result}
+import uk.gov.hmrc.apiplatformxmlservices.models.{ErrorResponse, ErrorResponseMessage}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.http.JsonErrorHandler
 import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
-
-import uk.gov.hmrc.apiplatformxmlservices.models.{ErrorResponse, ErrorResponseMessage}
 
 class CustomJsonErrorHandler @Inject() (auditConnector: AuditConnector, httpAuditEvent: HttpAuditEvent, configuration: Configuration)(implicit ec: ExecutionContext)
     extends JsonErrorHandler(auditConnector, httpAuditEvent, configuration) {

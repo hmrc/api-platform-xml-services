@@ -18,7 +18,6 @@ package uk.gov.hmrc.apiplatformxmlservices
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
-
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.{HmrcSpec, JsonFormattersSpec}
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.WrappedTaxRegimeInterests
 
