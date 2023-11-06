@@ -28,6 +28,8 @@ lazy val microservice = Project(appName, file("."))
   .settings(Compile / unmanagedResourceDirectories  += baseDirectory.value / "resources")
   .configs(IntegrationTest)
   .settings(DefaultBuildSettings.integrationTestSettings())
+  .settings(inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
+  .settings(inConfig(IntegrationTest)(ScalafmtPlugin.scalafmtConfigSettings))
   .settings(
     IntegrationTest / testOptions := Seq(Tests.Argument(TestFrameworks.ScalaTest, "-eT")),
     IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
@@ -57,7 +59,7 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
     )
   )
-  .settings(inConfig(IntegrationTest)(ScalafmtPlugin.scalafmtConfigSettings))
+
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
 

@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json

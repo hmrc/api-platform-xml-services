@@ -16,30 +16,22 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
+import java.util.UUID
+
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
-import uk.gov.hmrc.apiplatformxmlservices.models.{
-  Collaborator,
-  Organisation,
-  OrganisationId,
-  OrganisationName,
-  OrganisationSortBy,
-  UpdateOrganisationFailedResult,
-  UpdateOrganisationSuccessResult,
-  VendorId
-}
+import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-
-import java.util.UUID
 
 class OrganisationRepositoryISpec
     extends AnyWordSpec

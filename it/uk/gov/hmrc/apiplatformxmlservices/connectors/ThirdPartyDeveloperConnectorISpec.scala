@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.connectors
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json

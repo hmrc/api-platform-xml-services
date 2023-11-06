@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -30,8 +31,6 @@ import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPrefe
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.{MongoApp, ServerBaseISpec}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-
-import java.util.UUID
 
 class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with MongoApp[Organisation] {
 
