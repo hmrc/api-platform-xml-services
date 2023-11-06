@@ -15,7 +15,7 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .settings(
     name := appName,
     organization := "uk.gov.hmrc",
@@ -59,8 +59,6 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
     )
   )
-
-  .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
 
 Global / bloopAggregateSourceDependencies := true
