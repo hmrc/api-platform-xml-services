@@ -46,14 +46,14 @@ class VendorIdServiceSpec extends AsyncHmrcSpec {
   }
 
   "getNextVendorId" should {
-    "return (maxVendorId + 1) when max vendorId from repo is greater than or equal to config startingVendorId" in new Setup {
-      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(anOrganisation)))
+    "return maxVendorId from repo + 1 when max vendorId from repo is greater than or equal to config startingVendorId" in new Setup {
+      val vendorId = 9500
+      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(anOrganisation.copy(vendorId = VendorId(vendorId)))))
 
       val result = await(inTest.getNextVendorId())
-      result shouldBe Right(configStartingVendorId)
+      result shouldBe Right(VendorId(vendorId + 1))
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId()
-
     }
 
     "return config startingVendorId when max vendorId from repo is less than config startingVendorId" in new Setup {
@@ -66,6 +66,7 @@ class VendorIdServiceSpec extends AsyncHmrcSpec {
 
     }
 
+    // NOTE: only relevant with an empty collection
     "return config startingVendorId when repo returns None" in new Setup {
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(None))
 

@@ -42,7 +42,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
 
   "handleGetOrCreateUser" should {
     "return right list of user responses when user created result returned" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedApiCategoryServiceMap.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*))
         .thenReturn(Future.successful(CreatedUserResult(response)))
 
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))
@@ -53,7 +53,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
     }
 
     "return right list of user responses when user retrieved result returned" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedApiCategoryServiceMap.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*))
         .thenReturn(Future.successful(RetrievedUserResult(response)))
 
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))
@@ -64,7 +64,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
     }
 
     "return left GetOrCreateUserFailedResult when connector returns failure" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedApiCategoryServiceMap.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("Some error")))
 
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))

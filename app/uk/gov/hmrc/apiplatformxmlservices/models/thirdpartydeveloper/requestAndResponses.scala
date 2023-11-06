@@ -37,28 +37,28 @@ case class CoreUserDetail(userId: UserId, email: LaxEmailAddress)
 object CoreUserDetail {
   implicit val format = Json.format[CoreUserDetail]
 }
-case class WrappedApiCategoryServiceMap(wrapped: Map[ApiCategory, List[ServiceName]])
+case class WrappedTaxRegimeInterests(value: Map[ApiCategory, List[ServiceName]])
 
-object WrappedApiCategoryServiceMap {
+object WrappedTaxRegimeInterests {
 
-  def empty = WrappedApiCategoryServiceMap(Map.empty)
+  def empty = WrappedTaxRegimeInterests(Map.empty)
 
-  val apiCategoryMapReads: Reads[WrappedApiCategoryServiceMap] = Reads { json =>
+  private val apiCategoryMapReads: Reads[WrappedTaxRegimeInterests] = Reads { json =>
     JsSuccess(json.as[Map[String, List[String]]].map {
       case (category, serviceNames) => ApiCategory.unsafeApply(category) -> serviceNames.map(ServiceName(_))
-    }).map(WrappedApiCategoryServiceMap(_))
+    }).map(WrappedTaxRegimeInterests(_))
   }
 
-  val apiCategoryMapWrites: Writes[WrappedApiCategoryServiceMap] = wrappedApiCategoryServiceMap => {
-    val apiCategoryServicePairs = wrappedApiCategoryServiceMap.wrapped.map { case (apiCategory, serviceNames) =>
+  private val apiCategoryMapWrites: Writes[WrappedTaxRegimeInterests] = wrappedTaxRegimeInterests => {
+    val apiCategoryServicePairs = wrappedTaxRegimeInterests.value.map { case (apiCategory, serviceNames) =>
       apiCategory.toString -> JsArray(serviceNames.map(serviceName => JsString(serviceName.toString)))
     }
     JsObject(apiCategoryServicePairs.toList)
   }
 
-  implicit val format: Format[WrappedApiCategoryServiceMap] = Format(apiCategoryMapReads, apiCategoryMapWrites)
+  implicit val format: Format[WrappedTaxRegimeInterests] = Format(apiCategoryMapReads, apiCategoryMapWrites)
 }
-case class CreateUserRequest(email: LaxEmailAddress, firstName: String, lastName: String, emailPreferences: WrappedApiCategoryServiceMap)
+case class CreateUserRequest(email: LaxEmailAddress, firstName: String, lastName: String, emailPreferences: WrappedTaxRegimeInterests)
 
 object CreateUserRequest {
   implicit val formats = Json.format[CreateUserRequest]

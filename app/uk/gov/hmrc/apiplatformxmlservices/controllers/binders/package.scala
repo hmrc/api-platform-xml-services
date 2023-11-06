@@ -40,9 +40,12 @@ package object binders {
       textBinder.bind(key, value).flatMap(organisationIdFromString)
     }
 
+    // this is needed to compile but is not used
+    // $COVERAGE-OFF$
     override def unbind(key: String, organisationId: OrganisationId): String = {
       textBinder.unbind(key, organisationId.value.toString)
     }
+    // $COVERAGE-ON$
   }
 
   private def vendorIdFromString(text: String): Either[String, VendorId] = {
@@ -62,9 +65,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, vendorId: VendorId): String = {
         textBinder.unbind(key, vendorId.value.toString)
       }
+      // $COVERAGE-ON$
     }
 
   private def categoryFromString(text: String): Either[String, ApiCategory] = {
@@ -82,9 +88,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, category: ApiCategory): String = {
         textBinder.unbind(key, category.toString)
       }
+      // $COVERAGE-ON$
 
     }
 
@@ -105,9 +114,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, userId: UserId): String = {
         textBinder.unbind(key, userId.toString())
       }
+      // $COVERAGE-ON$
     }
 
   implicit def serviceNameQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ServiceName] =
@@ -121,9 +133,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, serviceName: ServiceName): String = {
-        textBinder.unbind(key, serviceName.value.toString)
+        textBinder.unbind(key, serviceName.value)
       }
+      // $COVERAGE-ON$
     }
 
   private def sortByFromString(text: String): Either[String, OrganisationSortBy] = {
@@ -142,9 +157,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, sortBy: OrganisationSortBy): String = {
         textBinder.unbind(key, sortBy.toString)
       }
+      // $COVERAGE-ON$
     }
 
 }

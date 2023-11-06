@@ -28,15 +28,6 @@ trait JsonFormattersSpec extends AnyWordSpec with Matchers {
     Json.toJson(in) shouldBe JsObject(f)
   }
 
-  def testToJsonJsValue[T](in: T)(fields: (String, JsValue)*)(implicit wrt: OWrites[T]) = {
-    val f: Seq[(String, JsValue)] = fields.map {
-      case (k, v: JsString) => (k -> v)
-      case (k, v: JsObject) => (k -> v)
-    }
-
-    Json.toJsObject(in).fields shouldBe JsObject(f).fields
-  }
-
   def testFromJson[T](text: String)(expected: T)(implicit rdr: Reads[T]) =
     Json.parse(text).validate[T] match {
       case JsSuccess(found, _) if (found == expected) => succeed

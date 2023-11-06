@@ -150,7 +150,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
-        WrappedApiCategoryServiceMap.empty
+        WrappedTaxRegimeInterests.empty
       )))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(
           createOrganisationRequest.email,
@@ -182,7 +182,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
-        WrappedApiCategoryServiceMap.empty
+        WrappedTaxRegimeInterests.empty
       )))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(
           createOrganisationRequest.email,
@@ -213,7 +213,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
-        WrappedApiCategoryServiceMap.empty
+        WrappedTaxRegimeInterests.empty
       )))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(
           createOrganisationRequest.email,
@@ -243,7 +243,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
-        WrappedApiCategoryServiceMap.empty
+        WrappedTaxRegimeInterests.empty
       )))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("error")))
 
