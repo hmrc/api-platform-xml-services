@@ -20,11 +20,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CreateUserRequest, UserResponse, WrappedTaxRegimeInterests}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CreateUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult, GetOrCreateUserFailedResult, OrganisationId, OrganisationUser}
-import uk.gov.hmrc.http.HeaderCarrier
 
 trait UserFunctions {
   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
@@ -38,7 +39,7 @@ trait UserFunctions {
       ec: ExecutionContext
     ): Future[Either[GetOrCreateUserFailedResult, UserResponse]] = {
 
-    thirdPartyDeveloperConnector.createVerifiedUser(CreateUserRequest(email, firstName, lastName, WrappedTaxRegimeInterests.empty)).map {
+    thirdPartyDeveloperConnector.createVerifiedUser(CreateUserRequest(email, firstName, lastName, Map.empty)).map {
       case x: CreateVerifiedUserSuccessResult    => Right(x.userResponse)
       case error: CreateVerifiedUserFailedResult => Left(GetOrCreateUserFailedResult(error.message))
     }

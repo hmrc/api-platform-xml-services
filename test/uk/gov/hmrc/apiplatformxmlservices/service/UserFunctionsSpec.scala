@@ -21,12 +21,13 @@ import scala.concurrent.Future
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiContext
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
-import uk.gov.hmrc.http.HeaderCarrier
 
 class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
 
@@ -41,7 +42,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
 
   "handleGetOrCreateUser" should {
     "return right list of user responses when user created result returned" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*))
         .thenReturn(Future.successful(CreatedUserResult(response)))
 
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))
@@ -52,7 +53,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
     }
 
     "return right list of user responses when user retrieved result returned" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*))
         .thenReturn(Future.successful(RetrievedUserResult(response)))
 
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))
@@ -63,7 +64,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
     }
 
     "return left GetOrCreateUserFailedResult when connector returns failure" in new Setup {
-      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*))
+      when(thirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("Some error")))
 
       val result: Either[GetOrCreateUserFailedResult, UserResponse] = await(handleGetOrCreateUser(anEmailAddress, aFirstName, aLastName))

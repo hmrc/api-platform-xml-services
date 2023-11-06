@@ -37,30 +37,13 @@ case class CoreUserDetail(userId: UserId, email: LaxEmailAddress)
 object CoreUserDetail {
   implicit val format = Json.format[CoreUserDetail]
 }
-case class WrappedTaxRegimeInterests(value: Map[ApiCategory, List[ServiceName]])
 
-object WrappedTaxRegimeInterests {
-
-  def empty = WrappedTaxRegimeInterests(Map.empty)
-
-  private val apiCategoryMapReads: Reads[WrappedTaxRegimeInterests] = Reads { json =>
-    JsSuccess(json.as[Map[String, List[String]]].map {
-      case (category, serviceNames) => ApiCategory.unsafeApply(category) -> serviceNames.map(ServiceName(_))
-    }).map(WrappedTaxRegimeInterests(_))
-  }
-
-  private val apiCategoryMapWrites: Writes[WrappedTaxRegimeInterests] = wrappedTaxRegimeInterests => {
-    val apiCategoryServicePairs = wrappedTaxRegimeInterests.value.map { case (apiCategory, serviceNames) =>
-      apiCategory.toString -> JsArray(serviceNames.map(serviceName => JsString(serviceName.toString)))
-    }
-    JsObject(apiCategoryServicePairs.toList)
-  }
-
-  implicit val format: Format[WrappedTaxRegimeInterests] = Format(apiCategoryMapReads, apiCategoryMapWrites)
-}
-case class CreateUserRequest(email: LaxEmailAddress, firstName: String, lastName: String, emailPreferences: WrappedTaxRegimeInterests)
+case class CreateUserRequest(email: LaxEmailAddress, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]])
 
 object CreateUserRequest {
+  implicit val keyReads: KeyReads[ApiCategory]   = key => JsSuccess(ApiCategory.unsafeApply(key))
+  implicit val keyWrites: KeyWrites[ApiCategory] = _.toString
+
   implicit val formats = Json.format[CreateUserRequest]
 }
 case class TaxRegimeInterests(regime: ApiCategory, services: Set[ServiceName])

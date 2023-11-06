@@ -22,13 +22,14 @@ import scala.concurrent.Future
 
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, UpstreamErrorResponse}
+
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, UpstreamErrorResponse}
 
 class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
@@ -72,7 +73,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
     "return Left when Organisation exists but fails to get or create user" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("some error")))
 
       await(inTest.addCollaborator(anOrganisationId, anEmailAddress, aFirstName, aLastName)) match {
@@ -89,7 +90,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
       val organisationWithUSer = anOrganisation.copy(collaborators = List(Collaborator(UserId(UUID.randomUUID()), anEmailAddress)))
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithUSer)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
       await(inTest.addCollaborator(anOrganisationId, anEmailAddress, aFirstName, aLastName)) match {
@@ -103,7 +104,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
     "return Left when Organisation exists and get User is successful but update Org fails" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
       when(mockOrganisationRepo.addCollaboratorToOrganisation(*[OrganisationId], *)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
@@ -121,7 +122,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
     "return Right when collaborator successfully added to organisation" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, WrappedTaxRegimeInterests.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
       val organisationWithCollaborator = anOrganisation.copy(collaborators = List(aCollaborator))
