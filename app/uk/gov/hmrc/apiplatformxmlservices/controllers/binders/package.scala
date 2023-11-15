@@ -20,9 +20,10 @@ import java.util.UUID
 import scala.util.Try
 
 import play.api.mvc.{PathBindable, QueryStringBindable}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, UserId, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, VendorId}
 
 package object binders {
 
@@ -39,9 +40,12 @@ package object binders {
       textBinder.bind(key, value).flatMap(organisationIdFromString)
     }
 
+    // this is needed to compile but is not used
+    // $COVERAGE-OFF$
     override def unbind(key: String, organisationId: OrganisationId): String = {
       textBinder.unbind(key, organisationId.value.toString)
     }
+    // $COVERAGE-ON$
   }
 
   private def vendorIdFromString(text: String): Either[String, VendorId] = {
@@ -61,15 +65,17 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, vendorId: VendorId): String = {
         textBinder.unbind(key, vendorId.value.toString)
       }
+      // $COVERAGE-ON$
     }
 
-  private def categoryFromString(category: String): Either[String, ApiCategory] = {
-    ApiCategory.withNameEither(category.toUpperCase)
-      .toOption
-      .toRight(s"Unable to bind category $category")
+  private def categoryFromString(text: String): Either[String, ApiCategory] = {
+    ApiCategory.apply(text)
+      .toRight(s"Unable to bind category $text")
   }
 
   implicit def categoryQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ApiCategory] =
@@ -82,9 +88,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, category: ApiCategory): String = {
-        textBinder.unbind(key, category.entryName)
+        textBinder.unbind(key, category.toString)
       }
+      // $COVERAGE-ON$
 
     }
 
@@ -105,9 +114,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, userId: UserId): String = {
-        textBinder.unbind(key, userId.value.toString)
+        textBinder.unbind(key, userId.toString())
       }
+      // $COVERAGE-ON$
     }
 
   implicit def serviceNameQueryStringBindable(implicit textBinder: QueryStringBindable[String]): QueryStringBindable[ServiceName] =
@@ -121,9 +133,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, serviceName: ServiceName): String = {
-        textBinder.unbind(key, serviceName.value.toString)
+        textBinder.unbind(key, serviceName.value)
       }
+      // $COVERAGE-ON$
     }
 
   private def sortByFromString(text: String): Either[String, OrganisationSortBy] = {
@@ -142,9 +157,12 @@ package object binders {
         }
       }
 
+      // this is needed to compile but is not used
+      // $COVERAGE-OFF$
       override def unbind(key: String, sortBy: OrganisationSortBy): String = {
         textBinder.unbind(key, sortBy.toString)
       }
+      // $COVERAGE-ON$
     }
 
 }

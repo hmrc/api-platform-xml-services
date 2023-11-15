@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.support
+package uk.gov.hmrc.apiplatformxmlservices.common.builder
 
-import org.scalatest.{BeforeAndAfterEach, Suite, TestSuite}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Collaborator, Organisation, OrganisationId, OrganisationName, VendorId}
 
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+trait OrganisationBuilder {
 
-trait MongoApp[A] extends DefaultPlayMongoRepositorySupport[A] with BeforeAndAfterEach {
-  me: Suite with TestSuite =>
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    dropMongoDb()
+  def buildOrganisation(maybeId: Option[OrganisationId] = None, vendorId: VendorId, name: OrganisationName, collaborators: List[Collaborator]): Organisation = {
+    val id = maybeId.fold(OrganisationId.random)(id => id)
+    Organisation(id, vendorId, name, collaborators)
   }
 
-  def dropMongoDb(): Unit =
-    mongoDatabase.drop()
 }

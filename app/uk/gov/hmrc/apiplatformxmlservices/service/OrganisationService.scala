@@ -23,11 +23,11 @@ import scala.util.control.NonFatal
 
 import com.mongodb.MongoCommandException
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.collaborators.GetOrCreateUserFailedResult
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 

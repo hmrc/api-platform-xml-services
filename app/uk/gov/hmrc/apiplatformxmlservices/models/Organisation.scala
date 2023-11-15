@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.support
+package uk.gov.hmrc.apiplatformxmlservices.models
 
-import org.scalatest.{BeforeAndAfterEach, Suite, TestSuite}
+import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+case class Organisation(
+    organisationId: OrganisationId,
+    vendorId: VendorId,
+    name: OrganisationName,
+    collaborators: List[Collaborator] = List.empty,
+    services: List[ServiceName] = List.empty
+  )
 
-trait MongoApp[A] extends DefaultPlayMongoRepositorySupport[A] with BeforeAndAfterEach {
-  me: Suite with TestSuite =>
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    dropMongoDb()
-  }
-
-  def dropMongoDb(): Unit =
-    mongoDatabase.drop()
+object Organisation {
+  implicit val formatOrganisation = Json.format[Organisation]
 }

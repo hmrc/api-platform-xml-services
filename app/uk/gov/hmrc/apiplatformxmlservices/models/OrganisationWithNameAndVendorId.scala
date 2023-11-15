@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.modules.csvupload.models
+package uk.gov.hmrc.apiplatformxmlservices.models
 
-import uk.gov.hmrc.apiplatformxmlservices.models.common.ServiceName
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationWithNameAndVendorId, VendorId}
+import play.api.libs.json.Json
 
-case class ParsedUser(email: String, firstName: String, lastName: String, services: List[ServiceName], vendorIds: List[VendorId])
-case class BulkAddUsersRequest(users: Seq[ParsedUser])
-case class BulkUploadOrganisationsRequest(organisations: Seq[OrganisationWithNameAndVendorId])
+case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
+
+object OrganisationWithNameAndVendorId {
+  implicit val formatOrganisationWithNameAndVendorId = Json.format[OrganisationWithNameAndVendorId]
+}

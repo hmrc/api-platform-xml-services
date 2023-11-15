@@ -17,12 +17,14 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
-import uk.gov.hmrc.apiplatformxmlservices.models.common.ApiCategory
-import uk.gov.hmrc.apiplatformxmlservices.models.{ErrorResponse, JsonFormatters, XmlApi}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiCategory
+
+import uk.gov.hmrc.apiplatformxmlservices.models.{ErrorResponse, XmlApi}
 import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 import uk.gov.hmrc.apiplatformxmlservices.support.ServerBaseISpec
 
@@ -56,7 +58,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       .get()
       .futureValue
 
-  trait Setup extends JsonFormatters {
+  trait Setup {
 
     val xmlApiService = new XmlApiService
 

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.support
 
+import scala.jdk.CollectionConverters.SetHasAsScala
+
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Suite
-import play.api.Application
 
-import scala.jdk.CollectionConverters.SetHasAsScala
-import scala.jdk.javaapi.CollectionConverters.asScala
+import play.api.Application
 
 trait MetricsTestSupport {
   self: Suite =>

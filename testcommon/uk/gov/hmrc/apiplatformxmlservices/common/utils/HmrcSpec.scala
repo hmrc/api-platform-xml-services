@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.support
+package uk.gov.hmrc.apiplatformxmlservices.common.utils
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Seconds, Span}
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{EitherValues, OptionValues}
+import org.scalatestplus.play.WsScalaTestClient
 
-import play.api.Application
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 
-abstract class ServerBaseISpec
-    extends BaseISpec with GuiceOneServerPerSuite with TestApplication with ScalaFutures with DefaultAwaitTimeout with FutureAwaits {
+abstract class HmrcSpec extends AnyWordSpec with Matchers with OptionValues with EitherValues with WsScalaTestClient with MockitoSugar with ArgumentMatchersSugar
 
-  override implicit lazy val app: Application = appBuilder.build()
-
-  implicit override val patienceConfig: PatienceConfig =
-    PatienceConfig(timeout = Span(4, Seconds), interval = Span(1, Seconds))
-
-}
+abstract class AsyncHmrcSpec extends HmrcSpec with DefaultAwaitTimeout with FutureAwaits {}

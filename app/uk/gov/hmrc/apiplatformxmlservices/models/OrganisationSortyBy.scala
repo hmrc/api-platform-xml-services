@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformxmlservices.support
+package uk.gov.hmrc.apiplatformxmlservices.models
 
-import org.scalatest.{BeforeAndAfterEach, Suite, TestSuite}
+import enumeratum._
 
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+sealed trait OrganisationSortBy extends EnumEntry
 
-trait MongoApp[A] extends DefaultPlayMongoRepositorySupport[A] with BeforeAndAfterEach {
-  me: Suite with TestSuite =>
+object OrganisationSortBy extends Enum[OrganisationSortBy] {
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    dropMongoDb()
-  }
+  val values = findValues
 
-  def dropMongoDb(): Unit =
-    mongoDatabase.drop()
+  case object VENDOR_ID         extends OrganisationSortBy
+  case object ORGANISATION_NAME extends OrganisationSortBy
+
 }

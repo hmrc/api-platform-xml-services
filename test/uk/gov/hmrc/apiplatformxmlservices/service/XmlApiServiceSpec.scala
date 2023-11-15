@@ -16,18 +16,11 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.service
 
-import org.mockito.scalatest.MockitoSugar
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 
-class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-  }
+class XmlApiServiceSpec extends AsyncHmrcSpec {
 
   /*
    * The data for this test is production data in the file $project_dir/resources/xml_apis.json
@@ -39,8 +32,8 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
     val unfilteredApis = inTest.getUnfilteredApis()
     val stableApis     = inTest.getStableApis()
 
-    val retiredApiServiceName = "employment-intermediaries"
-    val retiredApi            = unfilteredApis.filter(_.serviceName.value == retiredApiServiceName).head
+    val retiredApiServiceName = ServiceName("employment-intermediaries")
+    val retiredApi            = unfilteredApis.filter(_.serviceName == retiredApiServiceName).head
   }
 
   "getUnfilteredApis" should {
@@ -64,9 +57,9 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   "getStableApisByServiceName" should {
     "return the matching xml api when called with a valid service name" in new Setup {
 
-      val serviceName = "paye-online"
+      val serviceName = ServiceName("paye-online")
       val result      = inTest.getStableApiByServiceName(serviceName)
-      result.map(_.serviceName).getOrElse("") shouldBe ServiceName(serviceName)
+      result.map(_.serviceName).getOrElse("") shouldBe serviceName
     }
 
     "return nothing when called with a retired API" in new Setup {
@@ -79,7 +72,7 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
   "getStableApisForCategory" should {
     "return xml apis containing the selected category" in new Setup {
 
-      val result       = inTest.getStableApisByCategory(ApiCategory.PAYE.toString)
+      val result       = inTest.getStableApisByCategory(ApiCategory.PAYE)
       val expectedApis = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.PAYE))
 
       result.size shouldBe 2 // PAYE has two stable APIs and one retired API
@@ -88,7 +81,7 @@ class XmlApiServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with
 
     "return nothing if given a category with no xml apis" in new Setup {
 
-      val result = inTest.getStableApisByCategory(ApiCategory.VAT.toString)
+      val result = inTest.getStableApisByCategory(ApiCategory.VAT)
       result shouldBe Nil
     }
   }

@@ -25,6 +25,7 @@ import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model.Updates.{addToSet, set, setOnInsert}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, _}
 
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 

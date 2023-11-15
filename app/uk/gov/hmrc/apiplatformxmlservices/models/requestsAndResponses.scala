@@ -17,21 +17,34 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 
-case class CreateOrganisationRequest(organisationName: OrganisationName, email: String, firstName: String, lastName: String)
+/* Organisation request responses */
+
+case class CreateOrganisationRequest(organisationName: OrganisationName, email: LaxEmailAddress, firstName: String, lastName: String)
+
+object CreateOrganisationRequest {
+  implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
+}
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
 
-case class OrganisationWithNameAndVendorId(name: OrganisationName, vendorId: VendorId)
+object UpdateOrganisationDetailsRequest {
+  implicit val formatUpdateOrganisationDetailsRequest = Json.format[UpdateOrganisationDetailsRequest]
+}
 
-sealed trait CreateOrganisationResult
-case class CreateOrganisationSuccessResult(organisation: Organisation) extends CreateOrganisationResult
-case class CreateOrganisationFailedResult(message: String)             extends CreateOrganisationResult
-case class CreateOrganisationFailedDuplicateIdResult(message: String)  extends CreateOrganisationResult
+/* User request responses */
 
-sealed trait UpdateOrganisationResult
-case class UpdateOrganisationSuccessResult(organisation: Organisation) extends UpdateOrganisationResult
-case class UpdateOrganisationFailedResult()                            extends UpdateOrganisationResult
+case class AddCollaboratorRequest(email: LaxEmailAddress, firstName: String, lastName: String)
+
+object AddCollaboratorRequest {
+  implicit val formatAddCollaboratorRequest = Json.format[AddCollaboratorRequest]
+}
+case class RemoveCollaboratorRequest(email: LaxEmailAddress, gatekeeperUserId: String)
+
+object RemoveCollaboratorRequest {
+  implicit val formatRemoveCollaboratorRequest = Json.format[RemoveCollaboratorRequest]
+}
 
 case class ErrorResponseMessage(message: String)
 

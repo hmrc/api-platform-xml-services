@@ -17,63 +17,38 @@
 package uk.gov.hmrc.apiplatformxmlservices.stubs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformxmlservices.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, GetOrCreateUserIdRequest, ImportUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.JsonFormatters._
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.GetOrCreateUserIdRequest
 
 trait ThirdPartyDeveloperStub {
   val createOrGetUserIdUrl = "/developers/user-id"
 
-  def stubCreateOrGetUserIdReturnsResponse(email: String, responseBodyAsString: String) = {
+  def stubCreateOrGetUserIdReturnsResponse(email: LaxEmailAddress, responseBodyAsString: String) = {
     val requestAsString = Json.toJson(GetOrCreateUserIdRequest(email)).toString
 
     stubPostWithRequestBody("/developers/user-id", OK, requestAsString, responseBodyAsString)
   }
 
-  def stubCreateOrGetUserIdReturnsNoResponse(email: String, status: Int) = {
+  def stubCreateOrGetUserIdReturnsNoResponse(email: LaxEmailAddress, status: Int) = {
     val requestAsString = Json.toJson(GetOrCreateUserIdRequest(email)).toString
 
     stubPostWithRequestBodyNoResponse("/developers/user-id", status, requestAsString)
   }
 
-  def stubGetByEmailsReturnsResponse(emails: List[String], responseAsString: String) = {
+  def stubGetByEmailsReturnsResponse(emails: List[LaxEmailAddress], responseAsString: String) = {
     val requestAsString = Json.toJson(emails).toString()
 
     stubPostWithRequestBody("/developers/get-by-emails", OK, requestAsString, responseAsString)
   }
 
-  def stubGetByEmailsReturnsNoResponse(emails: List[String], status: Int) = {
+  def stubGetByEmailsReturnsNoResponse(emails: List[LaxEmailAddress], status: Int) = {
     val requestAsString = Json.toJson(emails).toString()
 
     stubPostWithRequestBodyNoResponse("/developers/get-by-emails", status, requestAsString)
-  }
-
-  def stubCreateVerifiedUserSuccess(email: String, firstName: String, lastName: String, userId: UserId, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) = {
-    val createXmlUserRequestObj = ImportUserRequest(email, firstName, lastName, emailPreferences)
-    val requestAsString         = Json.toJson(createXmlUserRequestObj).toString
-
-    val userResponse = UserResponse(
-      email = email,
-      firstName = firstName,
-      lastName = lastName,
-      verified = true,
-      userId = userId,
-      EmailPreferences.noPreferences
-    )
-
-    stubPostWithRequestBody("/import-user", status, requestAsString, Json.toJson(userResponse).toString())
-
-  }
-
-  def stubCreateVerifiedUserEmptyResponse(email: String, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]], status: Int) = {
-    val importUserRequestObj = ImportUserRequest(email, firstName, lastName, emailPreferences)
-    val requestAsString      = Json.toJson(importUserRequestObj).toString
-
-    stubPostWithRequestBodyNoResponse("/import-user", status, requestAsString)
-
   }
 
   private def stubPostWithRequestBody(url: String, status: Int, expectedRequestBody: String, responseBodyAsString: String) = {

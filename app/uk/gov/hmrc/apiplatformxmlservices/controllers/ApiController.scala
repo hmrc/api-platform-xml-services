@@ -21,15 +21,14 @@ import scala.concurrent.Future
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import uk.gov.hmrc.apiplatformxmlservices.models.JsonFormatters
-import uk.gov.hmrc.apiplatformxmlservices.models.common.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatformxmlservices.service.XmlApiService
 
 @Singleton()
 class ApiController @Inject() (xmlService: XmlApiService, cc: ControllerComponents)
-    extends BackendController(cc) with JsonFormatters {
+    extends BackendController(cc) {
 
   def getAll(): Action[AnyContent] = Action.async {
     Future.successful(Ok(Json.toJson(xmlService.getStableApis())))

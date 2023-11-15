@@ -20,52 +20,40 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import org.mockito.scalatest.MockitoSugar
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-
+import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
+import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
 
-class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
+class VendorIdServiceSpec extends AsyncHmrcSpec {
 
-  val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
-  val mockConfig: Config                           = mock[Config]
+  trait Setup extends CommonTestData {
+    val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
+    val mockConfig: Config                           = mock[Config]
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    reset(mockOrganisationRepo)
-    reset(mockConfig)
-  }
-
-  trait Setup {
     val inTest = new VendorIdService(mockOrganisationRepo, mockConfig)
 
-    val configStartingVendorIdValue = 9000
-    when(mockConfig.startingVendorId).thenReturn(configStartingVendorIdValue)
+    val expectedStartingVendorIdValue = 9001
+    when(mockConfig.startingVendorId).thenReturn(expectedStartingVendorIdValue)
 
-    val configStartingVendorId           = VendorId(configStartingVendorIdValue)
-    val vendorId9001                     = VendorId(9001)
-    val vendorId4001                     = VendorId(4001)
-    val uuid                             = UUID.fromString("dcc80f1e-4798-11ec-81d3-0242ac130003")
-    val organisationWithStartingVendorId = Organisation(organisationId = OrganisationId(uuid), vendorId = configStartingVendorId, name = OrganisationName("Organisation Name"))
-    val organisationWithVendorId4001     = Organisation(organisationId = OrganisationId(uuid), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
+    val configStartingVendorId = VendorId(expectedStartingVendorIdValue)
+
+    val vendorId4001 = VendorId(4001)
+
+    val organisationWithVendorId4001 = Organisation(organisationId = OrganisationId(UUID.randomUUID()), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
 
   }
 
   "getNextVendorId" should {
-    "return (maxVendorId + 1) when max vendorId from repo is greater than or equal to config startingVendorId" in new Setup {
-      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(organisationWithStartingVendorId)))
+    "return maxVendorId from repo + 1 when max vendorId from repo is greater than or equal to config startingVendorId" in new Setup {
+      val vendorId = 9500
+      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(anOrganisation.copy(vendorId = VendorId(vendorId)))))
 
       val result = await(inTest.getNextVendorId())
-      result shouldBe Right(vendorId9001)
+      result shouldBe Right(VendorId(vendorId + 1))
 
       verify(mockOrganisationRepo).findOrgWithMaxVendorId()
-
     }
 
     "return config startingVendorId when max vendorId from repo is less than config startingVendorId" in new Setup {
@@ -78,6 +66,7 @@ class VendorIdServiceSpec extends AnyWordSpec with Matchers with MockitoSugar wi
 
     }
 
+    // NOTE: only relevant with an empty collection
     "return config startingVendorId when repo returns None" in new Setup {
       when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(None))
 
