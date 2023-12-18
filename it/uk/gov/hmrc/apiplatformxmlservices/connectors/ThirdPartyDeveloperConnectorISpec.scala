@@ -24,7 +24,7 @@ import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, Upstream5xxResponse, UpstreamErrorResponse}
 
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
@@ -101,7 +101,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
 
       result match {
         case Left(e: InternalServerException) => e.message mustBe "Could not find or create user"
-        case _                                => fail
+        case _                                => fail()
       }
 
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
@@ -114,8 +114,8 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       val result: Either[Throwable, CoreUserDetail] = await(underTest.getOrCreateUserId(getOrCreateUserIdRequest))
 
       result match {
-        case Left(_: Upstream5xxResponse) => succeed
-        case _                            => fail()
+        case Left(UpstreamErrorResponse(_, INTERNAL_SERVER_ERROR, _, _)) => succeed
+        case _                                                           => fail()
       }
 
       verify(postRequestedFor(urlMatching(s"/developers/user-id"))
@@ -167,8 +167,8 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
       val result: Either[Throwable, List[UserResponse]] = await(underTest.getByEmail(emails))
 
       result match {
-        case Left(_: Upstream5xxResponse) => succeed
-        case _                            => fail()
+        case Left(UpstreamErrorResponse(_, INTERNAL_SERVER_ERROR, _, _)) => succeed
+        case _                                                           => fail()
       }
     }
 

@@ -62,10 +62,10 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
     val xmlApiService = new XmlApiService
 
-    val stableApis                   = xmlApiService.getStableApis
-    val unfilteredApis               = xmlApiService.getUnfilteredApis()
-    val employmentIntermediariesJson = Json.toJson(unfilteredApis.filter(_.serviceName.value == "employment-intermediaries").head).toString
-    val charitiesOnlineJson          = Json.toJson(stableApis.filter(_.serviceName.value == "charities-online").head).toString
+    val stableApis: List[XmlApi]             = xmlApiService.getStableApis()
+    val unfilteredApis: List[XmlApi]         = xmlApiService.getUnfilteredApis()
+    val employmentIntermediariesJson: String = Json.toJson(unfilteredApis.filter(_.serviceName.value == "employment-intermediaries").head).toString
+    val charitiesOnlineJson: String          = Json.toJson(stableApis.filter(_.serviceName.value == "charities-online").head).toString
   }
 
   "ApiController" when {
@@ -73,7 +73,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     "GET /xml/apis" should {
 
       "respond with 200 and return all stable Apis" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/apis")
+        val result: WSResponse = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
         result.body mustBe Json.toJson(stableApis).toString
       }
@@ -88,14 +88,14 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     "GET /xml/apis/filtered" should {
 
       "respond with 200 and return APIs for selected category" in new Setup {
-        val result                     = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "PAYE"))
+        val result: WSResponse         = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "PAYE"))
         result.status mustBe OK
         val expectedApis: List[XmlApi] = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.PAYE))
         result.body mustBe Json.toJson(expectedApis).toString
       }
 
       "respond with 200 and return nothing when category is not found" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "VAT"))
+        val result: WSResponse = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "VAT"))
         result.status mustBe OK
 
         result.body mustBe Json.toJson(List.empty[XmlApi]).toString
@@ -117,19 +117,19 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       val retiredApiName = "Employment intermediaries"
 
       "respond with 200 and return the stable API" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/api/$stableApiName")
+        val result: WSResponse = callGetEndpoint(s"$url/xml/api/$stableApiName")
         result.status mustBe OK
         result.body mustBe charitiesOnlineJson
       }
 
       "respond with 200 and return the retired API" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/api/$retiredApiName")
+        val result: WSResponse = callGetEndpoint(s"$url/xml/api/$retiredApiName")
         result.status mustBe OK
         result.body mustBe employmentIntermediariesJson
       }
 
       "respond with 404 when api not found" in {
-        val result = callGetEndpoint(s"$url/xml/api/INVALID_API_NAME")
+        val result: WSResponse = callGetEndpoint(s"$url/xml/api/INVALID_API_NAME")
         result.status mustBe NOT_FOUND
       }
     }
@@ -139,19 +139,19 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       val retiredApiServiceName = "employment-intermediaries"
 
       "respond with 200 and return the stable API" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/api?serviceName=$stableApiName")
+        val result: WSResponse = callGetEndpoint(s"$url/xml/api?serviceName=$stableApiName")
         result.status mustBe OK
         result.body mustBe charitiesOnlineJson
       }
 
       "respond with 200 and return the retired API" in new Setup {
-        val result = callGetEndpoint(s"$url/xml/api?serviceName=$retiredApiServiceName")
+        val result: WSResponse = callGetEndpoint(s"$url/xml/api?serviceName=$retiredApiServiceName")
         result.status mustBe OK
         result.body mustBe employmentIntermediariesJson
       }
 
       "respond with 404 when api not found" in {
-        val result = callGetEndpoint(s"$url/xml/api?serviceName=INVALID_API_NAME")
+        val result: WSResponse = callGetEndpoint(s"$url/xml/api?serviceName=INVALID_API_NAME")
         result.status mustBe NOT_FOUND
       }
     }
