@@ -23,7 +23,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models._
 
 object MongoFormatters {
-  implicit val formatServiceName                                                               = Json.valueFormat[ServiceName]
+  implicit val formatServiceName: Format[ServiceName]                                          = Json.valueFormat[ServiceName]
   implicit val formatVendorId: Format[VendorId]                                                = Json.valueFormat[VendorId]
   implicit val formatOrganisationName: Format[OrganisationName]                                = Json.valueFormat[OrganisationName]
   implicit val formatOrganisationWithNameAndVendorId: OFormat[OrganisationWithNameAndVendorId] = Json.format[OrganisationWithNameAndVendorId]

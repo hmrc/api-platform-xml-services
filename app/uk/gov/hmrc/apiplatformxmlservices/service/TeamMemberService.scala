@@ -107,7 +107,7 @@ class TeamMemberService @Inject() (
 
   private def handleRemoveCollaboratorFromOrg(organisation: Organisation, emailAddress: LaxEmailAddress): Future[Either[ManageCollaboratorResult, Organisation]] = {
     val updatedOrg = organisation.copy(collaborators =
-      organisation.collaborators.filterNot(_.email.equalsIgnoreCase(emailAddress))
+      organisation.collaborators.filterNot(_.email == emailAddress)
     )
     handleUpdateOrganisation(updatedOrg)
   }
@@ -120,7 +120,7 @@ class TeamMemberService @Inject() (
   }
 
   private def organisationHasCollaborator(organisation: Organisation, emailAddress: LaxEmailAddress): Boolean = {
-    organisation.collaborators.exists(_.email.equalsIgnoreCase(emailAddress))
+    organisation.collaborators.exists(_.email == emailAddress)
   }
 
   private def collaboratorCanBeDeleted(organisation: Organisation, emailAddress: LaxEmailAddress): Future[Either[ManageCollaboratorResult, Organisation]] = {

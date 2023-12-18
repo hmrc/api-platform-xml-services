@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -62,7 +63,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-  val validHeaders = List(CONTENT_TYPE -> "application/json")
+  val validHeaders: List[(String, String)] = List(CONTENT_TYPE -> "application/json")
 
   def callGetEndpoint(url: String): WSResponse =
     wsClient
@@ -75,7 +76,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     wsClient
       .url(url)
       .withFollowRedirects(false)
-      .delete
+      .delete()
       .futureValue
 
   def callPostEndpoint(url: String, body: String): WSResponse =
@@ -119,7 +120,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     val addCollaboratorRequestAsString    = Json.toJson(addCollaboratorRequest).toString
     val removeCollaboratorRequestAsString = Json.toJson(removeCollaboratorRequest).toString
 
-    def stubThirdPartyDeveloperConnectorWithoutBody(status: Int) = {
+    def stubThirdPartyDeveloperConnectorWithoutBody(status: Int): StubMapping = {
       stubFor(
         post(urlEqualTo("/developers/user-id"))
           .willReturn(
@@ -131,7 +132,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       )
     }
 
-    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: LaxEmailAddress, firstName: String, lastName: String, status: Int) = {
+    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: LaxEmailAddress, firstName: String, lastName: String, status: Int): StubMapping = {
       stubFor(
         post(urlEqualTo("/import-user"))
           .willReturn(

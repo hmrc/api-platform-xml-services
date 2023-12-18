@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
-import play.api.libs.json.Reads._
 import play.api.libs.json._
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
@@ -47,8 +46,8 @@ object CreateUserRequest {
 case class TaxRegimeInterests(regime: ApiCategory, services: Set[ServiceName])
 
 object TaxRegimeInterests {
-  implicit val format                                    = Json.format[TaxRegimeInterests]
-  def hasAllApis(taxRegimeInterests: TaxRegimeInterests) = taxRegimeInterests.services.isEmpty
+  implicit val format: OFormat[TaxRegimeInterests]                = Json.format[TaxRegimeInterests]
+  def hasAllApis(taxRegimeInterests: TaxRegimeInterests): Boolean = taxRegimeInterests.services.isEmpty
 }
 
 case class EmailPreferences(interests: List[TaxRegimeInterests], topics: Set[EmailTopic])
@@ -68,7 +67,7 @@ object EmailTopic {
   case object RELEASE_SCHEDULES   extends EmailTopic
   case object EVENT_INVITES       extends EmailTopic
 
-  val values = List(BUSINESS_AND_POLICY, TECHNICAL, RELEASE_SCHEDULES, EVENT_INVITES)
+  val values: List[EmailTopic] = List(BUSINESS_AND_POLICY, TECHNICAL, RELEASE_SCHEDULES, EVENT_INVITES)
 
   def apply(text: String): Option[EmailTopic] = EmailTopic.values.find(_.toString == text.toUpperCase)
 

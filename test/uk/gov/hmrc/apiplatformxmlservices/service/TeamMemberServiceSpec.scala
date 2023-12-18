@@ -181,7 +181,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
       "return Right updated organisation" in new Setup {
         when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
-        val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email.equalsIgnoreCase(anEmailAddress))
+        val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email == anEmailAddress)
         val updatedOrganisation  = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
         when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
 

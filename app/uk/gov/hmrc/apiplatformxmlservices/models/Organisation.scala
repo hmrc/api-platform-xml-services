@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 case class Organisation(
@@ -28,5 +28,5 @@ case class Organisation(
   )
 
 object Organisation {
-  implicit val formatOrganisation = Json.format[Organisation]
+  implicit val formatOrganisation: OFormat[Organisation] = Json.format[Organisation]
 }
