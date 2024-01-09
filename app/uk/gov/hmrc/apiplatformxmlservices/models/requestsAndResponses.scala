@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 
 /* Organisation request responses */
@@ -24,13 +24,13 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 case class CreateOrganisationRequest(organisationName: OrganisationName, email: LaxEmailAddress, firstName: String, lastName: String)
 
 object CreateOrganisationRequest {
-  implicit val formatCreateOrganisationRequest = Json.format[CreateOrganisationRequest]
+  implicit val formatCreateOrganisationRequest: OFormat[CreateOrganisationRequest] = Json.format[CreateOrganisationRequest]
 }
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
 
 object UpdateOrganisationDetailsRequest {
-  implicit val formatUpdateOrganisationDetailsRequest = Json.format[UpdateOrganisationDetailsRequest]
+  implicit val formatUpdateOrganisationDetailsRequest: OFormat[UpdateOrganisationDetailsRequest] = Json.format[UpdateOrganisationDetailsRequest]
 }
 
 /* User request responses */
@@ -38,22 +38,22 @@ object UpdateOrganisationDetailsRequest {
 case class AddCollaboratorRequest(email: LaxEmailAddress, firstName: String, lastName: String)
 
 object AddCollaboratorRequest {
-  implicit val formatAddCollaboratorRequest = Json.format[AddCollaboratorRequest]
+  implicit val formatAddCollaboratorRequest: OFormat[AddCollaboratorRequest] = Json.format[AddCollaboratorRequest]
 }
 case class RemoveCollaboratorRequest(email: LaxEmailAddress, gatekeeperUserId: String)
 
 object RemoveCollaboratorRequest {
-  implicit val formatRemoveCollaboratorRequest = Json.format[RemoveCollaboratorRequest]
+  implicit val formatRemoveCollaboratorRequest: OFormat[RemoveCollaboratorRequest] = Json.format[RemoveCollaboratorRequest]
 }
 
 case class ErrorResponseMessage(message: String)
 
 object ErrorResponseMessage {
-  implicit val formatErrorResponseMessage = Json.format[ErrorResponseMessage]
+  implicit val formatErrorResponseMessage: OFormat[ErrorResponseMessage] = Json.format[ErrorResponseMessage]
 }
 
 case class ErrorResponse(errors: List[ErrorResponseMessage])
 
 object ErrorResponse {
-  implicit val formatErrorResponse = Json.format[ErrorResponse]
+  implicit val formatErrorResponse: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }

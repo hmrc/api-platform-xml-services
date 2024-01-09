@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiContext
 
 case class XmlApi(name: String, serviceName: ServiceName, context: ApiContext, description: String, categories: Option[Seq[ApiCategory]] = None)
 
 object XmlApi {
-  implicit val formatXmlApi = Json.format[XmlApi]
+  implicit val formatXmlApi: OFormat[XmlApi] = Json.format[XmlApi]
 }

@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 
 case class Collaborator(userId: UserId, email: LaxEmailAddress)
 
 object Collaborator {
-  implicit val formatCollaborator = Json.format[Collaborator]
+  implicit val formatCollaborator: OFormat[Collaborator] = Json.format[Collaborator]
 }

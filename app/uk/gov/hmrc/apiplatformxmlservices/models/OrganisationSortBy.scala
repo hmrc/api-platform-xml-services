@@ -16,15 +16,24 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import enumeratum._
+sealed trait OrganisationSortBy
 
-sealed trait OrganisationSortBy extends EnumEntry
-
-object OrganisationSortBy extends Enum[OrganisationSortBy] {
-
-  val values = findValues
+object OrganisationSortBy {
 
   case object VENDOR_ID         extends OrganisationSortBy
   case object ORGANISATION_NAME extends OrganisationSortBy
+  val values = List(VENDOR_ID, ORGANISATION_NAME)
+
+  def apply(text: String): Option[OrganisationSortBy] = OrganisationSortBy.values.find(_.toString == text.toUpperCase)
+
+  // Not yet required but when library exists, we probably will need them.
+  // $COVERAGE-OFF$
+  def unsafeApply(text: String): OrganisationSortBy = apply(text).getOrElse(throw new RuntimeException(s"$text is not a sort by value"))
+  // $COVERAGE-ON$
+
+  import play.api.libs.json.Format
+  import uk.gov.hmrc.apiplatform.modules.common.domain.services.SealedTraitJsonFormatting
+
+  implicit val format: Format[OrganisationSortBy] = SealedTraitJsonFormatting.createFormatFor[OrganisationSortBy]("Organisation sort by", apply)
 
 }

@@ -23,12 +23,12 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.apiplatformxmlservices.models._
 
 object MongoFormatters {
-  implicit val formatServiceName                             = Json.valueFormat[ServiceName]
-  implicit val formatVendorId                                = Json.valueFormat[VendorId]
-  implicit val formatOrganisationName                        = Json.valueFormat[OrganisationName]
-  implicit val formatOrganisationWithNameAndVendorId         = Json.format[OrganisationWithNameAndVendorId]
-  implicit val organisationIdFormats: Format[OrganisationId] = Json.valueFormat[OrganisationId]
-  implicit val userIdFormats: Format[UserId]                 = Json.valueFormat[UserId]
-  implicit val collaboratorFormats: OFormat[Collaborator]    = Json.format[Collaborator]
-  implicit val organisationFormats: OFormat[Organisation]    = Json.format[Organisation]
+  implicit val formatServiceName: Format[ServiceName]                                          = Json.valueFormat[ServiceName]
+  implicit val formatVendorId: Format[VendorId]                                                = Json.valueFormat[VendorId]
+  implicit val formatOrganisationName: Format[OrganisationName]                                = Json.valueFormat[OrganisationName]
+  implicit val formatOrganisationWithNameAndVendorId: OFormat[OrganisationWithNameAndVendorId] = Json.format[OrganisationWithNameAndVendorId]
+  implicit val organisationIdFormats: Format[OrganisationId]                                   = Json.valueFormat[OrganisationId]
+  implicit val userIdFormats: Format[UserId]                                                   = Json.valueFormat[UserId]
+  implicit val collaboratorFormats: OFormat[Collaborator]                                      = Json.format[Collaborator]
+  implicit val organisationFormats: OFormat[Organisation]                                      = Json.format[Organisation]
 }

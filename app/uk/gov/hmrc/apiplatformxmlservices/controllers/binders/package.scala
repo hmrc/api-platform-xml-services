@@ -142,7 +142,7 @@ package object binders {
     }
 
   private def sortByFromString(text: String): Either[String, OrganisationSortBy] = {
-    Try(OrganisationSortBy.withName(text))
+    Try(OrganisationSortBy.unsafeApply(text))
       .toOption
       .toRight(s"Cannot accept $text as OrganisationSortBy")
   }

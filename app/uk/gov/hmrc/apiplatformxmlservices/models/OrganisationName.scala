@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
 case class OrganisationName(value: String) extends AnyVal {
   override def toString(): String = value
 }
 
 object OrganisationName {
-  implicit val formatOrganisationName = Json.valueFormat[OrganisationName]
+  implicit val formatOrganisationName: Format[OrganisationName] = Json.valueFormat[OrganisationName]
 }

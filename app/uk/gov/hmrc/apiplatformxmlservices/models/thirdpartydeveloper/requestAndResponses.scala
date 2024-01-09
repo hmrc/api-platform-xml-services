@@ -16,26 +16,23 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-
-import play.api.libs.json.Reads._
 import play.api.libs.json._
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 case class GetOrCreateUserIdRequest(email: LaxEmailAddress)
 
 object GetOrCreateUserIdRequest {
-  implicit val format = Json.format[GetOrCreateUserIdRequest]
+  implicit val format: OFormat[GetOrCreateUserIdRequest] = Json.format[GetOrCreateUserIdRequest]
 }
 case class UserIdResponse(userId: UserId)
 
 object UserIdResponse {
-  implicit val format = Json.format[UserIdResponse]
+  implicit val format: OFormat[UserIdResponse] = Json.format[UserIdResponse]
 }
 case class CoreUserDetail(userId: UserId, email: LaxEmailAddress)
 
 object CoreUserDetail {
-  implicit val format = Json.format[CoreUserDetail]
+  implicit val format: OFormat[CoreUserDetail] = Json.format[CoreUserDetail]
 }
 
 case class CreateUserRequest(email: LaxEmailAddress, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]])
@@ -44,36 +41,47 @@ object CreateUserRequest {
   implicit val keyReads: KeyReads[ApiCategory]   = key => JsSuccess(ApiCategory.unsafeApply(key))
   implicit val keyWrites: KeyWrites[ApiCategory] = _.toString
 
-  implicit val formats = Json.format[CreateUserRequest]
+  implicit val formats: OFormat[CreateUserRequest] = Json.format[CreateUserRequest]
 }
 case class TaxRegimeInterests(regime: ApiCategory, services: Set[ServiceName])
 
 object TaxRegimeInterests {
-  implicit val format                                    = Json.format[TaxRegimeInterests]
-  def hasAllApis(taxRegimeInterests: TaxRegimeInterests) = taxRegimeInterests.services.isEmpty
+  implicit val format: OFormat[TaxRegimeInterests]                = Json.format[TaxRegimeInterests]
+  def hasAllApis(taxRegimeInterests: TaxRegimeInterests): Boolean = taxRegimeInterests.services.isEmpty
 }
 
 case class EmailPreferences(interests: List[TaxRegimeInterests], topics: Set[EmailTopic])
 
 object EmailPreferences {
-  implicit val format = Json.format[EmailPreferences]
+  implicit val format: OFormat[EmailPreferences] = Json.format[EmailPreferences]
 
   def noPreferences: EmailPreferences = EmailPreferences(List.empty, Set.empty)
 }
 
-sealed trait EmailTopic extends EnumEntry
+sealed trait EmailTopic
 
-object EmailTopic extends Enum[EmailTopic] with PlayJsonEnum[EmailTopic] {
-
-  val values = findValues
+object EmailTopic {
 
   case object BUSINESS_AND_POLICY extends EmailTopic
   case object TECHNICAL           extends EmailTopic
   case object RELEASE_SCHEDULES   extends EmailTopic
   case object EVENT_INVITES       extends EmailTopic
+
+  val values: List[EmailTopic] = List(BUSINESS_AND_POLICY, TECHNICAL, RELEASE_SCHEDULES, EVENT_INVITES)
+
+  def apply(text: String): Option[EmailTopic] = EmailTopic.values.find(_.toString == text.toUpperCase)
+
+  // $COVERAGE-OFF$
+  def unsafeApply(text: String): EmailTopic = apply(text).getOrElse(throw new RuntimeException(s"$text is not an email topic value"))
+  // $COVERAGE-ON$
+
+  import play.api.libs.json.Format
+  import uk.gov.hmrc.apiplatform.modules.common.domain.services.SealedTraitJsonFormatting
+
+  implicit val format: Format[EmailTopic] = SealedTraitJsonFormatting.createFormatFor[EmailTopic]("Email Topic", apply)
 }
 case class UserResponse(email: LaxEmailAddress, firstName: String, lastName: String, verified: Boolean = false, userId: UserId, emailPreferences: EmailPreferences)
 
 object UserResponse {
-  implicit val format = Json.format[UserResponse]
+  implicit val format: OFormat[UserResponse] = Json.format[UserResponse]
 }

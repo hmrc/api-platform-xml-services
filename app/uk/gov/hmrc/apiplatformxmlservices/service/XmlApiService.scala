@@ -19,7 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 import javax.inject.{Inject, Singleton}
 import scala.io.Source
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ApiStatus, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiContext
 
@@ -37,7 +37,7 @@ case class InternalXmlApi(
 
 object InternalXmlApi {
 
-  implicit val format = Json.format[InternalXmlApi]
+  implicit val format: OFormat[InternalXmlApi] = Json.format[InternalXmlApi]
 
   def internalToXmlApi(xmlApi: InternalXmlApi): XmlApi = {
     XmlApi(
