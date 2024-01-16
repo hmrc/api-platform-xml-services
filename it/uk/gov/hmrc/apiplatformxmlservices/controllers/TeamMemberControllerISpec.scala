@@ -35,7 +35,7 @@ import uk.gov.hmrc.apiplatformxmlservices.support.{MongoApp, ServerBaseISpec}
 
 class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach with MongoApp[Organisation] {
 
-  override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
+  override protected val repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()

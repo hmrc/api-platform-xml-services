@@ -49,6 +49,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       replaceIndexes = true
     )
     with ApplicationLogger {
+  override lazy val requiresTtlIndex: Boolean = false
 
   def findOrgWithMaxVendorId(): Future[Option[Organisation]] = {
     collection

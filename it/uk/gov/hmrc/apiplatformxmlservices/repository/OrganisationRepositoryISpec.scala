@@ -44,7 +44,7 @@ class OrganisationRepositoryISpec
     with FutureAwaits
     with Matchers {
 
-  override protected def repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
+  override protected val repository: PlayMongoRepository[Organisation] = app.injector.instanceOf[OrganisationRepository]
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -59,7 +59,7 @@ class OrganisationRepositoryISpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     dropMongoDb()
-    await(repo.ensureIndexes)
+    await(repo.ensureIndexes())
   }
 
   trait Setup extends CommonTestData {
