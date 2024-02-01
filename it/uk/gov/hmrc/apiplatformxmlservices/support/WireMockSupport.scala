@@ -26,19 +26,17 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 case class WireMockBaseUrl(value: URL)
 
-object WireMockSupport {
-  // We have to make the wireMockPort constant per-JVM instead of constant
-  // per-WireMockSupport-instance because config values containing it are
-  // cached in the GGConfig object
-  private lazy val wireMockPort = PortHelper.randomAvailable
-}
+// object WireMockSupport {
+//   // We have to make the wireMockPort constant per-JVM instead of constant
+//   // per-WireMockSupport-instance because config values containing it are
+//   // cached in the GGConfig object
+//   private lazy val wireMockPort = PortHelper.randomAvailable
+// }
 
 trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach {
   me: Suite =>
 
-  def commonStubs(): Unit
-
-  val wireMockPort: Int                                           = WireMockSupport.wireMockPort
+  val wireMockPort: Int                                           = 22222
   val wireMockHost                                                = "localhost"
   val wireMockBaseUrlAsString                                     = s"http://$wireMockHost:$wireMockPort"
   val wireMockBaseUrl                                             = new URL(wireMockBaseUrlAsString)
@@ -62,7 +60,6 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach {
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     WireMock.reset()
-    commonStubs()
   }
 
   protected def stopWireMockServer(): Unit = wireMockServer.stop()
