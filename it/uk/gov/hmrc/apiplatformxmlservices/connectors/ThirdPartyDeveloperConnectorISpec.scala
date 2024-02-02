@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformxmlservices.connectors
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.http.Status._
@@ -37,7 +38,7 @@ class ThirdPartyDeveloperConnectorISpec extends ServerBaseISpec with BeforeAndAf
     super.beforeEach()
   }
 
-  implicit def mat: akka.stream.Materializer = app.injector.instanceOf[akka.stream.Materializer]
+  implicit def mat: Materializer = app.injector.instanceOf[Materializer]
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()

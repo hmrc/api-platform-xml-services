@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -43,7 +44,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     dropMongoDb()
   }
 
-  implicit def mat: akka.stream.Materializer = app.injector.instanceOf[akka.stream.Materializer]
+  implicit def mat: Materializer = app.injector.instanceOf[Materializer]
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.support
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import org.scalatestplus.play.PlaySpec
 
 import play.api.Application
@@ -28,14 +28,10 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 abstract class BaseISpec
-    extends PlaySpec with WireMockSupport with MetricsTestSupport {
+    extends PlaySpec with WireMockSupport {
 
   def app: Application
   protected def appBuilder: GuiceApplicationBuilder
-
-  override def commonStubs(): Unit = {
-    givenCleanMetricRegistry()
-  }
 
   protected implicit def materializer: Materializer = app.materializer
 

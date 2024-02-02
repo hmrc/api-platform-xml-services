@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
+import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -34,7 +35,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     super.beforeEach()
   }
 
-  implicit def mat: akka.stream.Materializer = app.injector.instanceOf[akka.stream.Materializer]
+  implicit def mat: Materializer = app.injector.instanceOf[Materializer]
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
