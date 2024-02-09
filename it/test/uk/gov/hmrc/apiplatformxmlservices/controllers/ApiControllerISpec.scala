@@ -43,7 +43,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
         "microservice.services.auth.port" -> wireMockPort,
         "metrics.enabled"                 -> true,
         "auditing.enabled"                -> false,
-        "auditing.consumer.baseUri.host"       -> wireMockHost,
+        "auditing.consumer.baseUri.host"  -> wireMockHost,
         "auditing.consumer.baseUri.port"  -> wireMockPort
       )
 
@@ -51,7 +51,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-  def callGetEndpoint(url: String,     queryParams: List[(String, String)] = List.empty): WSResponse =
+  def callGetEndpoint(url: String, queryParams: List[(String, String)] = List.empty): WSResponse =
     wsClient
       .url(url)
       .withFollowRedirects(false)
