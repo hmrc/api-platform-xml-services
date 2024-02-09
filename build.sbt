@@ -6,42 +6,40 @@ import bloop.integrations.sbt.BloopDefaults
 
 val appName = "api-platform-xml-services"
 
+Global / bloopAggregateSourceDependencies := true
 
-scalaVersion := "2.13.12"
+ThisBuild / majorVersion := 0
+ThisBuild / organization := "uk.gov.hmrc"
 
+ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+ThisBuild / scalafmtConfig := Some(file(".scalafmt"))
 
+lazy val plugins: Seq[Plugins] = Seq(PlayScala, SbtDistributablesPlugin)
 
-lazy val microservice = Project(appName, file("."))
-  .enablePlugins(PlayScala, SbtDistributablesPlugin)
+lazy val commonSettings = Seq(
+  retrieveManaged := true
+)
+
+lazy val microservice = (project in file("."))
+  .enablePlugins(plugins: _*)
+  .disablePlugins(JUnitXmlReportPlugin)
   .settings(
     name := appName,
-    organization := "uk.gov.hmrc",
-    majorVersion                     := 0,
     PlayKeys.playDefaultPort         := 11116,
-    libraryDependencies              ++= AppDependencies(),
-    retrieveManaged := true
+    libraryDependencies              ++= AppDependencies()
   )
+  .settings(ScalafmtPlugin.scalafmtConfigSettings)
+  .settings(commonSettings: _*)
   .settings(ScoverageSettings())
   .settings(Compile / unmanagedResourceDirectories  += baseDirectory.value / "resources")
-  .configs(IntegrationTest)
-  .settings(DefaultBuildSettings.integrationTestSettings())
-  .settings(inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
-  .settings(inConfig(IntegrationTest)(ScalafmtPlugin.scalafmtConfigSettings))
-  .settings(
-    IntegrationTest / testOptions := Seq(Tests.Argument(TestFrameworks.ScalaTest, "-eT")),
-    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
-    IntegrationTest / unmanagedSourceDirectories += baseDirectory.value / "it",
-    IntegrationTest / parallelExecution := false
-  )
   .settings(
     Test / fork := false,
     Test / parallelExecution := false,
     Test / testOptions := Seq(Tests.Argument(TestFrameworks.ScalaTest, "-eT")),
-    Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon",
-    Test / unmanagedSourceDirectories += baseDirectory.value / "test"
+    Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon"
   )
   .settings(
        routesImport  ++= Seq(
@@ -59,15 +57,24 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
     )
   )
-  .disablePlugins(JUnitXmlReportPlugin)
-
-Global / bloopAggregateSourceDependencies := true
 
 commands ++= Seq(
-  Command.command("run-all-tests") { state => "test" :: "it:test" :: state },
+  Command.command("run-all-tests") { state => "test" :: "it/test" :: state },
 
   Command.command("clean-and-test") { state => "clean" :: "compile" :: "run-all-tests" :: state },
 
   // Coverage does not need compile !
   Command.command("pre-commit") { state => "clean" :: "scalafmtAll" :: "scalafixAll" :: "coverage" :: "run-all-tests" :: "coverageReport" :: "coverageOff" :: state }
 )
+
+lazy val it = (project in file("it"))
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test")
+  .settings(commonSettings: _*)
+  // // .settings(scalafixConfigSettings(IntegrationTest))
+  .settings(
+
+      ScalafmtPlugin.scalafmtConfigSettings
+  )
+  // .settings(DefaultBuildSettings.itSettings())
+

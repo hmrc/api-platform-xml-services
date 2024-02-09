@@ -28,5 +28,5 @@ object AppDependencies {
     "org.mockito"           %% "mockito-scala-scalatest"         % "1.17.29",
     "com.github.tomakehurst" % "wiremock-jre8-standalone"        % "2.35.1",
     "uk.gov.hmrc"           %% "api-platform-test-common-domain" % commonDomainVersion
-  ).map(_ % "test, it")
+  ).map(_ % "test")
 }
