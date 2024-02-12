@@ -223,7 +223,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         val result        = callGetEndpoint(s"$url/organisations")
         result.status mustBe OK
         val organisations = Json.parse(result.body).as[List[Organisation]]
-        organisations must contain.only (anOrganisation, organisation2)
+        organisations must contain.only(anOrganisation, organisation2)
       }
 
       "respond with 404 when VendorId not found" in new Setup {

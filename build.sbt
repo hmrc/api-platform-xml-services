@@ -18,10 +18,6 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val plugins: Seq[Plugins] = Seq(PlayScala, SbtDistributablesPlugin)
 
-lazy val commonSettings = Seq(
-  retrieveManaged := true,
-)
-
 lazy val microservice = (project in file("."))
   .enablePlugins(plugins: _*)
   .disablePlugins(JUnitXmlReportPlugin)
@@ -30,7 +26,6 @@ lazy val microservice = (project in file("."))
     PlayKeys.playDefaultPort         := 11116,
     libraryDependencies              ++= AppDependencies()
   )
-  .settings(commonSettings: _*)
   .settings(ScoverageSettings())
   .settings(Compile / unmanagedResourceDirectories  += baseDirectory.value / "resources")
   .settings(
@@ -59,8 +54,6 @@ lazy val microservice = (project in file("."))
 lazy val it = (project in file("it"))
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test")
-  .settings(commonSettings: _*)
-  .settings(DefaultBuildSettings.itSettings())
 
 commands ++= Seq(
   Command.command("run-all-tests") { state => "test" :: "it / test" :: state },
