@@ -10,6 +10,7 @@ Global / bloopAggregateSourceDependencies := true
 
 ThisBuild / majorVersion := 0
 ThisBuild / organization := "uk.gov.hmrc"
+ThisBuild / retrieveManaged := true
 
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
