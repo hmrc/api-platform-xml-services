@@ -17,7 +17,7 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % mongoVersion,
     "uk.gov.hmrc"       %% "api-platform-api-domain"   % apiDomainVersion,
-    "org.playframework" %% "play-json"                 % "3.0.2",
+    "org.playframework" %% "play-json"                 % "3.0.1",
     "org.typelevel"     %% "cats-core"                 % "2.10.0"
   )
 
