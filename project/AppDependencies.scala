@@ -26,7 +26,6 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"         % mongoVersion,
     "org.pegdown"            % "pegdown"                         % "1.6.0",
     "org.mockito"           %% "mockito-scala-scalatest"         % "1.17.30",
-    "com.github.tomakehurst" % "wiremock-jre8-standalone"        % "2.35.1",
     "uk.gov.hmrc"           %% "api-platform-test-common-domain" % commonDomainVersion
   ).map(_ % "test")
 }
