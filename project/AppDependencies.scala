@@ -6,7 +6,7 @@ import sbt._
 object AppDependencies {
 
   lazy val mongoVersion      = "1.7.0"
-  lazy val bootstrapVersion  = "8.4.0"
+  lazy val bootstrapVersion  = "9.1.0"
   val apiDomainVersion       = "0.15.0"
   val commonDomainVersion    = "0.13.0"
 
@@ -17,7 +17,6 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % mongoVersion,
     "uk.gov.hmrc"       %% "api-platform-api-domain"   % apiDomainVersion,
-    "org.playframework" %% "play-json"                 % "3.0.1",
     "org.typelevel"     %% "cats-core"                 % "2.10.0"
   )
 

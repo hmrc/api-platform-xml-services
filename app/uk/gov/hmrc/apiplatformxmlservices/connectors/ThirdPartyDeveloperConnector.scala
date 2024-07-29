@@ -22,18 +22,22 @@ import scala.util.control.NonFatal
 
 import play.api.Logging
 import play.api.http.Status.{CREATED, OK}
+import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, InternalServerException, StringContextOps}
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector.Config
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CoreUserDetail, CreateUserRequest, GetOrCreateUserIdRequest, UserIdResponse, UserResponse}
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
 import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreatedUserResult, RetrievedUserResult}
 
 @Singleton
-class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(implicit val ec: ExecutionContext) extends Logging {
+class ThirdPartyDeveloperConnector @Inject() (http: HttpClientV2, config: Config)(implicit val ec: ExecutionContext) extends Logging {
 
   def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, CoreUserDetail]] = {
-    http.POST[GetOrCreateUserIdRequest, Option[UserIdResponse]](s"${config.thirdPartyDeveloperUrl}/developers/user-id", getOrCreateUserIdRequest)
+    http.post(url"${config.thirdPartyDeveloperUrl}/developers/user-id")
+      .withBody(Json.toJson(getOrCreateUserIdRequest))
+      .execute[Option[UserIdResponse]]
       .map {
         case Some(response) => Right(CoreUserDetail(response.userId, getOrCreateUserIdRequest.email))
         case _              => Left(new InternalServerException("Could not find or create user"))
@@ -45,7 +49,9 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
   }
 
   def getByEmail(emails: List[LaxEmailAddress])(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
-    http.POST[List[LaxEmailAddress], List[UserResponse]](s"${config.thirdPartyDeveloperUrl}/developers/get-by-emails", emails)
+    http.post(url"${config.thirdPartyDeveloperUrl}/developers/get-by-emails")
+      .withBody(Json.toJson(emails))
+      .execute[List[UserResponse]]
       .map(x => Right(x)).recover {
         case NonFatal(e) =>
           logger.error(e.getMessage)
@@ -54,7 +60,9 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClient, config: Config)(
   }
 
   def createVerifiedUser(request: CreateUserRequest)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
-    http.POST[CreateUserRequest, HttpResponse](s"${config.thirdPartyDeveloperUrl}/import-user", request)
+    http.post(url"${config.thirdPartyDeveloperUrl}/import-user")
+      .withBody(Json.toJson(request))
+      .execute[HttpResponse]
       .map { response =>
         response.status match {
           case CREATED => CreatedUserResult(response.json.as[UserResponse])
