@@ -80,14 +80,6 @@
     "status": "STABLE"
   },
   {
-    "name": "National Export System",
-    "serviceName": "national-export-system",
-    "context": "/government/collections/national-export-system-xml-channel-support-for-software-developers",
-    "description": "Technical specifications for National Export System (NES) XML channel software developers.",
-    "categories": ["CUSTOMS"],
-    "status": "STABLE"
-  },
-  {
     "name": "New Computerised Transit System",
     "serviceName": "new-computerised-transit-system",
     "context": "/government/collections/new-computerised-transit-system-support-for-software-developers",
