@@ -83,7 +83,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       "Excise Movement Control System",
       ServiceName("excise-movement-control"),
       ApiContext("/government/collections/excise-movement-control-system-fs31-support-for-software-developers"),
-      "Technical specifications for the Excise Movement Control System (EMCS).",
+      "The Excise Movement Control System is a UK and EU-wide system that’s used to record the movements of duty suspended excise goods. This API allows traders to submit Electronic administrative documents (eAD) for duty suspended goods and get notifications.",
       Some(List(ApiCategory.CUSTOMS))
     )
 
@@ -91,7 +91,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       "Import Control System",
       ServiceName("import-control-system"),
       ApiContext("/government/collections/import-control-system-support-for-software-developers"),
-      "Technical specifications for Import Control System software developers.",
+      "The Import Control System is used to perform risk analyses of goods entering the EU or Northern Ireland before they leave their country of departure.This API allows traders to  submit Entry Summary declaration (ENS) about their goods to ICS and get information about the decision on whether or not to allow those goods to enter the EU or Northern Ireland.",
       Some(List(ApiCategory.CUSTOMS))
     )
 
