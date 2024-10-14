@@ -61,7 +61,7 @@ trait UserFunctions {
       .filter(hasAllApis).flatMap(x => xmlApiService.getStableApisByCategory(x.regime))
 
     val combinedApis = stableXmlApisWhereUserSelectedAllForCategory ++ stableXmlApisThatUserSelectedSpecifically
-    OrganisationUser(organisationId, user.userId, user.email, user.firstName, user.lastName, combinedApis)
+    OrganisationUser(organisationId, Some(user.userId), user.email, user.firstName, user.lastName, combinedApis)
   }
 
 }

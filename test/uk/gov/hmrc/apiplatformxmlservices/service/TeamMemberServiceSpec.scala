@@ -235,23 +235,26 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
       val result = await(inTest.getOrganisationUserByOrganisationId(anOrganisationId))
       result should contain only (List(
-        OrganisationUser(anOrganisationId, userResponse1.userId, userResponse1.email, userResponse1.firstName, userResponse1.lastName, xmlApis = Nil),
-        OrganisationUser(anOrganisationId, userResponse2.userId, userResponse2.email, userResponse2.firstName, userResponse2.lastName, xmlApis = Nil)
+        OrganisationUser(anOrganisationId, Some(userResponse1.userId), userResponse1.email, userResponse1.firstName, userResponse1.lastName, xmlApis = Nil),
+        OrganisationUser(anOrganisationId, Some(userResponse2.userId), userResponse2.email, userResponse2.firstName, userResponse2.lastName, xmlApis = Nil)
+      ): _*)
+    }
+
+    "return converted Organisation Users when organisation exists and no users are retrieved from TPD" in new Setup {
+
+      when(mockOrganisationRepo.findByOrgId(eqTo(anOrganisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(*)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
+
+      val result = await(inTest.getOrganisationUserByOrganisationId(anOrganisationId))
+      result should contain only (List(
+        OrganisationUser(anOrganisationId, None, anEmailAddress, "user", "deleted", xmlApis = Nil),
+        OrganisationUser(anOrganisationId, None, emailTwo, "user", "deleted", xmlApis = Nil)
       ): _*)
     }
 
     "return empty list when organisation not found" in new Setup {
       when(mockOrganisationRepo.findByOrgId(eqTo(anOrganisationId))).thenReturn(Future.successful(None))
-
-      await(inTest.getOrganisationUserByOrganisationId(anOrganisationId)) shouldBe Nil
-
-    }
-
-    "return empty list when no results returned from third party developer" in new Setup {
-
-      when(mockOrganisationRepo.findByOrgId(eqTo(anOrganisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(*)).thenReturn(Future.successful(Right(List.empty)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
 
       await(inTest.getOrganisationUserByOrganisationId(anOrganisationId)) shouldBe Nil
 
@@ -275,7 +278,11 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
         INTERNAL_SERVER_ERROR,
         INTERNAL_SERVER_ERROR
       ))))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Left(UpstreamErrorResponse(
+        "",
+        INTERNAL_SERVER_ERROR,
+        INTERNAL_SERVER_ERROR
+      ))))
 
       await(inTest.getOrganisationUserByOrganisationId(anOrganisationId)) shouldBe Nil
 

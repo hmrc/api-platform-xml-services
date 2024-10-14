@@ -65,19 +65,28 @@ class TeamMemberService @Inject() (
   def getOrganisationUserByOrganisationId(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[OrganisationUser]] = {
     getOrganisationById(organisationId).flatMap {
       case None                             => Future.successful(List.empty)
-      case Some(organisation: Organisation) => handleGetOrganisationUsers(organisation.collaborators).map(x => if (x.nonEmpty) x.flatten.distinct else List.empty)
-    }.map(users => users.map(user => toOrganisationUser(organisationId, user)))
+      case Some(organisation: Organisation) => handleGetOrganisationUsers(organisationId, organisation.collaborators).map(x => if (x.nonEmpty) x.flatten.distinct else List.empty)
+    }
   }
 
-  private def handleGetOrganisationUsers(collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[UserResponse]]] = {
-    def mapResults(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[UserResponse]] = results map {
-      case Right(Nil)                       => List.empty[UserResponse]
-      case Right(users: List[UserResponse]) => List(users.head)
-      case _                                => List.empty[UserResponse]
+  private def handleGetOrganisationUsers(organisationId: OrganisationId, collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[OrganisationUser]]] = {
+    // def mapResults(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[OrganisationUser]] = results map {
+    //   case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "user", "deleted", List.empty[XmlApi]))
+    //   case Right(users: List[UserResponse]) => List(toOrganisationUser(organisationId, users.head))
+    //   case _                                => List.empty[OrganisationUser]
+    // }
+
+    collaborators.map(x => getDeveloperByEmail(organisationId, x.email)).sequence
+  }
+
+  private def getDeveloperByEmail(organisationId: OrganisationId, email: LaxEmailAddress)(implicit hc: HeaderCarrier) = {
+    def mapResult(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[OrganisationUser]] = results map {
+      case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "user", "deleted", List.empty[XmlApi]))
+      case Right(users: List[UserResponse]) => List(toOrganisationUser(organisationId, users.head))
+      case _                                => List.empty[OrganisationUser]
     }
 
-    collaborators.map(x => thirdPartyDeveloperConnector.getByEmail(List(x.email)))
-      .map(mapResults).sequence
+    mapResult(thirdPartyDeveloperConnector.getByEmail(List(email)))
   }
 
   private def getOrganisationById(organisationId: OrganisationId): Future[Option[Organisation]] = {

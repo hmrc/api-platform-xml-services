@@ -120,7 +120,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
 
     "getOrganisationUserByOrganisationId" should {
       "return 200 with list of users when service returns a list" in new Setup {
-        val organisationUser = OrganisationUser(anOrganisationId, aUserId, anEmailAddress, aFirstName, aLastName, List.empty)
+        val organisationUser = OrganisationUser(anOrganisationId, Some(aUserId), anEmailAddress, aFirstName, aLastName, List.empty)
         when(mockTeamMemberService.getOrganisationUserByOrganisationId(eqTo(anOrganisationId))(*)).thenReturn(Future.successful(List(organisationUser)))
 
         val result: Future[Result] = controller.getOrganisationUserByOrganisationId(anOrganisationId)(fakeRequest)
