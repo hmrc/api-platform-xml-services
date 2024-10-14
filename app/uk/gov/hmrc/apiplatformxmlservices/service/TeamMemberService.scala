@@ -70,18 +70,12 @@ class TeamMemberService @Inject() (
   }
 
   private def handleGetOrganisationUsers(organisationId: OrganisationId, collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[OrganisationUser]]] = {
-    // def mapResults(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[OrganisationUser]] = results map {
-    //   case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "user", "deleted", List.empty[XmlApi]))
-    //   case Right(users: List[UserResponse]) => List(toOrganisationUser(organisationId, users.head))
-    //   case _                                => List.empty[OrganisationUser]
-    // }
-
     collaborators.map(x => getDeveloperByEmail(organisationId, x.email)).sequence
   }
 
   private def getDeveloperByEmail(organisationId: OrganisationId, email: LaxEmailAddress)(implicit hc: HeaderCarrier) = {
     def mapResult(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[OrganisationUser]] = results map {
-      case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "user", "deleted", List.empty[XmlApi]))
+      case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "", "", List.empty[XmlApi]))  // User not found in TPD - just return minimum data
       case Right(users: List[UserResponse]) => List(toOrganisationUser(organisationId, users.head))
       case _                                => List.empty[OrganisationUser]
     }

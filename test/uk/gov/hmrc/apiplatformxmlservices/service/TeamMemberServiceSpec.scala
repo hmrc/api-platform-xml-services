@@ -248,8 +248,8 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
       val result = await(inTest.getOrganisationUserByOrganisationId(anOrganisationId))
       result should contain only (List(
-        OrganisationUser(anOrganisationId, None, anEmailAddress, "user", "deleted", xmlApis = Nil),
-        OrganisationUser(anOrganisationId, None, emailTwo, "user", "deleted", xmlApis = Nil)
+        OrganisationUser(anOrganisationId, None, anEmailAddress, "", "", xmlApis = Nil),
+        OrganisationUser(anOrganisationId, None, emailTwo, "", "", xmlApis = Nil)
       ): _*)
     }
 
