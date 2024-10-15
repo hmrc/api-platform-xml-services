@@ -22,9 +22,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import com.mongodb.client.model.ReturnDocument
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes._
-import org.mongodb.scala.model.Updates.{addToSet, set, setOnInsert}
+import org.mongodb.scala.model.Updates.{addToSet, pull, set, setOnInsert}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, _}
 
+import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
@@ -125,6 +126,21 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       }
   }
 
+  def removeCollaboratorFromOrganisation(organisationId: OrganisationId, userId: UserId): Future[Either[Exception, Organisation]] = {
+    collection.findOneAndUpdate(
+      equal("organisationId", Codecs.toBson(organisationId)),
+      pull("collaborators", Codecs.toBson(Json.obj("userId" -> userId))),
+      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+    )
+      .toFuture()
+      .map(x => Right(x))
+      .recover {
+        case e: Exception =>
+          logger.info("removeCollaboratorFromOrganisation failed:", e)
+          Left(new Exception(s"Failed remove collaborator from Organisation with organisationId ${organisationId.value} - ${e.getMessage}"))
+      }
+  }
+
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
     val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)), equal("vendorId", Codecs.toBson(organisation.vendorId)))
 
@@ -172,5 +188,4 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     collection.deleteOne(equal("organisationId", Codecs.toBson(organisationId))).toFuture()
       .map(x => x.getDeletedCount == 1)
   }
-
 }

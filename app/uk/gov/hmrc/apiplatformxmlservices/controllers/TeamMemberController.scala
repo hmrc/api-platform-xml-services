@@ -47,6 +47,13 @@ class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: 
     }
   }
 
+  def removeAllCollaboratorsForUserId(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+    withJsonBody[RemoveAllCollaboratorsForUserIdRequest] { removeCollaboratorRequest =>
+      teamMemberService.removeAllCollaboratorsForUserId(removeCollaboratorRequest)
+        .map(x => Ok(Json.toJson(x)))
+    }
+  }
+
   def getOrganisationUserByOrganisationId(organisationId: OrganisationId): Action[AnyContent] = Action.async { implicit request =>
     teamMemberService.getOrganisationUserByOrganisationId(organisationId)
       .map(x => Ok(Json.toJson(x)))
