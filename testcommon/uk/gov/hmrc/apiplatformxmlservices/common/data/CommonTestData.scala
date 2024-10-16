@@ -39,5 +39,5 @@ trait CommonTestData {
   val createOrganisationRequest: CreateOrganisationRequest = CreateOrganisationRequest(anOrganisation.name, anEmailAddress, aFirstName, aLastName)
   val updatedOrgName: OrganisationName                     = OrganisationName("Updated Organisation Name")
 
-  val anOrganisationUserNoServices = OrganisationUser(anOrganisationId, aUserId, anEmailAddress, aFirstName, aLastName, List.empty)
+  val anOrganisationUserNoServices = OrganisationUser(anOrganisationId, Some(aUserId), anEmailAddress, aFirstName, aLastName, List.empty)
 }
