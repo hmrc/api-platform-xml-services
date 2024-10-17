@@ -126,18 +126,16 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       }
   }
 
-  def removeCollaboratorFromOrganisation(organisationId: OrganisationId, userId: UserId): Future[Either[Exception, Organisation]] = {
+  def removeCollaboratorFromOrganisation(organisationId: OrganisationId, userId: UserId): Future[UpdateOrganisationResult] = {
     collection.findOneAndUpdate(
       equal("organisationId", Codecs.toBson(organisationId)),
       pull("collaborators", Codecs.toBson(Json.obj("userId" -> userId))),
-      FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+      FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
     )
-      .toFuture()
-      .map(x => Right(x))
-      .recover {
-        case e: Exception =>
-          logger.info("removeCollaboratorFromOrganisation failed:", e)
-          Left(new Exception(s"Failed remove collaborator from Organisation with organisationId ${organisationId.value} - ${e.getMessage}"))
+      .toFutureOption()
+      .map {
+        case Some(organisation: Organisation) => UpdateOrganisationSuccessResult(organisation)
+        case _                                => UpdateOrganisationFailedResult()
       }
   }
 

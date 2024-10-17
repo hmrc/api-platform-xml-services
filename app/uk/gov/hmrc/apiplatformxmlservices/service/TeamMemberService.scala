@@ -48,12 +48,12 @@ class TeamMemberService @Inject() (
     } yield updatedOrganisation).value
   }
 
-  def removeAllCollaboratorsForUserId(request: RemoveAllCollaboratorsForUserIdRequest): Future[List[Organisation]] = {
+  def removeAllCollaboratorsForUserId(request: RemoveAllCollaboratorsForUserIdRequest): Future[List[UpdateOrganisationResult]] = {
     for {
       organisations        <- organisationRepository.findByUserId(request.userId)
       updatedOrganisations <- Future.traverse(organisations)(handleRemoveCollaboratorFromOrg(request.userId))
       _                     = logger.info(s"Removed all XML vender collaborators for userId $request.userId")
-    } yield organisations
+    } yield updatedOrganisations
   }
 
   private def handleRemoveCollaboratorFromOrg(userId: UserId)(organisation: Organisation) = {
