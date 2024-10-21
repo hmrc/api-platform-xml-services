@@ -30,6 +30,7 @@ import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnecto
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
+import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
 
 @Singleton
 class TeamMemberService @Inject() (
@@ -37,7 +38,7 @@ class TeamMemberService @Inject() (
     override val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector,
     override val xmlApiService: XmlApiService
   )(implicit val ec: ExecutionContext
-  ) extends UserFunctions {
+  ) extends UserFunctions with ApplicationLogger {
 
   def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
@@ -45,6 +46,18 @@ class TeamMemberService @Inject() (
       _                   <- EitherT(collaboratorCanBeDeleted(organisation, request.email))
       updatedOrganisation <- EitherT(handleRemoveCollaboratorFromOrg(organisation, request.email))
     } yield updatedOrganisation).value
+  }
+
+  def removeAllCollaboratorsForUserId(request: RemoveAllCollaboratorsForUserIdRequest): Future[List[UpdateOrganisationResult]] = {
+    for {
+      organisations        <- organisationRepository.findByUserId(request.userId)
+      updatedOrganisations <- Future.traverse(organisations)(handleRemoveCollaboratorFromOrg(request.userId))
+      _                     = logger.info(s"Removed all XML vender collaborators for userId $request.userId")
+    } yield updatedOrganisations
+  }
+
+  private def handleRemoveCollaboratorFromOrg(userId: UserId)(organisation: Organisation) = {
+    organisationRepository.removeCollaboratorFromOrganisation(organisation.organisationId, userId)
   }
 
   def addCollaborator(
@@ -75,7 +88,7 @@ class TeamMemberService @Inject() (
 
   private def getDeveloperByEmail(organisationId: OrganisationId, email: LaxEmailAddress)(implicit hc: HeaderCarrier) = {
     def mapResult(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[OrganisationUser]] = results map {
-      case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "", "", List.empty[XmlApi]))  // User not found in TPD - just return minimum data
+      case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "", "", List.empty[XmlApi])) // User not found in TPD - just return minimum data
       case Right(users: List[UserResponse]) => List(toOrganisationUser(organisationId, users.head))
       case _                                => List.empty[OrganisationUser]
     }

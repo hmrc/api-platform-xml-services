@@ -64,9 +64,9 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
     val updateOrganisationDetailsRequest =
       FakeRequest("POST", s"/organisations/${anOrganisationId.value}").withBody(Json.toJson(updateOrganisationDetailsRequestObj))
 
-    val orgOne = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
-    val orgTwo = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
-
+    val orgOne           = OrganisationWithNameAndVendorId(name = OrganisationName("OrgOne"), vendorId = VendorId(1))
+    val orgTwo           = OrganisationWithNameAndVendorId(name = OrganisationName("OrgTwo"), vendorId = VendorId(2))
+    val gatekeeperUserId = "gatekeeperuser@hmrc.gov.uk"
   }
 
   "TeamMemberController" when {
@@ -129,6 +129,38 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
 
       }
     }
-  }
 
+    "removeAllCollaboratorsForUserId" should {
+      "return 204 when service returns success" in new Setup {
+        val request                  = RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)
+        val updateOrganisationResult = UpdateOrganisationSuccessResult(organisation)
+        when(mockTeamMemberService.removeAllCollaboratorsForUserId(eqTo(request))).thenReturn(Future.successful(List(updateOrganisationResult)))
+
+        val removeAllCollaboratorsForUserIdRequest =
+          FakeRequest("POST", "/organisations/all/remove-collaborators").withBody(Json.toJson(request))
+        val result: Future[Result]                 = controller.removeAllCollaboratorsForUserId()(removeAllCollaboratorsForUserIdRequest)
+        status(result) shouldBe Status.NO_CONTENT
+      }
+
+      "return 204 when service returns empty list" in new Setup {
+        val request = RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)
+        when(mockTeamMemberService.removeAllCollaboratorsForUserId(eqTo(request))).thenReturn(Future.successful(List.empty))
+
+        val removeAllCollaboratorsForUserIdRequest =
+          FakeRequest("POST", "/organisations/all/remove-collaborators").withBody(Json.toJson(request))
+        val result: Future[Result]                 = controller.removeAllCollaboratorsForUserId()(removeAllCollaboratorsForUserIdRequest)
+        status(result) shouldBe Status.NO_CONTENT
+      }
+
+      "return 500 when service returns failure" in new Setup {
+        val request = RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)
+        when(mockTeamMemberService.removeAllCollaboratorsForUserId(eqTo(request))).thenReturn(Future.successful(List(UpdateOrganisationFailedResult())))
+
+        val removeAllCollaboratorsForUserIdRequest =
+          FakeRequest("POST", "/organisations/all/remove-collaborators").withBody(Json.toJson(request))
+        val result: Future[Result]                 = controller.removeAllCollaboratorsForUserId()(removeAllCollaboratorsForUserIdRequest)
+        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      }
+    }
+  }
 }

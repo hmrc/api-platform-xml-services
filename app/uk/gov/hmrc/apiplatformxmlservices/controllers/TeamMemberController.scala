@@ -47,6 +47,17 @@ class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: 
     }
   }
 
+  def removeAllCollaboratorsForUserId(): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+    withJsonBody[RemoveAllCollaboratorsForUserIdRequest] { removeCollaboratorRequest =>
+      teamMemberService.removeAllCollaboratorsForUserId(removeCollaboratorRequest)
+        .map {
+          case List(UpdateOrganisationSuccessResult(organisation: Organisation)) => NoContent
+          case Nil                                                               => NoContent
+          case _                                                                 => InternalServerError(s"Unable to RemoveAllCollaboratorsForUserId for ${removeCollaboratorRequest.userId}")
+        }
+    }
+  }
+
   def getOrganisationUserByOrganisationId(organisationId: OrganisationId): Action[AnyContent] = Action.async { implicit request =>
     teamMemberService.getOrganisationUserByOrganisationId(organisationId)
       .map(x => Ok(Json.toJson(x)))

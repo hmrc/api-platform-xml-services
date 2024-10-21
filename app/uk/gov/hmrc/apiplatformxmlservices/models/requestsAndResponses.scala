@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 
 /* Organisation request responses */
 
@@ -40,10 +40,17 @@ case class AddCollaboratorRequest(email: LaxEmailAddress, firstName: String, las
 object AddCollaboratorRequest {
   implicit val formatAddCollaboratorRequest: OFormat[AddCollaboratorRequest] = Json.format[AddCollaboratorRequest]
 }
+
 case class RemoveCollaboratorRequest(email: LaxEmailAddress, gatekeeperUserId: String)
 
 object RemoveCollaboratorRequest {
   implicit val formatRemoveCollaboratorRequest: OFormat[RemoveCollaboratorRequest] = Json.format[RemoveCollaboratorRequest]
+}
+
+case class RemoveAllCollaboratorsForUserIdRequest(userId: UserId, gatekeeperUserId: String)
+
+object RemoveAllCollaboratorsForUserIdRequest {
+  implicit val formatRemoveAllCollaboratorsForUserIdRequest: OFormat[RemoveAllCollaboratorsForUserIdRequest] = Json.format[RemoveAllCollaboratorsForUserIdRequest]
 }
 
 case class ErrorResponseMessage(message: String)

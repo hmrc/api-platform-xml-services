@@ -287,7 +287,71 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
       await(inTest.getOrganisationUserByOrganisationId(anOrganisationId)) shouldBe Nil
 
     }
-
   }
 
+  "removeAllCollaboratorsForUserId" should {
+
+    "return a list of UpdateOrganisationSuccessResult when successful for one organisation" in new Setup {
+      when(mockOrganisationRepo.findByUserId(eqTo(aUserId))).thenReturn(Future.successful(List(organisationWithCollaborators)))
+      when(mockOrganisationRepo.removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators.organisationId), eqTo(aUserId))).thenReturn(
+        Future.successful(UpdateOrganisationSuccessResult(organisationWithCollaborators))
+      )
+
+      val result = await(inTest.removeAllCollaboratorsForUserId(RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)))
+      result shouldBe List(UpdateOrganisationSuccessResult(organisationWithCollaborators))
+
+      verify(mockOrganisationRepo).removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators.organisationId), eqTo(aUserId))
+    }
+
+    "return a list of UpdateOrganisationSuccessResult when successful for three organisations" in new Setup {
+      val collaboratorThree              = Collaborator(UserId.random, LaxEmailAddress("emailThree@example.com"))
+      val organisationWithCollaborators2 = anOrganisation.copy(organisationId = OrganisationId.random, collaborators = List(aCollaborator, collaboratorThree))
+      val organisationWithCollaborators3 = anOrganisation.copy(organisationId = OrganisationId.random, collaborators = List(collaboratorTwo, collaboratorThree))
+
+      when(mockOrganisationRepo.findByUserId(eqTo(aUserId))).thenReturn(Future.successful(List(
+        organisationWithCollaborators,
+        organisationWithCollaborators2,
+        organisationWithCollaborators3
+      )))
+      when(mockOrganisationRepo.removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators.organisationId), eqTo(aUserId))).thenReturn(
+        Future.successful(UpdateOrganisationSuccessResult(organisationWithCollaborators))
+      )
+      when(mockOrganisationRepo.removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators2.organisationId), eqTo(aUserId))).thenReturn(
+        Future.successful(UpdateOrganisationSuccessResult(organisationWithCollaborators2))
+      )
+      when(mockOrganisationRepo.removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators3.organisationId), eqTo(aUserId))).thenReturn(
+        Future.successful(UpdateOrganisationSuccessResult(organisationWithCollaborators3))
+      )
+
+      val result = await(inTest.removeAllCollaboratorsForUserId(RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)))
+      result shouldBe List(
+        UpdateOrganisationSuccessResult(organisationWithCollaborators),
+        UpdateOrganisationSuccessResult(organisationWithCollaborators2),
+        UpdateOrganisationSuccessResult(organisationWithCollaborators3)
+      )
+
+      verify(mockOrganisationRepo).removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators.organisationId), eqTo(aUserId))
+      verify(mockOrganisationRepo).removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators2.organisationId), eqTo(aUserId))
+      verify(mockOrganisationRepo).removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators3.organisationId), eqTo(aUserId))
+    }
+
+    "return a list of UpdateOrganisationSuccessResult when successful no organisations" in new Setup {
+      when(mockOrganisationRepo.findByUserId(eqTo(aUserId))).thenReturn(Future.successful(List.empty))
+
+      val result = await(inTest.removeAllCollaboratorsForUserId(RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)))
+      result shouldBe List.empty
+
+      verify(mockOrganisationRepo, never).removeCollaboratorFromOrganisation(*[OrganisationId], *[UserId])
+    }
+
+    "return a failure" in new Setup {
+      when(mockOrganisationRepo.findByUserId(eqTo(aUserId))).thenReturn(Future.successful(List(organisationWithCollaborators)))
+      when(mockOrganisationRepo.removeCollaboratorFromOrganisation(eqTo(organisationWithCollaborators.organisationId), eqTo(aUserId))).thenReturn(
+        Future.successful(UpdateOrganisationFailedResult())
+      )
+
+      val result = await(inTest.removeAllCollaboratorsForUserId(RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)))
+      result shouldBe List(UpdateOrganisationFailedResult())
+    }
+  }
 }

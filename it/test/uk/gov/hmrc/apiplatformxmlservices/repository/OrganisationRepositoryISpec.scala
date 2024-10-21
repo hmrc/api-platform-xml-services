@@ -285,7 +285,6 @@ class OrganisationRepositoryISpec
         case _                                 => fail()
       }
     }
-
   }
 
   "addCollaboratorToOrganisation" should {
@@ -315,7 +314,46 @@ class OrganisationRepositoryISpec
         case _                                 => fail()
       }
     }
+  }
 
+  "removeCollaboratorFromOrganisation" should {
+    "return UpdateOrganisationSuccessResult when collaborator successfully removed from Organisation" in new Setup {
+      await(repo.createOrUpdate(org3))
+
+      val result = await(repo.removeCollaboratorFromOrganisation(org3.organisationId, aCollaborator.userId))
+
+      result match {
+        case UpdateOrganisationSuccessResult(organisation: Organisation) => {
+          organisation.organisationId shouldBe org3.organisationId
+          organisation.collaborators shouldBe List(collaboratorTwo)
+        }
+        case _                                                           => fail()
+      }
+    }
+
+    "return UpdateOrganisationSuccessResult when collaborator not found in Organisation" in new Setup {
+      await(repo.createOrUpdate(org3))
+
+      val result = await(repo.removeCollaboratorFromOrganisation(org3.organisationId, collaboratorThree.userId))
+
+      result match {
+        case UpdateOrganisationSuccessResult(organisation: Organisation) => {
+          organisation.organisationId shouldBe org3.organisationId
+          organisation.collaborators shouldBe List(aCollaborator, collaboratorTwo)
+        }
+        case _                                                           => fail()
+      }
+    }
+
+    "return UpdateOrganisationFailedResult when organisation not found" in new Setup {
+      val result = await(repo.removeCollaboratorFromOrganisation(OrganisationId.random, aCollaborator.userId))
+
+      println(result)
+      result match {
+        case _: UpdateOrganisationFailedResult => succeed
+        case _                                 => fail()
+      }
+    }
   }
 
   "createOrUpdate" should {
@@ -339,8 +377,6 @@ class OrganisationRepositoryISpec
       await(repo.createOrUpdate(anOrganisation))
 
       val updatedOrganisation = anOrganisation.copy(organisationId = OrganisationId.random, name = OrganisationName("New organisation name"), vendorId = aVendorId)
-      println(anOrganisation)
-      println(updatedOrganisation)
       await(repo.createOrUpdate(updatedOrganisation)) match {
         case Right(a)           =>
           println(a)
