@@ -1,7 +1,8 @@
-# organistion routes
+# organisation routes
 
 GET        /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByOrgId(organisationId: OrganisationId)
 GET        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByParams(vendorId: Option[VendorId], organisationName: Option[OrganisationName], userId: Option[UserId], sortBy: Option[OrganisationSortBy])
+
 POST       /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.create()
 PUT        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.update()
 DELETE     /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.deleteByOrgId(organisationId: OrganisationId)
@@ -14,4 +15,4 @@ POST       /:organisationId/remove-collaborator uk.gov.hmrc.apiplatformxmlservic
 
 GET        /:organisationId/get-users           uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.getOrganisationUserByOrganisationId(organisationId: OrganisationId)
 
-POST       /remove-collaborators                uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeAllCollaboratorsForUserId()
+POST       /all/remove-collaborators            uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeAllCollaboratorsForUserId()

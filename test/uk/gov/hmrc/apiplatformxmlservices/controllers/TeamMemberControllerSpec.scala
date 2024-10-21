@@ -137,7 +137,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
         when(mockTeamMemberService.removeAllCollaboratorsForUserId(eqTo(request))).thenReturn(Future.successful(List(updateOrganisationResult)))
 
         val removeAllCollaboratorsForUserIdRequest =
-          FakeRequest("POST", "/organisations/remove-collaborators").withBody(Json.toJson(request))
+          FakeRequest("POST", "/organisations/all/remove-collaborators").withBody(Json.toJson(request))
         val result: Future[Result]                 = controller.removeAllCollaboratorsForUserId()(removeAllCollaboratorsForUserIdRequest)
         status(result) shouldBe Status.NO_CONTENT
       }
@@ -147,7 +147,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
         when(mockTeamMemberService.removeAllCollaboratorsForUserId(eqTo(request))).thenReturn(Future.successful(List.empty))
 
         val removeAllCollaboratorsForUserIdRequest =
-          FakeRequest("POST", "/organisations/remove-collaborators").withBody(Json.toJson(request))
+          FakeRequest("POST", "/organisations/all/remove-collaborators").withBody(Json.toJson(request))
         val result: Future[Result]                 = controller.removeAllCollaboratorsForUserId()(removeAllCollaboratorsForUserIdRequest)
         status(result) shouldBe Status.NO_CONTENT
       }
@@ -157,7 +157,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
         when(mockTeamMemberService.removeAllCollaboratorsForUserId(eqTo(request))).thenReturn(Future.successful(List(UpdateOrganisationFailedResult())))
 
         val removeAllCollaboratorsForUserIdRequest =
-          FakeRequest("POST", "/organisations/remove-collaborators").withBody(Json.toJson(request))
+          FakeRequest("POST", "/organisations/all/remove-collaborators").withBody(Json.toJson(request))
         val result: Future[Result]                 = controller.removeAllCollaboratorsForUserId()(removeAllCollaboratorsForUserIdRequest)
         status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       }
