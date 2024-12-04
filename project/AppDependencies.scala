@@ -7,8 +7,8 @@ object AppDependencies {
 
   lazy val mongoVersion      = "1.7.0"
   lazy val bootstrapVersion  = "9.1.0"
-  val apiDomainVersion       = "0.15.0"
-  val commonDomainVersion    = "0.13.0"
+  val apiDomainVersion       = "0.19.1"
+  val commonDomainVersion    = "0.17.0"
 
   def apply(): Seq[ModuleID] =
     compile ++ test
@@ -21,10 +21,10 @@ object AppDependencies {
   )
 
   lazy val test = Seq(
-    "uk.gov.hmrc"           %% "bootstrap-test-play-30"          % bootstrapVersion,
-    "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"         % mongoVersion,
-    "org.pegdown"            % "pegdown"                         % "1.6.0",
-    "org.mockito"           %% "mockito-scala-scalatest"         % "1.17.30",
-    "uk.gov.hmrc"           %% "api-platform-test-common-domain" % commonDomainVersion
+    "uk.gov.hmrc"           %% "bootstrap-test-play-30"              % bootstrapVersion,
+    "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"             % mongoVersion,
+    "org.pegdown"            % "pegdown"                             % "1.6.0",
+    "org.mockito"           %% "mockito-scala-scalatest"             % "1.17.30",
+    "uk.gov.hmrc"           %% "api-platform-common-domain-fixtures" % commonDomainVersion
   ).map(_ % "test")
 }
