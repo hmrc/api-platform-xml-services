@@ -57,11 +57,11 @@ class TestOrganisationsCleanupJob @Inject() (
 
   override def runJob(implicit ec: ExecutionContext): Future[RunningOfJobSuccessful] = {
     val timeBeforeWhichOrgIsConsideredExpired: Instant = instant().minus(jobConfig.expiryDuration.toMinutes, ChronoUnit.MINUTES)
-    logger.info(s"Delete expired test applications created earlier than $timeBeforeWhichOrgIsConsideredExpired ( ${jobConfig.expiryDuration.toMinutes} mins ago)")
+    logger.info(s"Delete expired test organisations created earlier than $timeBeforeWhichOrgIsConsideredExpired ( ${jobConfig.expiryDuration.toMinutes} mins ago)")
 
     val result: Future[RunningOfJobSuccessful.type] = for {
       idsToRemove <- testOrgRepo.findCreatedBefore(timeBeforeWhichOrgIsConsideredExpired)
-      _            = logger.info(s"Scheduled job $name found ${idsToRemove.size} test applications")
+      _            = logger.info(s"Scheduled job $name found ${idsToRemove.size} test organisations")
       _           <- Future.sequence(idsToRemove.map(deleteExpiredOrganisations(_)))
     } yield RunningOfJobSuccessful
 

@@ -33,6 +33,7 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
+import uk.gov.hmrc.mongo.play.json.Codecs
 
 object TestOrganisationsRepository {
   case class Data(id: OrganisationId, createdOn: Instant = Instant.now)
@@ -57,7 +58,8 @@ class TestOrganisationsRepository @Inject() (mongo: MongoComponent, val metrics:
             .background(true)
         )
       ),
-      replaceIndexes = true
+      replaceIndexes = true,
+      extraCodecs = Seq(Codecs.playFormatCodec(OrganisationId.format))
     ) {
 
   def record(id: OrganisationId): Future[Boolean] = {
