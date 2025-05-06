@@ -46,7 +46,7 @@ class TestOrganisationsCleanupJob @Inject() (
   )(implicit val ec: ExecutionContext
   ) extends ScheduledMongoJob with ClockNow {
 
-  override def name: String                 = "TestOrganisationsCleanupJob"
+  override def name: String                 = "testOrganisationsCleanupJob"
   override def interval: FiniteDuration     = jobConfig.interval
   override def initialDelay: FiniteDuration = jobConfig.initialDelay
   override val isEnabled: Boolean           = jobConfig.enabled
