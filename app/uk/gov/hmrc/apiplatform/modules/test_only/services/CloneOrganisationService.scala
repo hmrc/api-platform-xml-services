@@ -50,11 +50,13 @@ class CloneOrganisationService @Inject() (
         newName     = OrganisationName(s"${oldOrg.name} clone $suffix")
         firstCollab = oldOrg.collaborators.head
         user       <- E2.fromEitherF(tpdConnector.getByEmail(List(firstCollab.email))).bimap(_ => id, _.head)
+
         result     <- E.liftF(organisationService.create(CreateOrganisationRequest(newName, user.email, user.firstName, user.lastName)))
         org         = result match {
                         case CreateOrganisationSuccessResult(organisation) => Right(organisation)
                         case _                                             => throw new RuntimeException("COR failed")
                       }
+        _          <- E.liftF(testOrgRepo.record(org.value.organisationId))
       } yield result match {
         case CreateOrganisationSuccessResult(organisation) => organisation.vendorId
         case _                                             => throw new RuntimeException("COR failed")

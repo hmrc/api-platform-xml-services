@@ -45,7 +45,7 @@ object TestOrganisationsRepository {
 @Singleton
 class TestOrganisationsRepository @Inject() (mongo: MongoComponent, val metrics: Metrics)(implicit val ec: ExecutionContext)
     extends PlayMongoRepository[TestOrganisationsRepository.Data](
-      collectionName = "TestOrganisations",
+      collectionName = "testOrganisations",
       mongoComponent = mongo,
       domainFormat = TestOrganisationsRepository.format,
       indexes = Seq(
