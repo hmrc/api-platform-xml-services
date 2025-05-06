@@ -48,7 +48,7 @@ class TestOrganisationsCleanupJobConfigProvider @Inject() (val configuration: Co
     with Provider[TestOrganisationsCleanupJob.Config] {
 
   override def get() = {
-    val jobConfig = configuration.underlying.as[TestOrganisationsCleanupJob.Config]("TestOrganisationsCleanupJob")
+    val jobConfig = configuration.underlying.as[TestOrganisationsCleanupJob.Config]("testOrganisationsCleanupJob")
 
     TestOrganisationsCleanupJob.Config(jobConfig.initialDelay, jobConfig.interval, jobConfig.enabled, jobConfig.expiryDuration)
   }
