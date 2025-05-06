@@ -42,7 +42,7 @@ class CloneOrganisationService @Inject() (
   private val E  = EitherTHelper.make[OrganisationId]
   private val E2 = EitherTHelper.make[Throwable]
 
-  def cloneOrg(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[OrganisationId, VendorId]] = {
+  def cloneOrg(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[OrganisationId, Organisation]] = {
     (
       for {
         oldOrg     <- E.fromOptionF(orgRepo.findByOrgId(id), id)
@@ -58,7 +58,7 @@ class CloneOrganisationService @Inject() (
                       }
         _          <- E.liftF(testOrgRepo.record(org.value.organisationId))
       } yield result match {
-        case CreateOrganisationSuccessResult(organisation) => organisation.vendorId
+        case CreateOrganisationSuccessResult(organisation) => organisation
         case _                                             => throw new RuntimeException("COR failed")
       }
     )
