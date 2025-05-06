@@ -43,17 +43,22 @@ class CloneOrganisationService @Inject() (
   private val E2 = EitherTHelper.make[Throwable]
 
   def cloneOrg(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[OrganisationId, VendorId]] = {
-    val newId = OrganisationId.random
     (
       for {
-        oldOrg     <- E.fromOptionF(orgRepo.findByOrgId(id), newId)
+        oldOrg     <- E.fromOptionF(orgRepo.findByOrgId(id), id)
         suffix      = Instant.now().toEpochMilli().toHexString
         newName     = OrganisationName(s"${oldOrg.name} clone $suffix")
         firstCollab = oldOrg.collaborators.head
         user       <- E2.fromEitherF(tpdConnector.getByEmail(List(firstCollab.email))).bimap(_ => id, _.head)
         result     <- E.liftF(organisationService.create(CreateOrganisationRequest(newName, user.email, user.firstName, user.lastName)))
-        newOrg     <- E.fromOptionF(orgRepo.findByOrgId(newId), newId)
-      } yield newOrg.vendorId
+        org         = result match {
+                        case CreateOrganisationSuccessResult(organisation) => Right(organisation)
+                        case _                                             => throw new RuntimeException("COR failed")
+                      }
+      } yield result match {
+        case CreateOrganisationSuccessResult(organisation) => organisation.vendorId
+        case _                                             => throw new RuntimeException("COR failed")
+      }
     )
       .value
       .recover {
