@@ -53,14 +53,12 @@ class CloneOrganisationService @Inject() (
 
         result     <- E.liftF(organisationService.create(CreateOrganisationRequest(newName, user.email, user.firstName, user.lastName)))
         org         = result match {
-                        case CreateOrganisationSuccessResult(organisation) => Right(organisation)
+                        case CreateOrganisationSuccessResult(organisation) => organisation
                         case _                                             => throw new RuntimeException("COR failed")
                       }
-        _          <- E.liftF(testOrgRepo.record(org.value.organisationId))
-      } yield result match {
-        case CreateOrganisationSuccessResult(organisation) => organisation
-        case _                                             => throw new RuntimeException("COR failed")
-      }
+        _          <- E.liftF(testOrgRepo.record(org.organisationId))
+        finalOrg   <- E2.fromEitherF(organisationService.update(org.copy(services = oldOrg.services, collaborators = oldOrg.collaborators))).leftMap(_ => id)
+      } yield finalOrg
     )
       .value
       .recover {
