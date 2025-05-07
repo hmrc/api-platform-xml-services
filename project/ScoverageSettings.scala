@@ -20,6 +20,8 @@ object ScoverageSettings {
         """Module""",
         """GraphiteStartUp""",
         """.*\.Reverse[^.]*""",
+        """uk\.gov\.hmrc\.apiplatform\.modules\.test_only\..*""",
+        """uk\.gov\.hmrc\.apiplatform\.modules\.scheduling\..*"""
       ).mkString(";"),
       ScoverageKeys.coverageMinimumStmtTotal := 95.80,
       ScoverageKeys.coverageFailOnMinimum := true,

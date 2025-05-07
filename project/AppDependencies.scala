@@ -5,10 +5,10 @@ import sbt._
 
 object AppDependencies {
 
-  lazy val mongoVersion      = "2.4.0"
-  lazy val bootstrapVersion  = "9.7.0"
+  lazy val mongoVersion      = "2.5.0"
+  lazy val bootstrapVersion  = "9.11.0"
   val apiDomainVersion       = "0.19.1"
-  val commonDomainVersion    = "0.17.0"
+  val commonDomainVersion    = "0.18.0"
 
   def apply(): Seq[ModuleID] =
     compile ++ test
@@ -17,7 +17,8 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % mongoVersion,
     "uk.gov.hmrc"       %% "api-platform-api-domain"   % apiDomainVersion,
-    "org.typelevel"     %% "cats-core"                 % "2.10.0"
+    "org.typelevel"     %% "cats-core"                 % "2.10.0",
+    "com.iheart"        %% "ficus"                     % "1.5.2"
   )
 
   lazy val test = Seq(
