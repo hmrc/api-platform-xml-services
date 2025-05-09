@@ -25,17 +25,16 @@ import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
-import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
+import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, VendorIdService}
 
 @Singleton
 class CloneOrganisationService @Inject() (
     orgRepo: OrganisationRepository,
     testOrgRepo: TestOrganisationsRepository,
     organisationService: OrganisationService,
-    tpdConnector: ThirdPartyDeveloperConnector
+    vendorIdService: VendorIdService
   )(implicit ec: ExecutionContext
   ) {
 
@@ -45,19 +44,17 @@ class CloneOrganisationService @Inject() (
   def cloneOrg(id: OrganisationId)(implicit hc: HeaderCarrier): Future[Either[OrganisationId, Organisation]] = {
     (
       for {
-        oldOrg     <- E.fromOptionF(orgRepo.findByOrgId(id), id)
-        suffix      = Instant.now().toEpochMilli().toHexString
-        newName     = OrganisationName(s"${oldOrg.name} clone $suffix")
-        firstCollab = oldOrg.collaborators.head
-        user       <- E2.fromEitherF(tpdConnector.getByEmail(List(firstCollab.email))).bimap(_ => id, _.head)
-
-        result     <- E.liftF(organisationService.create(CreateOrganisationRequest(newName, user.email, user.firstName, user.lastName)))
-        org         = result match {
-                        case CreateOrganisationSuccessResult(organisation) => organisation
-                        case _                                             => throw new RuntimeException("COR failed")
-                      }
-        _          <- E.liftF(testOrgRepo.record(org.organisationId))
-        finalOrg   <- E2.fromEitherF(organisationService.update(org.copy(services = oldOrg.services, collaborators = oldOrg.collaborators))).leftMap(_ => id)
+        oldOrg   <- E.fromOptionF(orgRepo.findByOrgId(id), id)
+        suffix    = Instant.now().toEpochMilli().toHexString
+        newName   = OrganisationName(s"${oldOrg.name} clone $suffix")
+        vendorId <- E2.fromEitherF(vendorIdService.getNextVendorId()).leftMap(_ => id)
+        result   <- E.liftF(organisationService.createOrganisation(newName, vendorId, List.empty))
+        org       = result match {
+                      case CreateOrganisationSuccessResult(organisation) => organisation
+                      case _                                             => throw new RuntimeException("COR failed")
+                    }
+        _        <- E.liftF(testOrgRepo.record(org.organisationId))
+        finalOrg <- E2.fromEitherF(organisationService.update(org.copy(services = oldOrg.services, collaborators = oldOrg.collaborators))).leftMap(_ => id)
       } yield finalOrg
     )
       .value

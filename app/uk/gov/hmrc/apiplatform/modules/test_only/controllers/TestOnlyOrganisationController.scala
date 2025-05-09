@@ -43,7 +43,7 @@ class TestOnlyOrganisationController @Inject() (
     organisationService.findByOrgId(organisationId) flatMap {
       case Some(org: Organisation) =>
         cloneOrgansationService.cloneOrg(organisationId).map {
-          case Left(e)         => InternalServerError("Failed to clone organisation")
+          case Left(_)    => InternalServerError(s"Failed to clone organisation")
           case Right(org) => Created(Json.toJson(org))
         }
       case _                       => Future.successful(NotFound(s"XML Organisation with organisationId ${organisationId.value} not found."))

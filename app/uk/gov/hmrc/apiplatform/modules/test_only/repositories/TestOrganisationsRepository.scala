@@ -28,12 +28,11 @@ import org.mongodb.scala.model._
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsRepository.Data
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
-import uk.gov.hmrc.mongo.play.json.Codecs
 
 object TestOrganisationsRepository {
   case class Data(id: OrganisationId, createdOn: Instant = Instant.now)
