@@ -19,7 +19,6 @@ package uk.gov.hmrc.apiplatform.modules.test_only.services
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsRepository
@@ -37,7 +36,7 @@ class CloneOrganisationService @Inject() (
   )(implicit ec: ExecutionContext
   ) {
 
-  private val E  = EitherTHelper.make[Throwable]
+  private val E = EitherTHelper.make[Throwable]
 
   def cloneOrg(id: OrganisationId): Future[Either[Throwable, Organisation]] = {
     (
