@@ -52,7 +52,7 @@ class OrganisationService @Inject() (
     vendorIdService.getNextVendorId().flatMap {
       case Right(vendorId: VendorId) => handleGetOrCreateUser(request.email, request.firstName, request.lastName).flatMap {
           case Right(user: UserResponse)            =>
-            handleCreateOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
+            createOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))
           case Left(e: GetOrCreateUserFailedResult) => successful(CreateOrganisationFailedResult(e.message))
         }
       case Left(e: Throwable)        => successful(CreateOrganisationFailedResult(e.getMessage))
@@ -62,7 +62,7 @@ class OrganisationService @Inject() (
     }
   }
 
-  def handleCreateOrganisation(organisationName: OrganisationName, vendorId: VendorId, collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
+  def createOrganisation(organisationName: OrganisationName, vendorId: VendorId, collaborators: List[Collaborator] = List.empty): Future[CreateOrganisationResult] = {
 
     def mapError(ex: Exception): CreateOrganisationResult = ex match {
       case ex: MongoCommandException if ex.getErrorCode == 11000 => CreateOrganisationFailedDuplicateIdResult(ex.getMessage)
