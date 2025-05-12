@@ -5,7 +5,7 @@ import sbt._
 
 object AppDependencies {
 
-  lazy val mongoVersion      = "2.5.0"
+  lazy val mongoVersion      = "2.6.0"
   lazy val bootstrapVersion  = "9.11.0"
   val apiDomainVersion       = "0.19.1"
   val commonDomainVersion    = "0.18.0"
