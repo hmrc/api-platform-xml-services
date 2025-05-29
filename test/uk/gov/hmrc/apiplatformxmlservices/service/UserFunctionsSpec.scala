@@ -80,10 +80,10 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
     // The expectation data below must match the file $project_dir/resources/xml_apis.json
 
     val customs1 = XmlApi(
-      "Excise Movement Control System",
-      ServiceName("excise-movement-control"),
-      ApiContext("/government/collections/excise-movement-control-system-fs31-support-for-software-developers"),
-      "The Excise Movement Control System is a UK and EU-wide system that’s used to record the movements of duty suspended excise goods. This API allows traders to submit Electronic administrative documents (eAD) for duty suspended goods and get notifications.",
+      "EC Sales List Online",
+      ServiceName("vat-and-ec-sales-list"),
+      ApiContext("/government/collections/vat-and-ec-sales-list-online-support-for-software-developers"),
+      "The XML ECSL Declaration Service is a reliable channel for VAT registered traders and their appointed agents to submit EC Sales Lists (ECSL) directly via commercial or bespoke software packages. Since Brexit VAT registered businesses supplying goods from NI to VAT registered customers in EU must tell HMRC about those supplies.",
       Some(List(ApiCategory.CUSTOMS))
     )
 

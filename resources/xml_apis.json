@@ -69,7 +69,7 @@
     "context": "/government/collections/excise-movement-control-system-fs31-support-for-software-developers",
     "description": "The Excise Movement Control System is a UK and EU-wide system that’s used to record the movements of duty suspended excise goods. This API allows traders to submit Electronic administrative documents (eAD) for duty suspended goods and get notifications.",
     "categories": ["CUSTOMS"],
-    "status": "STABLE"
+    "status": "RETIRED"
   },
   {
     "name": "Exchange rates from HMRC",
