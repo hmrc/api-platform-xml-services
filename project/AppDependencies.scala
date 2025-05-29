@@ -6,7 +6,7 @@ import sbt._
 object AppDependencies {
 
   lazy val mongoVersion      = "2.6.0"
-  lazy val bootstrapVersion  = "9.11.0"
+  lazy val bootstrapVersion  = "9.12.0"
   val apiDomainVersion       = "0.19.1"
   val commonDomainVersion    = "0.18.0"
 
@@ -24,7 +24,7 @@ object AppDependencies {
   lazy val test = Seq(
     "uk.gov.hmrc"           %% "bootstrap-test-play-30"              % bootstrapVersion,
     "uk.gov.hmrc.mongo"     %% "hmrc-mongo-test-play-30"             % mongoVersion,
-    "org.pegdown"            % "pegdown"                             % "1.6.0",
+    "com.vladsch.flexmark"  % "flexmark-all"                         % "0.64.8",
     "org.mockito"           %% "mockito-scala-scalatest"             % "1.17.30",
     "uk.gov.hmrc"           %% "api-platform-common-domain-fixtures" % commonDomainVersion
   ).map(_ % "test")
