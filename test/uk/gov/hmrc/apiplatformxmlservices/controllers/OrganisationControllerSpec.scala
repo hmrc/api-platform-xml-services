@@ -72,16 +72,16 @@ class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with 
 
   "findByOrgId" should {
     "return 200" in new Setup {
-      when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisation)))
+      when(mockOrgService.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(organisation)))
 
       val result: Future[Result] = controller.findByOrgId(anOrganisationId)(fakeRequest)
       status(result) shouldBe Status.OK
     }
 
     "return 404 when no results returned" in new Setup {
-      when(mockOrgService.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
+      when(mockOrgService.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.findByOrgId(OrganisationId.random)(fakeRequest)
+      val result: Future[Result] = controller.findByOrgId(XmlOrganisationId.random)(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
     }
   }

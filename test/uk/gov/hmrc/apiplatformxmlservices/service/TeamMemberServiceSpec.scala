@@ -59,20 +59,20 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
   "addCollaborator" should {
     "return Left when Organisation does not exist" in new Setup {
-      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
+      when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(None))
 
       await(inTest.addCollaborator(anOrganisationId, anEmailAddress, aFirstName, aLastName)) match {
         case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: $anOrganisationId"
         case Right(_)                             => fail()
       }
 
-      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
       verifyZeroInteractions(mockThirdPartyDeveloperConnector)
 
     }
 
     "return Left when Organisation exists but fails to get or create user" in new Setup {
-      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
+      when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("some error")))
 
@@ -81,7 +81,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
         case _                                    => fail()
       }
 
-      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
 
     }
@@ -89,7 +89,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
     "return Left when Organisation exists but user already assigned to organisation" in new Setup {
 
       val organisationWithUSer = anOrganisation.copy(collaborators = List(Collaborator(UserId(UUID.randomUUID()), anEmailAddress)))
-      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithUSer)))
+      when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(organisationWithUSer)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
@@ -98,75 +98,75 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
         case _                                                 => fail()
       }
 
-      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
 
     }
 
     "return Left when Organisation exists and get User is successful but update Org fails" in new Setup {
-      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
+      when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
-      when(mockOrganisationRepo.addCollaboratorToOrganisation(*[OrganisationId], *)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
+      when(mockOrganisationRepo.addCollaboratorToOrganisation(*[XmlOrganisationId], *)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
       await(inTest.addCollaborator(anOrganisationId, anEmailAddress, aFirstName, aLastName)) match {
         case Left(x: UpdateCollaboratorFailedResult) => x.message shouldBe s"Organisation does not exist"
         case _                                       => fail()
       }
 
-      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
-      verify(mockOrganisationRepo).addCollaboratorToOrganisation(*[OrganisationId], *)
+      verify(mockOrganisationRepo).addCollaboratorToOrganisation(*[XmlOrganisationId], *)
 
     }
 
     "return Right when collaborator successfully added to organisation" in new Setup {
-      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
+      when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
       val organisationWithCollaborator = anOrganisation.copy(collaborators = List(aCollaborator))
-      when(mockOrganisationRepo.addCollaboratorToOrganisation(*[OrganisationId], *)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
+      when(mockOrganisationRepo.addCollaboratorToOrganisation(*[XmlOrganisationId], *)).thenReturn(Future.successful(Right(organisationWithCollaborator)))
 
       await(inTest.addCollaborator(anOrganisationId, anEmailAddress, aFirstName, aLastName)) match {
         case Right(organisation: Organisation) => organisation.collaborators should contain only aCollaborator
         case _                                 => fail()
       }
 
-      verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+      verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
-      verify(mockOrganisationRepo).addCollaboratorToOrganisation(*[OrganisationId], *)
+      verify(mockOrganisationRepo).addCollaboratorToOrganisation(*[XmlOrganisationId], *)
 
     }
 
     "removeCollaborator" should {
       "return Left when Organisation does not exist" in new Setup {
-        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(None))
+        when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(None))
 
         await(inTest.removeCollaborator(anOrganisationId, removeCollaboratorRequest)) match {
           case Left(x: GetOrganisationFailedResult) => x.message shouldBe s"Failed to get organisation for Id: $anOrganisationId"
           case _                                    => fail()
         }
 
-        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
         verifyZeroInteractions(mockThirdPartyDeveloperConnector)
 
       }
 
       "return Left collaborator does not exist on Organisation" in new Setup {
-        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
+        when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
 
         await(inTest.removeCollaborator(anOrganisationId, removeCollaboratorRequest)) match {
           case Left(x: ValidateCollaboratorFailureResult) => x.message shouldBe s"Collaborator not found on Organisation"
           case _                                          => fail()
         }
 
-        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
         verifyZeroInteractions(mockThirdPartyDeveloperConnector)
       }
 
       "return Left update organisation fails" in new Setup {
-        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+        when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
         when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
 
         await(inTest.removeCollaborator(anOrganisationId, removeCollaboratorRequest)) match {
@@ -174,13 +174,13 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
           case _                                       => fail()
         }
 
-        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
         verify(mockOrganisationRepo).createOrUpdate(*)
 
       }
 
       "return Right updated organisation" in new Setup {
-        when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
+        when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(organisationWithCollaborators)))
         val updatedCollaborators = organisationWithCollaborators.collaborators.filterNot(_.email == anEmailAddress)
         val updatedOrganisation  = organisationWithCollaborators.copy(collaborators = updatedCollaborators)
         when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(updatedOrganisation)))
@@ -190,7 +190,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
           case _                                 => fail()
         }
 
-        verify(mockOrganisationRepo).findByOrgId(*[OrganisationId])
+        verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
         verify(mockOrganisationRepo).createOrUpdate(*)
 
       }
@@ -305,8 +305,8 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
     "return a list of UpdateOrganisationSuccessResult when successful for three organisations" in new Setup {
       val collaboratorThree              = Collaborator(UserId.random, LaxEmailAddress("emailThree@example.com"))
-      val organisationWithCollaborators2 = anOrganisation.copy(organisationId = OrganisationId.random, collaborators = List(aCollaborator, collaboratorThree))
-      val organisationWithCollaborators3 = anOrganisation.copy(organisationId = OrganisationId.random, collaborators = List(collaboratorTwo, collaboratorThree))
+      val organisationWithCollaborators2 = anOrganisation.copy(organisationId = XmlOrganisationId.random, collaborators = List(aCollaborator, collaboratorThree))
+      val organisationWithCollaborators3 = anOrganisation.copy(organisationId = XmlOrganisationId.random, collaborators = List(collaboratorTwo, collaboratorThree))
 
       when(mockOrganisationRepo.findByUserId(eqTo(aUserId))).thenReturn(Future.successful(List(
         organisationWithCollaborators,
@@ -341,7 +341,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
       val result = await(inTest.removeAllCollaboratorsForUserId(RemoveAllCollaboratorsForUserIdRequest(aUserId, gatekeeperUserId)))
       result shouldBe List.empty
 
-      verify(mockOrganisationRepo, never).removeCollaboratorFromOrganisation(*[OrganisationId], *[UserId])
+      verify(mockOrganisationRepo, never).removeCollaboratorFromOrganisation(*[XmlOrganisationId], *[UserId])
     }
 
     "return a failure" in new Setup {

@@ -88,14 +88,14 @@ class OrganisationService @Inject() (
   def update(organisation: Organisation): Future[Either[Exception, Organisation]] =
     organisationRepository.createOrUpdate(organisation)
 
-  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName) = {
+  def updateOrganisationDetails(organisationId: XmlOrganisationId, organisationName: OrganisationName) = {
     organisationRepository.updateOrganisationDetails(organisationId, organisationName)
   }
 
-  def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] =
+  def deleteByOrgId(organisationId: XmlOrganisationId): Future[Boolean] =
     organisationRepository.deleteByOrgId(organisationId)
 
-  def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] =
+  def findByOrgId(organisationId: XmlOrganisationId): Future[Option[Organisation]] =
     organisationRepository.findByOrgId(organisationId)
 
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] =
@@ -119,5 +119,5 @@ class OrganisationService @Inject() (
     )
   }
 
-  private def generateOrganisationId(): OrganisationId = OrganisationId(uuidService.newUuid())
+  private def generateOrganisationId(): XmlOrganisationId = XmlOrganisationId(uuidService.newUuid())
 }

@@ -38,7 +38,7 @@ class CloneOrganisationService @Inject() (
 
   private val E = EitherTHelper.make[Throwable]
 
-  def cloneOrg(id: OrganisationId): Future[Either[Throwable, Organisation]] = {
+  def cloneOrg(id: XmlOrganisationId): Future[Either[Throwable, Organisation]] = {
     (
       for {
         oldOrg   <- E.fromOptionF(orgRepo.findByOrgId(id), new RuntimeException(s"Cannot find organisation: $id"))

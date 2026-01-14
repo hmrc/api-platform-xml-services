@@ -78,7 +78,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
     val gatekeeperUserId              = "John Doe"
     val organisationWithCollaborators = anOrganisation.copy(collaborators = List(aCollaborator))
-    val organisation2                 = Organisation(organisationId = OrganisationId.random, vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
+    val organisation2                 = Organisation(organisationId = XmlOrganisationId.random, vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
     val updatedOrgWithDuplicate       = Organisation(organisationId = anOrganisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
     val createOrganisationRequest1    = CreateOrganisationRequest(organisationName = OrganisationName("   Organisation Name   "), anEmailAddress, aFirstName, aLastName)
     val addCollaboratorRequest        = AddCollaboratorRequest(anEmailAddress, aFirstName, aLastName)
@@ -132,7 +132,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", "{\"someinvalidkey\": \"something\"}")
         result.status mustBe BAD_REQUEST
         withClue(s"response body not as expected: ${result.body}") {
-          result.body.startsWith("Invalid AddCollaboratorRequest payload:") mustBe true
+          result.body.startsWith("""{"statusCode":400,"message":"Invalid AddCollaboratorRequest payload:""") mustBe true
         }
       }
 
@@ -148,7 +148,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
         result.status mustBe BAD_REQUEST
         val response = Json.parse(result.body).as[ErrorResponse]
-        response.errors.head.message mustBe s"Cannot accept $organisationId as OrganisationId"
+        response.errors.head.message mustBe s"Cannot accept $organisationId as XmlOrganisationId"
       }
 
       "respond with 404 if organisationId exists" in new Setup {
@@ -196,7 +196,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
       val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/remove-collaborator", "{\"someinvalidkey\": \"something\"}")
       result.status mustBe BAD_REQUEST
       withClue(s"response body not as expected: ${result.body}") {
-        result.body.startsWith("Invalid RemoveCollaboratorRequest payload:") mustBe true
+        result.body.startsWith("""{"statusCode":400,"message":"Invalid RemoveCollaboratorRequest payload:""") mustBe true
       }
     }
 

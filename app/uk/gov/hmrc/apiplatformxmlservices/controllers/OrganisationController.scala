@@ -35,7 +35,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     with WithJsonBody
     with Logging {
 
-  def findByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
+  def findByOrgId(organisationId: XmlOrganisationId): Action[AnyContent] = Action.async {
     organisationService.findByOrgId(organisationId) map {
       case Some(organisation: Organisation) => Ok(Json.toJson(organisation))
       case _                                => NotFound(s"XML Organisation with organisationId ${organisationId.value} not found.")
@@ -64,7 +64,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
-  def deleteByOrgId(organisationId: OrganisationId): Action[AnyContent] = Action.async {
+  def deleteByOrgId(organisationId: XmlOrganisationId): Action[AnyContent] = Action.async {
     organisationService.deleteByOrgId(organisationId) map {
       case true => NoContent
       case _    => NotFound(s"XML Organisation with organisationId $organisationId not found.")
@@ -93,7 +93,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
     }
   }
 
-  def updateOrganisationDetails(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+  def updateOrganisationDetails(organisationId: XmlOrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[UpdateOrganisationDetailsRequest] { organisationDetailsRequest =>
       if (organisationDetailsRequest.organisationName.value.trim.isEmpty) Future.successful(BadRequest(s"Could not update Organisation with empty name"))
       else organisationService.updateOrganisationDetails(organisationId, organisationDetailsRequest.organisationName).map {

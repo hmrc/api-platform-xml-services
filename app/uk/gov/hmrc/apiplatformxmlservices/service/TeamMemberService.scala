@@ -40,7 +40,7 @@ class TeamMemberService @Inject() (
   )(implicit val ec: ExecutionContext
   ) extends UserFunctions with ApplicationLogger {
 
-  def removeCollaborator(organisationId: OrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  def removeCollaborator(organisationId: XmlOrganisationId, request: RemoveCollaboratorRequest): Future[Either[ManageCollaboratorResult, Organisation]] = {
     (for {
       organisation        <- EitherT(handleFindByOrgId(organisationId))
       _                   <- EitherT(collaboratorCanBeDeleted(organisation, request.email))
@@ -61,7 +61,7 @@ class TeamMemberService @Inject() (
   }
 
   def addCollaborator(
-      organisationId: OrganisationId,
+      organisationId: XmlOrganisationId,
       email: LaxEmailAddress,
       firstName: String,
       lastName: String
@@ -75,18 +75,18 @@ class TeamMemberService @Inject() (
     } yield updatedOrganisation).value
   }
 
-  def getOrganisationUserByOrganisationId(organisationId: OrganisationId)(implicit hc: HeaderCarrier): Future[List[OrganisationUser]] = {
+  def getOrganisationUserByOrganisationId(organisationId: XmlOrganisationId)(implicit hc: HeaderCarrier): Future[List[OrganisationUser]] = {
     getOrganisationById(organisationId).flatMap {
       case None                             => Future.successful(List.empty)
       case Some(organisation: Organisation) => handleGetOrganisationUsers(organisationId, organisation.collaborators).map(x => if (x.nonEmpty) x.flatten.distinct else List.empty)
     }
   }
 
-  private def handleGetOrganisationUsers(organisationId: OrganisationId, collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[OrganisationUser]]] = {
+  private def handleGetOrganisationUsers(organisationId: XmlOrganisationId, collaborators: List[Collaborator])(implicit hc: HeaderCarrier): Future[List[List[OrganisationUser]]] = {
     collaborators.map(x => getDeveloperByEmail(organisationId, x.email)).sequence
   }
 
-  private def getDeveloperByEmail(organisationId: OrganisationId, email: LaxEmailAddress)(implicit hc: HeaderCarrier) = {
+  private def getDeveloperByEmail(organisationId: XmlOrganisationId, email: LaxEmailAddress)(implicit hc: HeaderCarrier) = {
     def mapResult(results: Future[Either[Throwable, List[UserResponse]]]): Future[List[OrganisationUser]] = results map {
       case Right(Nil)                       => List(OrganisationUser(organisationId, None, email, "", "", List.empty[XmlApi])) // User not found in TPD - just return minimum data
       case Right(users: List[UserResponse]) => List(toOrganisationUser(organisationId, users.head))
@@ -96,11 +96,11 @@ class TeamMemberService @Inject() (
     mapResult(thirdPartyDeveloperConnector.getByEmail(List(email)))
   }
 
-  private def getOrganisationById(organisationId: OrganisationId): Future[Option[Organisation]] = {
+  private def getOrganisationById(organisationId: XmlOrganisationId): Future[Option[Organisation]] = {
     organisationRepository.findByOrgId(organisationId)
   }
 
-  private def handleFindByOrgId(organisationId: OrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
+  private def handleFindByOrgId(organisationId: XmlOrganisationId): Future[Either[ManageCollaboratorResult, Organisation]] = {
     getOrganisationById(organisationId).map {
       case None                             => Left(GetOrganisationFailedResult(s"Failed to get organisation for Id: ${organisationId.value}"))
       case Some(organisation: Organisation) => Right(organisation)

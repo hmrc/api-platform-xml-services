@@ -23,26 +23,26 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 
-import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationId, OrganisationSortBy, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{OrganisationSortBy, VendorId, XmlOrganisationId}
 
 package object binders {
 
-  private def organisationIdFromString(text: String): Either[String, OrganisationId] = {
+  private def organisationIdFromString(text: String): Either[String, XmlOrganisationId] = {
     Try(UUID.fromString(text))
       .toOption
-      .toRight(s"Cannot accept $text as OrganisationId")
-      .map(OrganisationId(_))
+      .toRight(s"Cannot accept $text as XmlOrganisationId")
+      .map(XmlOrganisationId(_))
   }
 
-  implicit def organisationIdPathBinder(implicit textBinder: PathBindable[String]): PathBindable[OrganisationId] = new PathBindable[OrganisationId] {
+  implicit def organisationIdPathBinder(implicit textBinder: PathBindable[String]): PathBindable[XmlOrganisationId] = new PathBindable[XmlOrganisationId] {
 
-    override def bind(key: String, value: String): Either[String, OrganisationId] = {
+    override def bind(key: String, value: String): Either[String, XmlOrganisationId] = {
       textBinder.bind(key, value).flatMap(organisationIdFromString)
     }
 
     // this is needed to compile but is not used
     // $COVERAGE-OFF$
-    override def unbind(key: String, organisationId: OrganisationId): String = {
+    override def unbind(key: String, organisationId: XmlOrganisationId): String = {
       textBinder.unbind(key, organisationId.value.toString)
     }
     // $COVERAGE-ON$

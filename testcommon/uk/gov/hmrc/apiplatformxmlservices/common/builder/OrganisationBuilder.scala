@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.common.builder
 
-import uk.gov.hmrc.apiplatformxmlservices.models.{Collaborator, Organisation, OrganisationId, OrganisationName, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Collaborator, Organisation, OrganisationName, VendorId, XmlOrganisationId}
 
 trait OrganisationBuilder {
 
-  def buildOrganisation(maybeId: Option[OrganisationId] = None, vendorId: VendorId, name: OrganisationName, collaborators: List[Collaborator]): Organisation = {
-    val id = maybeId.fold(OrganisationId.random)(id => id)
+  def buildOrganisation(maybeId: Option[XmlOrganisationId] = None, vendorId: VendorId, name: OrganisationName, collaborators: List[Collaborator]): Organisation = {
+    val id = maybeId.fold(XmlOrganisationId.random)(id => id)
     Organisation(id, vendorId, name, collaborators)
   }
 

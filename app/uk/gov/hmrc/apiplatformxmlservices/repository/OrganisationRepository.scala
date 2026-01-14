@@ -49,7 +49,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       ),
       replaceIndexes = true,
       extraCodecs = Seq(
-        Codecs.playFormatCodec(OrganisationId.format),
+        Codecs.playFormatCodec(XmlOrganisationId.format),
         Codecs.playFormatCodec(VendorId.format),
         Codecs.playFormatCodec(UserId.format)
       )
@@ -81,7 +81,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       .map(_.toList.sorted(sorting))
   }
 
-  def findByOrgId(organisationId: OrganisationId): Future[Option[Organisation]] = {
+  def findByOrgId(organisationId: XmlOrganisationId): Future[Option[Organisation]] = {
     collection.find(equal("organisationId", organisationId)).toFuture().map(_.headOption)
   }
 
@@ -101,7 +101,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       .map(_.toList.sorted(caseInsensitiveOrgNameOrdering))
   }
 
-  def addCollaboratorToOrganisation(organisationId: OrganisationId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
+  def addCollaboratorToOrganisation(organisationId: XmlOrganisationId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
     collection.findOneAndUpdate(
       equal("organisationId", organisationId),
       addToSet("collaborators", Codecs.toBson(collaborator)),
@@ -131,7 +131,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       }
   }
 
-  def removeCollaboratorFromOrganisation(organisationId: OrganisationId, userId: UserId): Future[UpdateOrganisationResult] = {
+  def removeCollaboratorFromOrganisation(organisationId: XmlOrganisationId, userId: UserId): Future[UpdateOrganisationResult] = {
     collection.findOneAndUpdate(
       equal("organisationId", organisationId),
       pull("collaborators", Codecs.toBson(Json.obj("userId" -> userId))),
@@ -173,7 +173,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       }
   }
 
-  def updateOrganisationDetails(organisationId: OrganisationId, organisationName: OrganisationName): Future[UpdateOrganisationResult] = {
+  def updateOrganisationDetails(organisationId: XmlOrganisationId, organisationName: OrganisationName): Future[UpdateOrganisationResult] = {
     val query = equal("organisationId", organisationId)
     collection.findOneAndUpdate(query, set("name", organisationName.value), options = FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)).toFutureOption()
       .map {
@@ -187,7 +187,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
 
   }
 
-  def deleteByOrgId(organisationId: OrganisationId): Future[Boolean] = {
+  def deleteByOrgId(organisationId: XmlOrganisationId): Future[Boolean] = {
     collection.deleteOne(equal("organisationId", organisationId)).toFuture()
       .map(x => x.getDeletedCount == 1)
   }
