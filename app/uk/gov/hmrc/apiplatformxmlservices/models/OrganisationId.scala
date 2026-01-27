@@ -20,12 +20,12 @@ import java.{util => ju}
 
 import play.api.libs.json.{Format, Json}
 
-case class OrganisationId(value: ju.UUID) extends AnyVal {
+case class XmlOrganisationId(value: ju.UUID) extends AnyVal {
   override def toString(): String = value.toString
 }
 
-object OrganisationId {
-  def random: OrganisationId = new OrganisationId(ju.UUID.randomUUID())
+object XmlOrganisationId {
+  def random: XmlOrganisationId = new XmlOrganisationId(ju.UUID.randomUUID())
 
-  implicit val format: Format[OrganisationId] = Json.valueFormat[OrganisationId]
+  implicit val format: Format[XmlOrganisationId] = Json.valueFormat[XmlOrganisationId]
 }

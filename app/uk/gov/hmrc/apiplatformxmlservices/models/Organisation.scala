@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 case class Organisation(
-    organisationId: OrganisationId,
+    organisationId: XmlOrganisationId,
     vendorId: VendorId,
     name: OrganisationName,
     collaborators: List[Collaborator] = List.empty,

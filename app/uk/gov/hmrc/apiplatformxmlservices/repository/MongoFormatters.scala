@@ -27,7 +27,7 @@ object MongoFormatters {
   implicit val formatVendorId: Format[VendorId]                                                = Json.valueFormat[VendorId]
   implicit val formatOrganisationName: Format[OrganisationName]                                = Json.valueFormat[OrganisationName]
   implicit val formatOrganisationWithNameAndVendorId: OFormat[OrganisationWithNameAndVendorId] = Json.format[OrganisationWithNameAndVendorId]
-  implicit val organisationIdFormats: Format[OrganisationId]                                   = Json.valueFormat[OrganisationId]
+  implicit val organisationIdFormats: Format[XmlOrganisationId]                                = Json.valueFormat[XmlOrganisationId]
   implicit val userIdFormats: Format[UserId]                                                   = Json.valueFormat[UserId]
   implicit val collaboratorFormats: OFormat[Collaborator]                                      = Json.format[Collaborator]
   implicit val organisationFormats: OFormat[Organisation]                                      = Json.format[Organisation]

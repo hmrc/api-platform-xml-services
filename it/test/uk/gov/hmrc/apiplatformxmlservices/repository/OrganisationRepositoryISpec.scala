@@ -68,20 +68,20 @@ class OrganisationRepositoryISpec
     val collaboratorThree = aCollaborator.copy(UserId.random)
 
     val organisationWithTrimmedName = anOrganisation.copy(name = OrganisationName(anOrganisation.name.value.trim))
-    val anOrganisation2             = Organisation(OrganisationId.random, vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
+    val anOrganisation2             = Organisation(XmlOrganisationId.random, vendorId = VendorId(9001), name = OrganisationName("Organisation Name 2"))
 
     val org3: Organisation = Organisation(
-      OrganisationId.random,
+      XmlOrganisationId.random,
       vendorId = VendorId(9003),
       name = OrganisationName("ABC DEF GHI"),
       collaborators = List(aCollaborator, collaboratorTwo)
     )
 
-    val org4 = Organisation(organisationId = OrganisationId.random, vendorId = VendorId(9004), name = OrganisationName("DEF GHI"), collaborators = List(collaboratorThree))
+    val org4 = Organisation(organisationId = XmlOrganisationId.random, vendorId = VendorId(9004), name = OrganisationName("DEF GHI"), collaborators = List(collaboratorThree))
 
     val org5 =
-      Organisation(organisationId = OrganisationId.random, vendorId = VendorId(9005), name = OrganisationName("GHUIUIU"), collaborators = List(aCollaborator, collaboratorTwo))
-    val org6 = Organisation(organisationId = OrganisationId.random, vendorId = VendorId(9006), name = OrganisationName("GPYGFRTDE"))
+      Organisation(organisationId = XmlOrganisationId.random, vendorId = VendorId(9005), name = OrganisationName("GHUIUIU"), collaborators = List(aCollaborator, collaboratorTwo))
+    val org6 = Organisation(organisationId = XmlOrganisationId.random, vendorId = VendorId(9006), name = OrganisationName("GPYGFRTDE"))
 
     def createOrganisations() = {
       await(repo.createOrUpdate(anOrganisation))
@@ -93,16 +93,16 @@ class OrganisationRepositoryISpec
     }
 
     def createUnsortedListOfOrganisations(): List[Organisation] = {
-      val orgOne   = Organisation(OrganisationId.random, VendorId(1111L), OrganisationName("1 Trading"))
-      val orgTwo   = Organisation(OrganisationId.random, VendorId(1112L), OrganisationName("Global Trans Inc"))
-      val orgThree = Organisation(OrganisationId.random, VendorId(1113L), OrganisationName("23rd Street Inc"))
-      val orgFour  = Organisation(OrganisationId.random, VendorId(1114L), OrganisationName("! Exclamation Trading"))
-      val orgFive  = Organisation(OrganisationId.random, VendorId(1115L), OrganisationName("$ Dollar and Co"))
-      val orgSix   = Organisation(OrganisationId.random, VendorId(1116L), OrganisationName("Zone 5 Corp"))
-      val orgSeven = Organisation(OrganisationId.random, VendorId(1117L), OrganisationName("Criterion Games"))
-      val orgEight = Organisation(OrganisationId.random, VendorId(1118L), OrganisationName("abcl corp"))
-      val orgNine  = Organisation(OrganisationId.random, VendorId(1119L), OrganisationName("exile dog inc"))
-      val orgTen   = Organisation(OrganisationId.random, VendorId(1120L), OrganisationName("yo yachets"))
+      val orgOne   = Organisation(XmlOrganisationId.random, VendorId(1111L), OrganisationName("1 Trading"))
+      val orgTwo   = Organisation(XmlOrganisationId.random, VendorId(1112L), OrganisationName("Global Trans Inc"))
+      val orgThree = Organisation(XmlOrganisationId.random, VendorId(1113L), OrganisationName("23rd Street Inc"))
+      val orgFour  = Organisation(XmlOrganisationId.random, VendorId(1114L), OrganisationName("! Exclamation Trading"))
+      val orgFive  = Organisation(XmlOrganisationId.random, VendorId(1115L), OrganisationName("$ Dollar and Co"))
+      val orgSix   = Organisation(XmlOrganisationId.random, VendorId(1116L), OrganisationName("Zone 5 Corp"))
+      val orgSeven = Organisation(XmlOrganisationId.random, VendorId(1117L), OrganisationName("Criterion Games"))
+      val orgEight = Organisation(XmlOrganisationId.random, VendorId(1118L), OrganisationName("abcl corp"))
+      val orgNine  = Organisation(XmlOrganisationId.random, VendorId(1119L), OrganisationName("exile dog inc"))
+      val orgTen   = Organisation(XmlOrganisationId.random, VendorId(1120L), OrganisationName("yo yachets"))
 
       await(repo.createOrUpdate(orgOne))
       await(repo.createOrUpdate(orgTwo))
@@ -175,7 +175,7 @@ class OrganisationRepositoryISpec
     }
 
     "return None when organisationId does not exist" in new Setup {
-      val result = await(repo.findByOrgId(OrganisationId.random))
+      val result = await(repo.findByOrgId(XmlOrganisationId.random))
 
       result shouldBe None
     }
@@ -346,7 +346,7 @@ class OrganisationRepositoryISpec
     }
 
     "return UpdateOrganisationFailedResult when organisation not found" in new Setup {
-      val result = await(repo.removeCollaboratorFromOrganisation(OrganisationId.random, aCollaborator.userId))
+      val result = await(repo.removeCollaboratorFromOrganisation(XmlOrganisationId.random, aCollaborator.userId))
 
       println(result)
       result match {
@@ -376,7 +376,7 @@ class OrganisationRepositoryISpec
     "return Left when vendor Id already exists" in new Setup {
       await(repo.createOrUpdate(anOrganisation))
 
-      val updatedOrganisation = anOrganisation.copy(organisationId = OrganisationId.random, name = OrganisationName("New organisation name"), vendorId = aVendorId)
+      val updatedOrganisation = anOrganisation.copy(organisationId = XmlOrganisationId.random, name = OrganisationName("New organisation name"), vendorId = aVendorId)
       await(repo.createOrUpdate(updatedOrganisation)) match {
         case Right(a)           =>
           println(a)
@@ -385,7 +385,7 @@ class OrganisationRepositoryISpec
       }
     }
 
-    "return Left and if try to update name on an Organisation when OrganisationId and VendorId don't match an existing Organisation" in new Setup {
+    "return Left and if try to update name on an Organisation when XmlOrganisationId and VendorId don't match an existing Organisation" in new Setup {
       await(repo.createOrUpdate(anOrganisation))
 
       val updatedOrganisation = anOrganisation.copy(name = OrganisationName("New organisation name"), vendorId = VendorId(9001))
@@ -415,7 +415,7 @@ class OrganisationRepositoryISpec
       await(repo.createOrUpdate(anOrganisation))
       val updatedName = OrganisationName("updatedName")
 
-      val result = await(repo.updateOrganisationDetails(OrganisationId(UUID.randomUUID()), updatedName))
+      val result = await(repo.updateOrganisationDetails(XmlOrganisationId(UUID.randomUUID()), updatedName))
 
       result match {
         case _: UpdateOrganisationFailedResult => succeed

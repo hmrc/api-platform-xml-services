@@ -110,7 +110,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     "return Right(Organisation) when vendorId does not exist and organisation successfully created" in new Setup {
       when(mockOrganisationRepo.findByVendorId(*[VendorId])).thenReturn(Future.successful(None))
       when(mockUuidService.newUuid()).thenReturn(uuidGnerated)
-      val newOrganisation = anOrganisation.copy(organisationId = OrganisationId(uuidGnerated), name = updatedOrgName)
+      val newOrganisation = anOrganisation.copy(organisationId = XmlOrganisationId(uuidGnerated), name = updatedOrgName)
       when(mockOrganisationRepo.createOrUpdate(*)).thenReturn(Future.successful(Right(newOrganisation)))
 
       await(inTest.findAndCreateOrUpdate(updatedOrgName, newOrganisation.vendorId)) match {
@@ -142,7 +142,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
   "createOrganisation" should {
     "return CreateOrganisationSuccessResult when vendorIdService returns a vendorId and user exists in TPD" in new Setup {
       val organisationWithAddedCollaborator =
-        anOrganisation.copy(organisationId = OrganisationId(uuidGnerated), collaborators = List(Collaborator(aUserId, createOrganisationRequest.email)))
+        anOrganisation.copy(organisationId = XmlOrganisationId(uuidGnerated), collaborators = List(Collaborator(aUserId, createOrganisationRequest.email)))
 
       when(mockUuidService.newUuid()).thenReturn(uuidGnerated)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(aVendorId)))
@@ -175,7 +175,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
     "return CreateOrganisationFailed when organisation repo returns MongoCommandException" in new Setup {
       val organisationWithAddedCollaborator =
-        anOrganisation.copy(organisationId = OrganisationId(uuidGnerated), collaborators = List(Collaborator(aUserId, createOrganisationRequest.email)))
+        anOrganisation.copy(organisationId = XmlOrganisationId(uuidGnerated), collaborators = List(Collaborator(aUserId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid()).thenReturn(uuidGnerated)
       when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(aVendorId)))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(
@@ -234,7 +234,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       verify(mockUuidService).newUuid()
       verify(mockVendorIdService).getNextVendorId()
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
-      verify(mockOrganisationRepo).createOrUpdate(organisationWithAddedCollaborator.copy(OrganisationId(uuidGnerated)))
+      verify(mockOrganisationRepo).createOrUpdate(organisationWithAddedCollaborator.copy(XmlOrganisationId(uuidGnerated)))
     }
 
     "return CreateOrganisationFailed when TPD returns error" in new Setup {
@@ -318,7 +318,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "deleteByOrgId" should {
     "return an true when delete successful" in new Setup {
-      when(mockOrganisationRepo.deleteByOrgId(*[OrganisationId])).thenReturn(Future.successful(true))
+      when(mockOrganisationRepo.deleteByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(true))
 
       val result = await(inTest.deleteByOrgId(anOrganisationId))
       result shouldBe true
@@ -330,7 +330,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
   "findByOrgId" should {
     "return an Organisation when organisationId exists" in new Setup {
-      when(mockOrganisationRepo.findByOrgId(*[OrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
+      when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
 
       val result = await(inTest.findByOrgId(anOrganisationId))
       result shouldBe Some(anOrganisation)

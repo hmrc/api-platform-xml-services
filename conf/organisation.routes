@@ -1,18 +1,18 @@
 # organisation routes
 
-GET        /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByOrgId(organisationId: OrganisationId)
+GET        /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByOrgId(organisationId: XmlOrganisationId)
 GET        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByParams(vendorId: Option[VendorId], organisationName: Option[OrganisationName], userId: Option[UserId], sortBy: Option[OrganisationSortBy])
 
 POST       /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.create()
 PUT        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.update()
-DELETE     /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.deleteByOrgId(organisationId: OrganisationId)
+DELETE     /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.deleteByOrgId(organisationId: XmlOrganisationId)
 
-POST       /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.updateOrganisationDetails(organisationId: OrganisationId)
+POST       /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.updateOrganisationDetails(organisationId: XmlOrganisationId)
 
 # collaborator endpoints
-POST       /:organisationId/add-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.addCollaborator(organisationId: OrganisationId)
-POST       /:organisationId/remove-collaborator uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeCollaborator(organisationId: OrganisationId)
+POST       /:organisationId/add-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.addCollaborator(organisationId: XmlOrganisationId)
+POST       /:organisationId/remove-collaborator uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeCollaborator(organisationId: XmlOrganisationId)
 
-GET        /:organisationId/get-users           uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.getOrganisationUserByOrganisationId(organisationId: OrganisationId)
+GET        /:organisationId/get-users           uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.getOrganisationUserByOrganisationId(organisationId: XmlOrganisationId)
 
 POST       /all/remove-collaborators            uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeAllCollaboratorsForUserId()

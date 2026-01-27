@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CreateUserRequest, UserResponse}
-import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult, GetOrCreateUserFailedResult, OrganisationId, OrganisationUser}
+import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult, GetOrCreateUserFailedResult, OrganisationUser, XmlOrganisationId}
 
 trait UserFunctions {
   val thirdPartyDeveloperConnector: ThirdPartyDeveloperConnector
@@ -46,7 +46,7 @@ trait UserFunctions {
 
   }
 
-  def toOrganisationUser(organisationId: OrganisationId, user: UserResponse): OrganisationUser = {
+  def toOrganisationUser(organisationId: XmlOrganisationId, user: UserResponse): OrganisationUser = {
     val stableApis = xmlApiService.getStableApis()
 
     val xmlServiceNames: Set[ServiceName] = stableApis.map(_.serviceName).toSet

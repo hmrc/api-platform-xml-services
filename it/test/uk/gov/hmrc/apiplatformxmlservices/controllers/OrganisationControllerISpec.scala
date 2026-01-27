@@ -102,7 +102,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
     val gatekeeperUserId = "John Doe"
 
     val organisationWithCollaborators = anOrganisation.copy(collaborators = List(aCollaborator))
-    val organisation2                 = Organisation(organisationId = OrganisationId.random, vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
+    val organisation2                 = Organisation(organisationId = XmlOrganisationId.random, vendorId = VendorId(2002), name = OrganisationName("Organisation Name2"))
     val updatedOrgWithDuplicate       = Organisation(organisationId = anOrganisationId, organisation2.vendorId, name = OrganisationName("Updated Organisation Name"))
     val createOrganisationRequest2    = CreateOrganisationRequest(organisationName = anOrganisationName, anEmailAddress, aFirstName, aLastName)
     val addCollaboratorRequest        = AddCollaboratorRequest(anEmailAddress, aFirstName, aLastName)
@@ -158,7 +158,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         result.body mustBe Json.toJson(anOrganisation).toString
       }
 
-      "respond with 404 when OrganisationId not found" in new Setup {
+      "respond with 404 when XmlOrganisationId not found" in new Setup {
         val result = callGetEndpoint(s"$url/organisations/${organisationIdValue}")
         result.status mustBe NOT_FOUND
         result.body mustBe s"XML Organisation with organisationId ${organisationIdValue} not found."
@@ -253,7 +253,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         result.status mustBe 204
       }
 
-      "respond with 404 when OrganisationId not found" in new Setup {
+      "respond with 404 when XmlOrganisationId not found" in new Setup {
         val result = callDeleteEndpoint(s"$url/organisations/${organisationIdValue}")
         result.status mustBe NOT_FOUND
         result.body mustBe s"XML Organisation with organisationId ${organisationIdValue} not found."
@@ -277,7 +277,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         val result = callPostEndpoint(s"$url/organisations", "{\"someinvalidkey\": \"something\"}")
         result.status mustBe BAD_REQUEST
         withClue(s"response body not as expected: ${result.body}") {
-          result.body.startsWith("Invalid CreateOrganisationRequest payload:") mustBe true
+          result.body.startsWith("""{"statusCode":400,"message":"Invalid CreateOrganisationRequest payload:""") mustBe true
         }
       }
     }
@@ -301,7 +301,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         val result = callPutEndpoint(s"$url/organisations", "{\"someinvalidkey\": \"something\"}")
         result.status mustBe BAD_REQUEST
         withClue(s"response body not as expected: ${result.body}") {
-          result.body.startsWith("Invalid Organisation payload:") mustBe true
+          result.body.startsWith("""{"statusCode":400,"message":"Invalid Organisation payload:""") mustBe true
         }
       }
 

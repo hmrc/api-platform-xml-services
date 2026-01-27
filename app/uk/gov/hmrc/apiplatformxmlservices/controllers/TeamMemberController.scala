@@ -33,14 +33,14 @@ class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: 
     with WithJsonBody
     with Logging {
 
-  def addCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+  def addCollaborator(organisationId: XmlOrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[AddCollaboratorRequest] { addCollaboratorRequest =>
       teamMemberService.addCollaborator(organisationId, addCollaboratorRequest.email, addCollaboratorRequest.firstName, addCollaboratorRequest.lastName)
         .map(handleCollaboratorResult)
     }
   }
 
-  def removeCollaborator(organisationId: OrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+  def removeCollaborator(organisationId: XmlOrganisationId): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[RemoveCollaboratorRequest] { removeCollaboratorRequest =>
       teamMemberService.removeCollaborator(organisationId, removeCollaboratorRequest)
         .map(handleCollaboratorResult)
@@ -58,7 +58,7 @@ class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: 
     }
   }
 
-  def getOrganisationUserByOrganisationId(organisationId: OrganisationId): Action[AnyContent] = Action.async { implicit request =>
+  def getOrganisationUserByOrganisationId(organisationId: XmlOrganisationId): Action[AnyContent] = Action.async { implicit request =>
     teamMemberService.getOrganisationUserByOrganisationId(organisationId)
       .map(x => Ok(Json.toJson(x)))
   }

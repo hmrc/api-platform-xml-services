@@ -23,7 +23,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDet
 
 trait CommonTestData {
 
-  val anOrganisationId   = OrganisationId.random
+  val anOrganisationId   = XmlOrganisationId.random
   val aVendorId          = VendorId(9000)
   val anOrganisationName = OrganisationName("Big Buck Corp")
   val anEmailAddress     = LaxEmailAddress("foo@bar.com")

@@ -74,7 +74,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
     "addCollaborator" should {
 
       "return 404 when fail to get organisation" in new Setup {
-        when(mockTeamMemberService.addCollaborator(*[OrganisationId], *[LaxEmailAddress], *, *)(*))
+        when(mockTeamMemberService.addCollaborator(*[XmlOrganisationId], *[LaxEmailAddress], *, *)(*))
           .thenReturn(Future.successful(Left(GetOrganisationFailedResult("Organisation does not exist"))))
 
         val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
@@ -83,7 +83,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
       }
 
       "return 400 when service returns collaborator already added" in new Setup {
-        when(mockTeamMemberService.addCollaborator(*[OrganisationId], *[LaxEmailAddress], *, *)(*))
+        when(mockTeamMemberService.addCollaborator(*[XmlOrganisationId], *[LaxEmailAddress], *, *)(*))
           .thenReturn(Future.successful(Left(OrganisationAlreadyHasCollaboratorResult("some error"))))
         val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
         status(result) shouldBe Status.BAD_REQUEST
@@ -91,7 +91,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
       }
 
       "return 400 when fail to get or create user" in new Setup {
-        when(mockTeamMemberService.addCollaborator(*[OrganisationId], *[LaxEmailAddress], *, *)(*)).thenReturn(
+        when(mockTeamMemberService.addCollaborator(*[XmlOrganisationId], *[LaxEmailAddress], *, *)(*)).thenReturn(
           Future.successful(Left(GetOrCreateUserFailedResult("Could not find or create user")))
         )
         val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
@@ -100,7 +100,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
       }
 
       "return 500 when fail to update organisation" in new Setup {
-        when(mockTeamMemberService.addCollaborator(*[OrganisationId], *[LaxEmailAddress], *, *)(*))
+        when(mockTeamMemberService.addCollaborator(*[XmlOrganisationId], *[LaxEmailAddress], *, *)(*))
           .thenReturn(Future.successful(Left(UpdateCollaboratorFailedResult("Organisation does not exist"))))
 
         val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)
@@ -109,7 +109,7 @@ class TeamMemberControllerSpec extends AsyncHmrcSpec with CommonTestData with Or
       }
 
       "return 200 when collaborator added" in new Setup {
-        when(mockTeamMemberService.addCollaborator(*[OrganisationId], *[LaxEmailAddress], *, *)(*))
+        when(mockTeamMemberService.addCollaborator(*[XmlOrganisationId], *[LaxEmailAddress], *, *)(*))
           .thenReturn(Future.successful(Right(organisationWithCollaborator)))
 
         val result: Future[Result] = controller.addCollaborator(organisation.organisationId)(addCollaboratorRequest)

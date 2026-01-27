@@ -29,7 +29,7 @@ import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsR
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.{LockRepository, LockService}
 
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlOrganisationId
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
 object TestOrganisationsCleanupJob {
@@ -70,7 +70,7 @@ class TestOrganisationsCleanupJob @Inject() (
     }
   }
 
-  private def deleteExpiredOrganisations(id: OrganisationId): Future[Unit] = {
+  private def deleteExpiredOrganisations(id: XmlOrganisationId): Future[Unit] = {
     logger.info(s"Delete expired test organisation $id.")
 
     (for {

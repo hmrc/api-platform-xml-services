@@ -32,10 +32,10 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationId
+import uk.gov.hmrc.apiplatformxmlservices.models.XmlOrganisationId
 
 object TestOrganisationsRepository {
-  case class Data(id: OrganisationId, createdOn: Instant = Instant.now)
+  case class Data(id: XmlOrganisationId, createdOn: Instant = Instant.now)
 
   implicit val formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
 
@@ -58,19 +58,19 @@ class TestOrganisationsRepository @Inject() (mongo: MongoComponent, val metrics:
         )
       ),
       replaceIndexes = true,
-      extraCodecs = Seq(Codecs.playFormatCodec(OrganisationId.format))
+      extraCodecs = Seq(Codecs.playFormatCodec(XmlOrganisationId.format))
     ) {
 
-  def record(id: OrganisationId): Future[Boolean] = {
+  def record(id: XmlOrganisationId): Future[Boolean] = {
     collection.insertOne(Data(id, Instant.now())).toFuture().map(_.wasAcknowledged())
   }
 
-  def findCreatedBefore(pointInTime: Instant): Future[List[OrganisationId]] = {
+  def findCreatedBefore(pointInTime: Instant): Future[List[XmlOrganisationId]] = {
     val query: Bson = lt("createdOn", pointInTime)
     collection.find(query).toFuture().map(_.toList.map(_.id))
   }
 
-  def delete(id: OrganisationId): Future[Boolean] = {
+  def delete(id: XmlOrganisationId): Future[Boolean] = {
     collection.deleteOne(equal("id", id)).toFuture().map(_.wasAcknowledged())
   }
 }

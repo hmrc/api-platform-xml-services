@@ -22,7 +22,7 @@ import scala.concurrent.Future
 
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
-import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationId, OrganisationName, VendorId}
+import uk.gov.hmrc.apiplatformxmlservices.models.{Organisation, OrganisationName, VendorId, XmlOrganisationId}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
 
@@ -41,7 +41,7 @@ class VendorIdServiceSpec extends AsyncHmrcSpec {
 
     val vendorId4001 = VendorId(4001)
 
-    val organisationWithVendorId4001 = Organisation(organisationId = OrganisationId(UUID.randomUUID()), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
+    val organisationWithVendorId4001 = Organisation(organisationId = XmlOrganisationId(UUID.randomUUID()), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
 
   }
 
