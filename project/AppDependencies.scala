@@ -7,7 +7,7 @@ object AppDependencies {
 
   lazy val mongoVersion      = "2.12.0"
   lazy val bootstrapVersion  = "10.7.0"
-  val apiDomainVersion       = "0.22.0"
+  val apiDomainVersion       = "1.0.0"
   val commonDomainVersion    = "1.0.0"
 
   def apply(): Seq[ModuleID] =
@@ -17,7 +17,7 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % mongoVersion,
     "uk.gov.hmrc"       %% "api-platform-api-domain"   % apiDomainVersion,
-    "org.typelevel"     %% "cats-core"                 % "2.10.0",
+    "org.typelevel"     %% "cats-core"                 % "2.13.0",
     "com.iheart"        %% "ficus"                     % "1.5.2"
   )
 
