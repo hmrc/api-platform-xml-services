@@ -1,18 +1,18 @@
 # organisation routes
 
-GET        /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByOrgId(organisationId: XmlOrganisationId)
-GET        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.findByParams(vendorId: Option[VendorId], organisationName: Option[OrganisationName], userId: Option[UserId], sortBy: Option[OrganisationSortBy])
+GET        /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController.findByOrgId(organisationId: XmlOrganisationId)
+GET        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController.findByParams(vendorId: Option[VendorId], organisationName: Option[OrganisationName], userId: Option[UserId], sortBy: Option[OrganisationSortBy])
 
-POST       /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.create()
-PUT        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.update()
-DELETE     /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.deleteByOrgId(organisationId: XmlOrganisationId)
+POST       /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController.create()
+PUT        /                                    uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController.update()
+DELETE     /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController.deleteByOrgId(organisationId: XmlOrganisationId)
 
-POST       /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.OrganisationController.updateOrganisationDetails(organisationId: XmlOrganisationId)
+POST       /:organisationId                     uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController.updateOrganisationDetails(organisationId: XmlOrganisationId)
 
 # collaborator endpoints
-POST       /:organisationId/add-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.addCollaborator(organisationId: XmlOrganisationId)
-POST       /:organisationId/remove-collaborator uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeCollaborator(organisationId: XmlOrganisationId)
+POST       /:organisationId/add-collaborator    uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.TeamMemberController.addCollaborator(organisationId: XmlOrganisationId)
+POST       /:organisationId/remove-collaborator uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.TeamMemberController.removeCollaborator(organisationId: XmlOrganisationId)
 
-GET        /:organisationId/get-users           uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.getOrganisationUserByOrganisationId(organisationId: XmlOrganisationId)
+GET        /:organisationId/get-users           uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.TeamMemberController.getOrganisationUserByOrganisationId(organisationId: XmlOrganisationId)
 
-POST       /all/remove-collaborators            uk.gov.hmrc.apiplatformxmlservices.controllers.TeamMemberController.removeAllCollaboratorsForUserId()
+POST       /all/remove-collaborators            uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.TeamMemberController.removeAllCollaboratorsForUserId()
