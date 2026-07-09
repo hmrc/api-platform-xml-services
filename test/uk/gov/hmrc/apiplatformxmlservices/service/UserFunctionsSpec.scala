@@ -83,7 +83,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       "EC Sales List Online",
       ServiceName("vat-and-ec-sales-list"),
       ApiContext("/government/collections/vat-and-ec-sales-list-online-support-for-software-developers"),
-      "The XML ECSL Declaration Service is a reliable channel for VAT registered traders and their appointed agents to submit EC Sales Lists (ECSL) directly via commercial or bespoke software packages. Since Brexit VAT registered businesses supplying goods from NI to VAT registered customers in EU must tell HMRC about those supplies.",
+      "The XML ECSL Declaration Service lets VAT‑registered traders and their agents submit EC Sales Lists (ECSL) directly through commercial or bespoke software. Since Brexit, VAT‑registered businesses that supply goods from Northern Ireland to VAT‑registered customers in the EU must tell HMRC about those supplies.",
       Some(List(ApiCategory.CUSTOMS))
     )
 
@@ -91,7 +91,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       "Import Control System",
       ServiceName("import-control-system"),
       ApiContext("/government/collections/import-control-system-support-for-software-developers"),
-      "The Import Control System is used to perform risk analyses of goods entering the EU or Northern Ireland before they leave their country of departure.This API allows traders to  submit Entry Summary declaration (ENS) about their goods to ICS and get information about the decision on whether or not to allow those goods to enter the EU or Northern Ireland.",
+      "Use this API to submit Entry Summary Declarations (ENS) to the Import Control System (ICS) for goods entering the EU or Northern Ireland. ICS carries out risk analysis before goods leave their country of departure. You can also use this API to get decisions on whether those goods are allowed to enter the EU or Northern Ireland.",
       Some(List(ApiCategory.CUSTOMS))
     )
 
@@ -99,7 +99,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       "PAYE Online",
       ServiceName("paye-online"),
       ApiContext("/government/collections/paye-online-support-for-software-developers"),
-      "Technical specifications for software developers working with the PAYE online service.",
+      "Use this content to understand the technical specifications you need when working with the PAYE Online service.",
       Some(List(ApiCategory.PAYE))
     )
 
@@ -107,7 +107,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       "Real Time Information online",
       ServiceName("real-time-information-online"),
       ApiContext("/government/collections/real-time-information-online-internet-submissions-support-for-software-developers"),
-      "Technical specifications for software developers working with the Real Time Information online service.",
+      "Use this content to understand the technical specifications you need when working with the Real Time Information (RTI) online service.",
       Some(List(ApiCategory.PAYE))
     )
 
