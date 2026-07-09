@@ -3,7 +3,7 @@
     "name": "Agent Authorisation Online",
     "serviceName": "agent-authorisation-online",
     "context": "/government/collections/agent-authorisation-online-support-for-software-developers",
-    "description": "Technical specifications for software developers working with the Agent Authorisation Online service. This API is not part of the Making Tax Digital initiative.",
+    "description": "Technical guidance for software developers working with the Agent Authorisation Online service. This API is separate from the Making Tax Digital programme.",
     "categories": ["AGENTS"],
     "status": "STABLE"
   },
@@ -11,7 +11,7 @@
     "name": "Alcohol and Tobacco Warehouse Declaration Online",
     "serviceName": "alcohol-and-tobacco-warehouse-declaration-online",
     "context": "/government/collections/alcohol-and-tobacco-warehouse-declaration-online-support-for-software-developers",
-    "description": "Excise Warehouses are premises authorised by HMRC to receive and store goods that are liable for excise duty without having to pay the duty. This API allows Excise Warehouses to Submit Excise warehouse returns (W1), Alcohol Remittance Warrants (W5), Alcohol deferment warrants (W5D), Tobacco remittance warrants (W6) and tobacco deferment warrants (W6D)",
+    "description": "Excise Warehouses are HMRC‑authorised premises that can receive and store goods liable for excise duty without paying the duty upfront. This API lets Excise Warehouses submit Excise Warehouse Returns (W1), Alcohol Remittance Warrants (W5), Alcohol Deferment Warrants (W5D), Tobacco Remittance Warrants (W6), and Tobacco Deferment Warrants (W6D).",
     "categories": ["CUSTOMS"],
     "status": "STABLE"
   },
@@ -19,7 +19,7 @@
     "name": "Automatic Exchange of Information",
     "serviceName": "automatic-exchange-of-information",
     "context": "/government/publications/foreign-account-tax-compliance-act-schema-and-supporting-documents",
-    "description": "Automatic exchange of information agreements are made between UK and other countries to allow tax authorities to exchange information in order to stop tax avoidance. Banks and other financial institutions provide information to HMRC about their (non UK) customers which HMRC can then share internationally.",
+    "description": "Automatic exchange of information agreements allow the UK and other countries to share tax information to prevent tax avoidance. Banks and other financial institutions send HMRC details about their non‑UK customers, which HMRC can then share with overseas tax authorities.",
     "categories": ["OTHER"],
     "status": "STABLE"
   },
@@ -27,7 +27,7 @@
     "name": "Charities Online",
     "serviceName": "charities-online",
     "context": "/government/collections/charities-online-support-for-software-developers",
-    "description": "An API to allow charities and Community Amateur Sports Club (CASCs) to submit, amend and get information on Gift Aid claims.",
+    "description": "An API that allows charities and Community Amateur Sports Clubs (CASCs) to submit, amend and get information on Gift Aid claims.",
     "categories": ["CHARITIES"],
     "status": "STABLE"
   },
@@ -35,7 +35,7 @@
     "name": "Construction Industry Scheme Online",
     "serviceName": "construction-industry-scheme-online",
     "context": "/government/collections/construction-industry-scheme-online-support-for-software-developers",
-    "description": "The Construction Industry Scheme requires contractors in the construction Industry to deduct tax and national insurance from payments to subcontractors and send them to HMRC.This API allows contractors to verify the details of a subcontractor and submit monthly returns (CIS300) showing their payments to subcontractors.",
+    "description": "Use this API to verify a subcontractor’s details and submit monthly CIS300 returns. Under the Construction Industry Scheme,  contractors must deduct tax and National Insurance from payments to subcontractors and send these deductions to HMRC.",
     "categories": ["CONSTRUCTION_INDUSTRY_SCHEME"],
     "status": "STABLE"
   },
@@ -51,7 +51,7 @@
     "name": "EC Sales List Online",
     "serviceName": "vat-and-ec-sales-list",
     "context": "/government/collections/vat-and-ec-sales-list-online-support-for-software-developers",
-    "description": "The XML ECSL Declaration Service is a reliable channel for VAT registered traders and their appointed agents to submit EC Sales Lists (ECSL) directly via commercial or bespoke software packages. Since Brexit VAT registered businesses supplying goods from NI to VAT registered customers in EU must tell HMRC about those supplies.",
+    "description": "The XML ECSL Declaration Service lets VAT‑registered traders and their agents submit EC Sales Lists (ECSL) directly through commercial or bespoke software. Since Brexit, VAT‑registered businesses that supply goods from Northern Ireland to VAT‑registered customers in the EU must tell HMRC about those supplies.",
     "categories": ["CUSTOMS"],
     "status": "STABLE"
   },
@@ -67,7 +67,7 @@
     "name": "Excise Movement Control System",
     "serviceName": "excise-movement-control",
     "context": "/government/collections/excise-movement-control-system-fs31-support-for-software-developers",
-    "description": "The Excise Movement Control System is a UK and EU-wide system that’s used to record the movements of duty suspended excise goods. This API allows traders to submit Electronic administrative documents (eAD) for duty suspended goods and get notifications.",
+    "description": "Use this API to submit movement notices to the Excise Movement Control System (EMCS), view messages from EMCS and retrieve information about traders.",
     "categories": ["CUSTOMS"],
     "status": "RETIRED"
   },
@@ -83,7 +83,7 @@
     "name": "Import Control System",
     "serviceName": "import-control-system",
     "context": "/government/collections/import-control-system-support-for-software-developers",
-    "description": "The Import Control System is used to perform risk analyses of goods entering the EU or Northern Ireland before they leave their country of departure.This API allows traders to  submit Entry Summary declaration (ENS) about their goods to ICS and get information about the decision on whether or not to allow those goods to enter the EU or Northern Ireland.",
+    "description": "Use this API to submit Entry Summary Declarations (ENS) to the Import Control System (ICS) for goods entering the EU or Northern Ireland. ICS carries out risk analysis before goods leave their country of departure. You can also use this API to get decisions on whether those goods are allowed to enter the EU or Northern Ireland.",
     "categories": ["CUSTOMS"],
     "status": "STABLE"
   },
@@ -91,7 +91,7 @@
     "name": "New Computerised Transit System",
     "serviceName": "new-computerised-transit-system",
     "context": "/government/collections/new-computerised-transit-system-support-for-software-developers",
-    "description": "The New Computerised Transit System (NCTS) is a European wide system, based upon electronic declaration and processing, designed to provide better management and control of Community and Common Transit.",
+    "description": "Use this API to interact with the New Computerised Transit System (NCTS). It supports the electronic declaration and processing of Community and Common Transit movements",
     "categories": ["CUSTOMS"],
     "status": "STABLE"
   },
@@ -99,7 +99,7 @@
     "name": "PAYE Online",
     "serviceName": "paye-online",
     "context": "/government/collections/paye-online-support-for-software-developers",
-    "description": "Technical specifications for software developers working with the PAYE online service.",
+    "description": "Use this content to understand the technical specifications you need when working with the PAYE Online service.",
     "categories": ["PAYE"],
     "status": "STABLE"
   },
@@ -107,7 +107,7 @@
     "name": "Pension Schemes Online",
     "serviceName": "pension-schemes-online",
     "context": "/government/collections/pension-schemes-online-support-for-software-developers",
-    "description": "Pension schemes online is a service for registering pension scheme administrators and practitioners. It is used for filing a scheme administrator's declaration, event reports, accounting for tax returns",
+    "description": "Use this service to register as a pension scheme administrator or practitioner. Use it to file a scheme administrator’s declaration, submit event reports and complete accounting for tax returns.",
     "categories": ["PENSIONS"],
     "status": "STABLE"
   },
@@ -115,7 +115,7 @@
     "name": "Real Time Information online",
     "serviceName": "real-time-information-online",
     "context": "/government/collections/real-time-information-online-internet-submissions-support-for-software-developers",
-    "description": "Technical specifications for software developers working with the Real Time Information online service.",
+    "description": "Use this content to understand the technical specifications you need when working with the Real Time Information (RTI) online service.",
     "categories": ["PAYE"],
     "status": "STABLE"
   },
@@ -123,7 +123,7 @@
     "name": "Self Assessment Online",
     "serviceName": "self-assessment-online",
     "context": "/government/collections/self-assessment-online-support-for-software-developers",
-    "description": "API for the old, pre-MTD ITSA self assessment service. Supports returns for individual, partnership, trust and estate returns. The person completing the form gets data to help complete it from a number of REST APIs (individual benefits, individual employments, national insurance etc.) but the self assessment tax return (SA100) is submitted through this XML API.",
+    "description": "Use this API to submit Self Assessment tax returns for the old, pre‑MTD ITSA service. It supports individual, partnership, trust and estate returns.",
     "categories": ["SELF_ASSESSMENT"],
     "status": "STABLE"
   },
@@ -131,7 +131,7 @@
     "name": "Stamp Taxes Online",
     "serviceName": "stamp-taxes-online",
     "context": "/government/collections/stamp-taxes-online-support-for-software-developers",
-    "description": "Service to allow solicitors, conveyancers, individuals to submit a return for stamp duty when a property is purchased (SDLT5)",
+    "description": "Use this service to submit a Stamp Duty Land Tax (SDLT) return (SDLT5) when a property is purchased. It lets you complete and file the return online so you can meet your legal obligations and ensure HMRC receives the correct stamp duty information for the transaction.",
     "categories": ["STAMP_DUTY"],
     "status": "STABLE"
   }
