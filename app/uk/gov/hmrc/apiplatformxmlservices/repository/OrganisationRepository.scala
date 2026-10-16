@@ -57,14 +57,35 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     with ApplicationLogger {
   override lazy val requiresTtlIndex: Boolean = false
 
-  def findOrgWithMaxVendorId(): Future[Option[Organisation]] = {
-    collection
-      .find()
-      .sort(
-        descending("vendorId")
-      )
-      .limit(1)
-      .toFuture().map(_.headOption)
+  def findOrgWithMaxVendorIdInRange(start: Long, end: Long): Future[Option[VendorId]] = {
+    import org.mongodb.scala.model.Aggregates.{filter, project, sort}
+    import org.mongodb.scala.model.Filters.{and, lte, gte}
+    import org.mongodb.scala.model.Projections.{excludeId, fields}
+
+    collection.aggregate[Organisation](Seq(
+      filter(
+        and(
+          gte("vendorId", start),
+          lte("vendorId", end)
+        )
+      ),
+      // Why can we not do this ?? and return just a VendorId ??
+      // project(
+      //   fields(
+      //     excludeId(),
+      //     include("vendorId")
+      //   )
+      // ),
+      // group(max("maxVendorId", "$vendorId")),
+      project(
+        fields(
+          excludeId()
+        )
+      ),
+      sort(Sorts.descending("vendorId"))
+    ))
+      .headOption()
+      .map(_.map(_.vendorId))
   }
 
   implicit val caseInsensitiveOrgNameOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)

@@ -42,49 +42,58 @@ class VendorIdServiceSpec extends AsyncHmrcSpec {
     val vendorId4001 = VendorId(4001)
 
     val organisationWithVendorId4001 = Organisation(organisationId = XmlOrganisationId(UUID.randomUUID()), vendorId = vendorId4001, name = OrganisationName("Organisation Name"))
-
   }
 
   "getNextVendorId" should {
-    "return maxVendorId from repo + 1 when max vendorId from repo is greater than or equal to config startingVendorId" in new Setup {
+    "return maxVendorId from repo + 1" in new Setup {
       val vendorId = 9500
-      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(anOrganisation.copy(vendorId = VendorId(vendorId)))))
+      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(vendorId))))
 
       val result = await(inTest.getNextVendorId())
-      result shouldBe Right(VendorId(vendorId + 1))
+      result shouldBe VendorId(vendorId + 1)
 
-      verify(mockOrganisationRepo).findOrgWithMaxVendorId()
+      verify(mockOrganisationRepo).findOrgWithMaxVendorIdInRange(*, *)
     }
 
-    "return config startingVendorId when max vendorId from repo is less than config startingVendorId" in new Setup {
-      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(Some(organisationWithVendorId4001)))
+    "return from subsequent range if first is full and second is empty" in new Setup {
+      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(9999))))
+      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(2500L), eqTo(2999))).thenReturn(Future.successful(None))
 
       val result = await(inTest.getNextVendorId())
-      result shouldBe Right(configStartingVendorId)
+      result shouldBe VendorId(2500L)
 
-      verify(mockOrganisationRepo).findOrgWithMaxVendorId()
-
+      verify(mockOrganisationRepo, times(2)).findOrgWithMaxVendorIdInRange(*, *)
     }
 
-    // NOTE: only relevant with an empty collection
-    "return config startingVendorId when repo returns None" in new Setup {
-      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.successful(None))
+    "return maxVendorId from repo + 1 from subsequent range if first is full" in new Setup {
+      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(9999))))
+      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(2500L), eqTo(2999))).thenReturn(Future.successful(Some(VendorId(2505))))
 
       val result = await(inTest.getNextVendorId())
-      result shouldBe Right(configStartingVendorId)
+      result shouldBe VendorId(2506)
 
-      verify(mockOrganisationRepo).findOrgWithMaxVendorId()
-
+      verify(mockOrganisationRepo, times(2)).findOrgWithMaxVendorIdInRange(*, *)
     }
 
-    "return Left with exception when repo returns Exception" in new Setup {
+    "return start of range value when no vendorId is found in range" in new Setup {
+      val start = 9000
+      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(start), eqTo(9999))).thenReturn(Future.successful(None))
+
+      val result = await(inTest.getNextVendorId())
+      result.value shouldBe start
+
+      verify(mockOrganisationRepo).findOrgWithMaxVendorIdInRange(*, *)
+    }
+
+    "return exception when repo returns Exception" in new Setup {
       val exception = new RuntimeException("some error")
-      when(mockOrganisationRepo.findOrgWithMaxVendorId()).thenReturn(Future.failed(exception))
+      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.failed(exception))
 
-      val result = await(inTest.getNextVendorId())
-      result shouldBe Left(exception)
+      intercept[Exception] {
+        await(inTest.getNextVendorId())
+      } shouldBe exception
 
-      verify(mockOrganisationRepo).findOrgWithMaxVendorId()
+      verify(mockOrganisationRepo).findOrgWithMaxVendorIdInRange(*, *)
 
     }
   }
