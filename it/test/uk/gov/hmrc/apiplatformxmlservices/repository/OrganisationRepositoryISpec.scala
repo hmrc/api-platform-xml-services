@@ -378,9 +378,7 @@ class OrganisationRepositoryISpec
 
       val updatedOrganisation = anOrganisation.copy(organisationId = XmlOrganisationId.random, name = OrganisationName("New organisation name"), vendorId = aVendorId)
       await(repo.createOrUpdate(updatedOrganisation)) match {
-        case Right(a)           =>
-          println(a)
-          fail()
+        case Right(a)           => fail()
         case Left(e: Exception) => e.getMessage contains "E11000 duplicate key error"
       }
     }

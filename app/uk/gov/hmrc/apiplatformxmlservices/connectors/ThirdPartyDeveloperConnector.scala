@@ -24,6 +24,7 @@ import play.api.Logging
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, InternalServerException, StringContextOps}
 
@@ -52,7 +53,8 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClientV2, config: Config
     http.post(url"${config.thirdPartyDeveloperUrl}/developers/get-by-emails")
       .withBody(Json.toJson(emails))
       .execute[List[UserResponse]]
-      .map(x => Right(x)).recover {
+      .map(x => Right(x))
+      .recover {
         case NonFatal(e) =>
           logger.error(e.getMessage)
           Left(e)
