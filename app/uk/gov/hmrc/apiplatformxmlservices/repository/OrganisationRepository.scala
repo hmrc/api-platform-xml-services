@@ -25,7 +25,7 @@ import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model.Updates.{addToSet, pull, set, setOnInsert}
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, _}
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
@@ -33,7 +33,14 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
 import uk.gov.hmrc.apiplatformxmlservices.models._
 import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
+import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository.MaxVendorId
 import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
+
+object OrganisationRepository {
+  case class MaxVendorId(maxVendorId: VendorId)
+
+  implicit val fmt: OFormat[MaxVendorId] = Json.format[MaxVendorId]
+}
 
 @Singleton
 class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
@@ -51,41 +58,36 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       extraCodecs = Seq(
         Codecs.playFormatCodec(XmlOrganisationId.format),
         Codecs.playFormatCodec(VendorId.format),
-        Codecs.playFormatCodec(UserId.format)
+        Codecs.playFormatCodec(UserId.format),
+        Codecs.playFormatCodec(OrganisationRepository.fmt)
       )
     )
     with ApplicationLogger {
   override lazy val requiresTtlIndex: Boolean = false
 
-  def findOrgWithMaxVendorIdInRange(start: Long, end: Long): Future[Option[VendorId]] = {
-    import org.mongodb.scala.model.Aggregates.{filter, project, sort}
+  def findMaxVendorIdInRange(start: Long, end: Long): Future[Option[VendorId]] = {
+    import org.mongodb.scala.model.Aggregates.{filter, project, group}
     import org.mongodb.scala.model.Filters.{and, lte, gte}
-    import org.mongodb.scala.model.Projections.{excludeId, fields}
+    import org.mongodb.scala.model.Accumulators.max
+    import org.mongodb.scala.model.Projections.{excludeId, include, fields}
 
-    collection.aggregate[Organisation](Seq(
+    collection.aggregate[MaxVendorId](Seq(
+      project(
+        fields(
+          excludeId(),
+          include("vendorId")
+        )
+      ),
       filter(
         and(
           gte("vendorId", start),
           lte("vendorId", end)
         )
       ),
-      // Why can we not do this ?? and return just a VendorId ??
-      // project(
-      //   fields(
-      //     excludeId(),
-      //     include("vendorId")
-      //   )
-      // ),
-      // group(max("maxVendorId", "$vendorId")),
-      project(
-        fields(
-          excludeId()
-        )
-      ),
-      sort(Sorts.descending("vendorId"))
+      group(1, max("maxVendorId", "$vendorId"))
     ))
       .headOption()
-      .map(_.map(_.vendorId))
+      .map(_.map(_.maxVendorId))
   }
 
   implicit val caseInsensitiveOrgNameOrdering: Ordering[Organisation] = (x: Organisation, y: Organisation) => x.name.value.compareToIgnoreCase(y.name.value)

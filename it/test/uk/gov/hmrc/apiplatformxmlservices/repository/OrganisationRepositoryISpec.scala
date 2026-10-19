@@ -148,18 +148,18 @@ class OrganisationRepositoryISpec
     }
   }
 
-  "findOrgWithMaxVendorId" should {
+  "findMaxVendorId" should {
     "return Organisation with max vendorId when there are 2 organisations" in new Setup {
       await(repo.createOrUpdate(anOrganisation))
       await(repo.createOrUpdate(anOrganisation2))
 
-      val result = await(repo.findOrgWithMaxVendorIdInRange(9000, 9999))
+      val result = await(repo.findMaxVendorIdInRange(9000, 9999))
 
       result shouldBe Some(anOrganisation2.vendorId)
     }
 
     "return None no Organisations exist" in new Setup {
-      val result = await(repo.findOrgWithMaxVendorIdInRange(9000, 9999))
+      val result = await(repo.findMaxVendorIdInRange(9000, 9999))
 
       result shouldBe None
     }

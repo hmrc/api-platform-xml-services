@@ -43,7 +43,7 @@ class VendorIdService @Inject() (organisationRepository: OrganisationRepository,
     ranges match {
       case Nil           => Future.failed(new RuntimeException("No empty range of ids left to search"))
       case range :: tail =>
-        organisationRepository.findOrgWithMaxVendorIdInRange(range._1, range._2).map {
+        organisationRepository.findMaxVendorIdInRange(range._1, range._2).map {
           case None                                         => Some(VendorId(range._1))
           case Some(vendorId) if vendorId.value == range._2 => None
           case Some(vendorId)                               => Some(VendorId(vendorId.value + 1))

@@ -47,53 +47,53 @@ class VendorIdServiceSpec extends AsyncHmrcSpec {
   "getNextVendorId" should {
     "return maxVendorId from repo + 1" in new Setup {
       val vendorId = 9500
-      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(vendorId))))
+      when(mockOrganisationRepo.findMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(vendorId))))
 
       val result = await(inTest.getNextVendorId())
       result shouldBe VendorId(vendorId + 1)
 
-      verify(mockOrganisationRepo).findOrgWithMaxVendorIdInRange(*, *)
+      verify(mockOrganisationRepo).findMaxVendorIdInRange(*, *)
     }
 
     "return from subsequent range if first is full and second is empty" in new Setup {
-      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(9999))))
-      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(2500L), eqTo(2999))).thenReturn(Future.successful(None))
+      when(mockOrganisationRepo.findMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(9999))))
+      when(mockOrganisationRepo.findMaxVendorIdInRange(eqTo(2500L), eqTo(2999))).thenReturn(Future.successful(None))
 
       val result = await(inTest.getNextVendorId())
       result shouldBe VendorId(2500L)
 
-      verify(mockOrganisationRepo, times(2)).findOrgWithMaxVendorIdInRange(*, *)
+      verify(mockOrganisationRepo, times(2)).findMaxVendorIdInRange(*, *)
     }
 
     "return maxVendorId from repo + 1 from subsequent range if first is full" in new Setup {
-      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(9999))))
-      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(2500L), eqTo(2999))).thenReturn(Future.successful(Some(VendorId(2505))))
+      when(mockOrganisationRepo.findMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.successful(Some(VendorId(9999))))
+      when(mockOrganisationRepo.findMaxVendorIdInRange(eqTo(2500L), eqTo(2999))).thenReturn(Future.successful(Some(VendorId(2505))))
 
       val result = await(inTest.getNextVendorId())
       result shouldBe VendorId(2506)
 
-      verify(mockOrganisationRepo, times(2)).findOrgWithMaxVendorIdInRange(*, *)
+      verify(mockOrganisationRepo, times(2)).findMaxVendorIdInRange(*, *)
     }
 
     "return start of range value when no vendorId is found in range" in new Setup {
       val start = 9000
-      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(start), eqTo(9999))).thenReturn(Future.successful(None))
+      when(mockOrganisationRepo.findMaxVendorIdInRange(eqTo(start), eqTo(9999))).thenReturn(Future.successful(None))
 
       val result = await(inTest.getNextVendorId())
       result.value shouldBe start
 
-      verify(mockOrganisationRepo).findOrgWithMaxVendorIdInRange(*, *)
+      verify(mockOrganisationRepo).findMaxVendorIdInRange(*, *)
     }
 
     "return exception when repo returns Exception" in new Setup {
       val exception = new RuntimeException("some error")
-      when(mockOrganisationRepo.findOrgWithMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.failed(exception))
+      when(mockOrganisationRepo.findMaxVendorIdInRange(eqTo(9000), eqTo(9999))).thenReturn(Future.failed(exception))
 
       intercept[Exception] {
         await(inTest.getNextVendorId())
       } shouldBe exception
 
-      verify(mockOrganisationRepo).findOrgWithMaxVendorIdInRange(*, *)
+      verify(mockOrganisationRepo).findMaxVendorIdInRange(*, *)
 
     }
   }
