@@ -44,7 +44,7 @@ class CloneOrganisationService @Inject() (
         oldOrg   <- E.fromOptionF(orgRepo.findByOrgId(id), new RuntimeException(s"Cannot find organisation: $id"))
         suffix    = Instant.now().toEpochMilli().toHexString
         newName   = OrganisationName(s"${oldOrg.name} clone $suffix")
-        vendorId <- E.fromEitherF(vendorIdService.getNextVendorId())
+        vendorId <- E.liftF(vendorIdService.getNextVendorId())
         result   <- E.liftF(organisationService.createOrganisation(newName, vendorId, List.empty))
         org       = result match {
                       case CreateOrganisationSuccessResult(organisation) => organisation

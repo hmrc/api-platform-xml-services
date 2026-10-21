@@ -148,18 +148,18 @@ class OrganisationRepositoryISpec
     }
   }
 
-  "findOrgWithMaxVendorId" should {
+  "findMaxVendorId" should {
     "return Organisation with max vendorId when there are 2 organisations" in new Setup {
       await(repo.createOrUpdate(anOrganisation))
       await(repo.createOrUpdate(anOrganisation2))
 
-      val result = await(repo.findOrgWithMaxVendorId())
+      val result = await(repo.findMaxVendorIdInRange(9000, 9999))
 
-      result shouldBe Some(anOrganisation2)
+      result shouldBe Some(anOrganisation2.vendorId)
     }
 
     "return None no Organisations exist" in new Setup {
-      val result = await(repo.findOrgWithMaxVendorId())
+      val result = await(repo.findMaxVendorIdInRange(9000, 9999))
 
       result shouldBe None
     }
@@ -378,9 +378,7 @@ class OrganisationRepositoryISpec
 
       val updatedOrganisation = anOrganisation.copy(organisationId = XmlOrganisationId.random, name = OrganisationName("New organisation name"), vendorId = aVendorId)
       await(repo.createOrUpdate(updatedOrganisation)) match {
-        case Right(a)           =>
-          println(a)
-          fail()
+        case Right(a)           => fail()
         case Left(e: Exception) => e.getMessage contains "E11000 duplicate key error"
       }
     }
