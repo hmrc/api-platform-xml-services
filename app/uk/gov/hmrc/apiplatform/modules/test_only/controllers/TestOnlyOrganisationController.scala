@@ -39,7 +39,7 @@ class TestOnlyOrganisationController @Inject() (
     with WithJsonBody
     with Logging {
 
-  def cloneOrg(organisationId: XmlOrganisationId): Action[AnyContent] = Action.async { implicit request =>
+  def cloneOrg(organisationId: XmlOrganisationId): Action[AnyContent] = Action.async { _ =>
     organisationService.findByOrgId(organisationId) flatMap {
       case Some(org: Organisation) =>
         cloneOrgansationService.cloneOrg(organisationId).map {

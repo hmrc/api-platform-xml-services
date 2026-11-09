@@ -145,7 +145,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         anOrganisation.copy(organisationId = XmlOrganisationId(uuidGnerated), collaborators = List(Collaborator(aUserId, createOrganisationRequest.email)))
 
       when(mockUuidService.newUuid()).thenReturn(uuidGnerated)
-      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(aVendorId)))
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(aVendorId))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
@@ -177,7 +177,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       val organisationWithAddedCollaborator =
         anOrganisation.copy(organisationId = XmlOrganisationId(uuidGnerated), collaborators = List(Collaborator(aUserId, createOrganisationRequest.email)))
       when(mockUuidService.newUuid()).thenReturn(uuidGnerated)
-      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(aVendorId)))
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(aVendorId))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
@@ -208,7 +208,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
     "return CreateOrganisationFailed when organisation repo returns Exception" in new ManageCollaboratorSetup {
       when(mockUuidService.newUuid()).thenReturn(uuidGnerated)
-      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(aVendorId)))
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(aVendorId))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
@@ -238,7 +238,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
     }
 
     "return CreateOrganisationFailed when TPD returns error" in new Setup {
-      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(Right(aVendorId)))
+      when(mockVendorIdService.getNextVendorId()).thenReturn(Future.successful(aVendorId))
       when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(
         createOrganisationRequest.email,
         createOrganisationRequest.firstName,
@@ -254,20 +254,6 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
       verify(mockVendorIdService).getNextVendorId()
       verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
-      verifyZeroInteractions(mockOrganisationRepo)
-    }
-
-    "return CreateOrganisationFailed when next vendorID returns Left" in new Setup {
-      when(mockVendorIdService.getNextVendorId())
-        .thenReturn(Future.successful(Left(new RuntimeException("some error"))))
-
-      await(inTest.create(createOrganisationRequest)) match {
-        case _: CreateOrganisationFailedResult => succeed
-        case _                                 => fail()
-      }
-
-      verify(mockVendorIdService).getNextVendorId()
-      verifyZeroInteractions(mockThirdPartyDeveloperConnector)
       verifyZeroInteractions(mockOrganisationRepo)
     }
 

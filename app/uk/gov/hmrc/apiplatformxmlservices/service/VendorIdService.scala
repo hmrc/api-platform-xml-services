@@ -26,20 +26,37 @@ import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
 @Singleton
 class VendorIdService @Inject() (organisationRepository: OrganisationRepository, config: Config)(implicit val ec: ExecutionContext) {
 
-  def getNextVendorId(): Future[Either[Throwable, VendorId]] = {
+  val ranges = List(
+    ((9000L, 9999L)),
+    ((2500L, 2999L)),
+    ((3200L, 3999L)),
+    ((4100L, 4999L)),
+    ((5200L, 5999L)),
+    ((6100L, 6999L))
+  )
 
-    organisationRepository.findOrgWithMaxVendorId().map {
-      mayBeOrganisation =>
-        mayBeOrganisation
-          .fold(Right(VendorId(config.startingVendorId)))(x => Right(calculateNextVendorId(x.vendorId)))
-    }.recover {
-      case e: Exception => Left(e)
-    }
+  def getNextVendorId(): Future[VendorId] = {
+    getNextVendorId(ranges)
   }
 
-  private def calculateNextVendorId(maxVendorId: VendorId): VendorId = {
-    if (maxVendorId.value < config.startingVendorId) VendorId(config.startingVendorId)
-    else VendorId(maxVendorId.value + 1)
+  private final def getNextVendorId(ranges: List[(Long, Long)]): Future[VendorId] = {
+    ranges match {
+      case Nil           => Future.failed(new RuntimeException("No empty range of ids left to search"))
+      case range :: tail =>
+        organisationRepository.findMaxVendorIdInRange(range._1, range._2).map {
+          case None                                         => Some(VendorId(range._1))
+          case Some(vendorId) if vendorId.value == range._2 => None
+          case Some(vendorId)                               => Some(VendorId(vendorId.value + 1))
+        }
+          .flatMap { oNextId =>
+            {
+              if (oNextId.isDefined)
+                Future.successful(oNextId.get)
+              else
+                getNextVendorId(tail)
+            }
+          }
+    }
   }
 }
 

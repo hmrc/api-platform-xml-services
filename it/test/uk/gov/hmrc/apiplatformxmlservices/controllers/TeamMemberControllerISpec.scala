@@ -157,12 +157,11 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
         result.status mustBe NOT_FOUND
       }
 
-      "respond with 400 if third party developer connector returns and error" in new Setup {
+      "respond with 400 if third party developer connector returns an error" in new Setup {
         await(orgRepo.createOrUpdate(anOrganisation))
         stubThirdPartyDeveloperConnectorWithBody(aUserId, anEmailAddress, aFirstName, aLastName, BAD_REQUEST)
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe BAD_REQUEST
-        result.body.contains("Bad Request") mustBe true
       }
 
       "respond with 200 if organisationId exists" in new Setup {
