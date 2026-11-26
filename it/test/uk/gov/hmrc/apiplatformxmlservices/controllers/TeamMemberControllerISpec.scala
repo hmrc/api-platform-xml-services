@@ -22,7 +22,7 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.libs.ws.WSBodyReadables.readableAsJson
+import play.api.libs.ws.WSBodyReadables.readableAsString
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
@@ -153,7 +153,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       "respond with 404 if organisationId exists" in new Setup {
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", addCollaboratorRequestAsString)
-        result.body `mustBe` Json.toJson(s"Failed to get organisation for Id: $anOrganisationId")
+        result.body mustBe s"Failed to get organisation for Id: $anOrganisationId"
         result.status mustBe NOT_FOUND
       }
 
@@ -169,7 +169,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
         stubThirdPartyDeveloperConnectorWithBody(aUserId, anEmailAddress, aFirstName, aLastName, OK)
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe OK
-        result.body `mustBe` Json.toJson(organisationWithCollaborators)
+        result.body mustBe Json.toJson(organisationWithCollaborators).toString()
       }
     }
   }
@@ -181,14 +181,14 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe OK
-      result.body mustBe Json.toJson(anOrganisation)
+      result.body mustBe Json.toJson(anOrganisation).toString
     }
 
     "respond with 404 if organisationId exists but collaborator is not associated" in new Setup {
       await(orgRepo.createOrUpdate(anOrganisation))
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe NOT_FOUND
-      result.body `mustBe` Json.toJson("Collaborator not found on Organisation")
+      result.body mustBe "Collaborator not found on Organisation"
     }
 
     "respond with 400 if request body is not json" in new Setup {

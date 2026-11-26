@@ -204,7 +204,7 @@ class OrganisationRepositoryISpec
 
       val results: List[Organisation] = await(repo.findByUserId(aCollaborator.userId))
 
-      results should contain only List(org3, org5)
+      results should contain theSameElementsAs List(org3, org5)
     }
 
     "return no organisations for non-existent userId" in new Setup {
