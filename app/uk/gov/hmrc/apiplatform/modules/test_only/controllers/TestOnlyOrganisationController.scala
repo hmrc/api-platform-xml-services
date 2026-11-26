@@ -26,7 +26,7 @@ import uk.gov.hmrc.apiplatform.modules.test_only.services.CloneOrganisationServi
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
 @Singleton

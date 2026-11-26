@@ -21,9 +21,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import org.bson.conversions.Bson
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.*
+import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model._
 
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsRepository.Data

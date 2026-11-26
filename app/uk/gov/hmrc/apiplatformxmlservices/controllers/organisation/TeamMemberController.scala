@@ -25,7 +25,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
 
 class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: ControllerComponents)(implicit val ec: ExecutionContext)

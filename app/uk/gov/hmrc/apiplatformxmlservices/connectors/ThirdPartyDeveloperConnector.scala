@@ -19,18 +19,18 @@ package uk.gov.hmrc.apiplatformxmlservices.connectors
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
 
 import play.api.Logging
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
+import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, InternalServerException, StringContextOps}
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector.Config
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.*
 import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreatedUserResult, RetrievedUserResult}
 
 @Singleton

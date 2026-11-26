@@ -22,7 +22,7 @@ import scala.concurrent.Future
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Result
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -30,7 +30,7 @@ import uk.gov.hmrc.apiplatformxmlservices.common.builder.OrganisationBuilder
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 

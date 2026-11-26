@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.controllers
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -27,6 +28,7 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, UserResponse}

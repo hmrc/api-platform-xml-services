@@ -31,7 +31,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.support.MongoApp
 
 class OrganisationRepositoryISpec

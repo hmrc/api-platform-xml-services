@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -28,6 +29,7 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, UserResponse}
@@ -146,7 +148,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
   }
 
-    import play.api.libs.ws.WSBodyReadables.readableAsString
+  import play.api.libs.ws.WSBodyReadables.readableAsString
   "OrganisationController" when {
     "GET /organisations/:organisationId" should {
 
@@ -163,83 +165,83 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         result.body mustBe s"XML Organisation with organisationId $organisationIdValue not found."
       }
 
-          "respond with 400 when invalid organisationId" in {
-          val result = callGetEndpoint(s"$url/organisations/2233-3322-2222")
-          result.status mustBe BAD_REQUEST
-        }
+      "respond with 400 when invalid organisationId" in {
+        val result = callGetEndpoint(s"$url/organisations/2233-3322-2222")
+        result.status mustBe BAD_REQUEST
+      }
+    }
+
+    "GET /organisations with query parameters" should {
+      "respond 200 and return matches when valid vendorID provided" in new Setup {
+        await(orgRepo.createOrUpdate(anOrganisation))
+        val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue&sortBy=ORGANISATION_NAME")
+        result.status mustBe OK
+        result.body mustBe Json.toJson(List(anOrganisation)).toString
+      }
+      "respond 200 and return matches when valid userId provided" in new Setup {
+        await(orgRepo.createOrUpdate(organisationWithCollaborators))
+        val result = callGetEndpoint(s"$url/organisations?userId=$aUserId&sortBy=ORGANISATION_NAME")
+        result.status mustBe OK
+        result.body mustBe Json.toJson(List(organisationWithCollaborators)).toString
       }
 
-      "GET /organisations with query parameters" should {
-        "respond 200 and return matches when valid vendorID provided" in new Setup {
-          await(orgRepo.createOrUpdate(anOrganisation))
-          val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue&sortBy=ORGANISATION_NAME")
-          result.status mustBe OK
-          result.body mustBe Json.toJson(List(anOrganisation)).toString
-        }
-        "respond 200 and return matches when valid userId provided" in new Setup {
-          await(orgRepo.createOrUpdate(organisationWithCollaborators))
-          val result = callGetEndpoint(s"$url/organisations?userId=$aUserId&sortBy=ORGANISATION_NAME")
-          result.status mustBe OK
-          result.body mustBe Json.toJson(List(organisationWithCollaborators)).toString
-        }
+      "respond 400 invalid userId provided" in new Setup {
+        await(orgRepo.createOrUpdate(organisationWithCollaborators))
+        val result = callGetEndpoint(s"$url/organisations?userId=12343222&sortBy=ORGANISATION_NAME")
+        result.status mustBe BAD_REQUEST
+      }
 
-        "respond 400 invalid userId provided" in new Setup {
-          await(orgRepo.createOrUpdate(organisationWithCollaborators))
-          val result = callGetEndpoint(s"$url/organisations?userId=12343222&sortBy=ORGANISATION_NAME")
-          result.status mustBe BAD_REQUEST
-        }
+      "respond 400 and when sortBy param is invalid" in new Setup {
+        await(orgRepo.createOrUpdate(anOrganisation))
+        val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue&sortBy=UNKNOWN")
+        result.status mustBe BAD_REQUEST
+      }
 
-        "respond 400 and when sortBy param is invalid" in new Setup {
-          await(orgRepo.createOrUpdate(anOrganisation))
-          val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue&sortBy=UNKNOWN")
-          result.status mustBe BAD_REQUEST
-        }
+      "respond 200 and return matches when valid partial organisation name provided" in new Setup {
+        await(orgRepo.createOrUpdate(anOrganisation))
+        await(orgRepo.createOrUpdate(organisation2))
 
-        "respond 200 and return matches when valid partial organisation name provided" in new Setup {
-          await(orgRepo.createOrUpdate(anOrganisation))
-          await(orgRepo.createOrUpdate(organisation2))
+        val result = callGetEndpoint(s"$url/organisations?organisationName=$anOrganisationName")
+        result.status mustBe OK
+        result.body mustBe Json.toJson(List(anOrganisation)).toString
+      }
 
-          val result = callGetEndpoint(s"$url/organisations?organisationName=$anOrganisationName")
-          result.status mustBe OK
-          result.body mustBe Json.toJson(List(anOrganisation)).toString
-        }
+      "respond 200 and return matches when valid full organisation name provided" in new Setup {
+        await(orgRepo.createOrUpdate(anOrganisation))
+        await(orgRepo.createOrUpdate(organisation2))
 
-        "respond 200 and return matches when valid full organisation name provided" in new Setup {
-          await(orgRepo.createOrUpdate(anOrganisation))
-          await(orgRepo.createOrUpdate(organisation2))
+        val result = callGetEndpoint(s"$url/organisations?organisationName=${anOrganisationName.value}")
+        result.status mustBe OK
+        result.body mustBe Json.toJson(List(anOrganisation)).toString
+      }
 
-          val result = callGetEndpoint(s"$url/organisations?organisationName=${anOrganisationName.value}")
-          result.status mustBe OK
-          result.body mustBe Json.toJson(List(anOrganisation)).toString
-        }
+      "respond with 200 and return all Organisations when no vendorId is provided" in new Setup {
+        await(orgRepo.createOrUpdate(anOrganisation))
+        await(orgRepo.createOrUpdate(organisation2))
+        val result        = callGetEndpoint(s"$url/organisations")
+        result.status mustBe OK
+        val organisations = Json.parse(result.body).as[List[Organisation]]
+        organisations must contain only (anOrganisation, organisation2)
+      }
 
-        "respond with 200 and return all Organisations when no vendorId is provided" in new Setup {
-          await(orgRepo.createOrUpdate(anOrganisation))
-          await(orgRepo.createOrUpdate(organisation2))
-          val result        = callGetEndpoint(s"$url/organisations")
-          result.status mustBe OK
-          val organisations = Json.parse(result.body).as[List[Organisation]]
-          organisations must contain only(anOrganisation, organisation2)
-        }
+      "respond with 404 when VendorId not found" in new Setup {
+        val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue")
+        result.status mustBe NOT_FOUND
+        result.body mustBe s"XML Organisation with vendorId $vendorIdValue not found."
+      }
 
-        "respond with 404 when VendorId not found" in new Setup {
-          val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue")
-          result.status mustBe NOT_FOUND
-          result.body mustBe s"XML Organisation with vendorId $vendorIdValue not found."
-        }
+      "respond 200 and empty list when OrganisationName not found" in new Setup {
+        await(orgRepo.createOrUpdate(organisation2))
+        val result = callGetEndpoint(s"$url/organisations?organisationName=unknown")
+        result.status mustBe OK
+        result.body mustBe "[]"
+      }
 
-        "respond 200 and empty list when OrganisationName not found" in new Setup {
-          await(orgRepo.createOrUpdate(organisation2))
-          val result = callGetEndpoint(s"$url/organisations?organisationName=unknown")
-          result.status mustBe OK
-          result.body mustBe "[]"
-        }
-
-        "respond with 400 when invalid vendorId" in {
-          val result = callGetEndpoint(s"$url/organisations?vendorId=INVALID-LONG")
-          result.status mustBe BAD_REQUEST
-        }
-        }
+      "respond with 400 when invalid vendorId" in {
+        val result = callGetEndpoint(s"$url/organisations?vendorId=INVALID-LONG")
+        result.status mustBe BAD_REQUEST
+      }
+    }
 
     "DELETE /organisations/:organisationId" should {
       "respond with 204 if Organisation was deleted" in new Setup {

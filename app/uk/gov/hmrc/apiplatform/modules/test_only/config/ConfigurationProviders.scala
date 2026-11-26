@@ -17,15 +17,16 @@
 package uk.gov.hmrc.apiplatform.modules.test_only.config
 
 import javax.inject.{Inject, Provider, Singleton}
-import play.api.inject.{Binding, Module}
-import play.api.{Configuration, Environment}
-import pureconfig.generic.semiauto.deriveReader
-import pureconfig.{ConfigReader, ConfigSource}
-import uk.gov.hmrc.apiplatform.modules.test_only.scheduled.TestOrganisationsCleanupJob
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import scala.concurrent.duration.FiniteDuration
 import scala.deriving.Mirror
+
+import pureconfig.generic.semiauto.deriveReader
+import pureconfig.{ConfigReader, ConfigSource}
+
+import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.apiplatform.modules.test_only.scheduled.TestOrganisationsCleanupJob
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class ConfigurationModule extends Module {
 
@@ -47,11 +48,13 @@ object ConfigHelper {
 class TestOrganisationsCleanupJobConfigProvider @Inject() (val configuration: Configuration)
     extends ServicesConfig(configuration)
     with Provider[TestOrganisationsCleanupJob.Config] {
+
   extension (c: ConfigReader.type)
     inline def derived[A: Mirror.Of, ProductHint, CoproductHint]: ConfigReader[A] = deriveReader[A]
-//  given fd:ValueReader[FiniteDuration] = ValueReader.generatedReader[FiniteDuration]  
+//  given fd:ValueReader[FiniteDuration] = ValueReader.generatedReader[FiniteDuration]
 //  given v:ValueReader[TestOrganisationsCleanupJob.Config] = ValueReader.generatedReader[TestOrganisationsCleanupJob.Config]
-  given ConfigReader[TestOrganisationsCleanupJob.Config] = deriveReader
+  given ConfigReader[TestOrganisationsCleanupJob.Config]                          = deriveReader
+
   override def get() = {
     val jobConfig =
       //      configuration.underlying.as[TestOrganisationsCleanupJob.Config]("testOrganisationsCleanupJob")

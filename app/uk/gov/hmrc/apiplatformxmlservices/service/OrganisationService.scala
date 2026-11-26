@@ -27,7 +27,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 

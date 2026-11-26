@@ -23,7 +23,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.apiplatform.modules.common.services.EitherTHelper
 import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsRepository
 
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.service.{OrganisationService, VendorIdService}
 

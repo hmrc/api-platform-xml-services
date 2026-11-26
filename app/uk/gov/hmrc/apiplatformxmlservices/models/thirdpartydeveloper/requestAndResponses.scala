@@ -17,8 +17,9 @@
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
 import play.api.libs.json.*
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiCategory
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+
 import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleServiceName
 case class GetOrCreateUserIdRequest(email: LaxEmailAddress)
 

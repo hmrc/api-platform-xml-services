@@ -16,25 +16,25 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import com.mongodb.client.model.ReturnDocument
+import org.mongodb.scala.model.*
 import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.model.Indexes.*
 import org.mongodb.scala.model.Updates.{addToSet, pull, set, setOnInsert}
-import org.mongodb.scala.model.*
+
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName.given_Format_ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given
-import uk.gov.hmrc.apiplatformxmlservices.models.*
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy.*
-import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters.{organisationFormats, *}
-import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository.MaxVendorId
-import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.apiplatformxmlservices.models.*
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy.*
+import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters.organisationFormats
+import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository.MaxVendorId
+import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
 
 object OrganisationRepository {
   case class MaxVendorId(maxVendorId: VendorId)
@@ -178,10 +178,10 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     )
 
     val setOnUpdate = List(
-          set("name", organisation.name.value.trim),
-          set("collaborators", Codecs.toBson(organisation.collaborators)),
-          set("services", Codecs.toBson(organisation.services))
-        )
+      set("name", organisation.name.value.trim),
+      set("collaborators", Codecs.toBson(organisation.collaborators)),
+      set("services", Codecs.toBson(organisation.services))
+    )
 
     val allOps = setOnInsertOperations ++ setOnUpdate
 

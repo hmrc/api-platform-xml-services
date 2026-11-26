@@ -17,9 +17,10 @@
 package uk.gov.hmrc.apiplatformxmlservices.service
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
 import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleServiceName
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis

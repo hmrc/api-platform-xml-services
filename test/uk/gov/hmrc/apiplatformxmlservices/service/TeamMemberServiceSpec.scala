@@ -27,8 +27,8 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, UpstreamErrorRespon
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.*
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
 class TeamMemberServiceSpec extends AsyncHmrcSpec {

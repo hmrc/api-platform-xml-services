@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers.binders
 
+import java.util.UUID
+
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.*
-
-import java.util.UUID
 
 // Workaround for Play unable to path bind opaque types
 

@@ -18,11 +18,10 @@ package uk.gov.hmrc.apiplatformxmlservices.repository
 
 //import play.api.libs.json.*
 import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
-import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.{SimpleServiceName, SimpleUserId}
+
+import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleUserId
 import uk.gov.hmrc.apiplatformxmlservices.models.*
-import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given_Conversion_SimpleServiceName_ServiceName
 //import ServiceName.given_Format_ServiceName
 
 object MongoFormatters {
@@ -31,7 +30,7 @@ object MongoFormatters {
   given formatOrganisationName: Format[OrganisationName]                                = Json.valueFormat[OrganisationName]
   given formatOrganisationWithNameAndVendorId: OFormat[OrganisationWithNameAndVendorId] = Json.format[OrganisationWithNameAndVendorId]
   given organisationIdFormats: Format[XmlOrganisationId]                                = Json.valueFormat[XmlOrganisationId]
-  given userIdFormats: Format[SimpleUserId]                                                   = Json.valueFormat[SimpleUserId]
+  given userIdFormats: Format[SimpleUserId]                                             = Json.valueFormat[SimpleUserId]
   given collaboratorFormats: OFormat[Collaborator]                                      = Json.format[Collaborator]
   given organisationFormats: OFormat[Organisation]                                      = Json.format[Organisation]
 }

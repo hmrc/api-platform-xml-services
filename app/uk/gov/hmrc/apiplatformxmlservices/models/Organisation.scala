@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformxmlservices.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+
 import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleServiceName
 
 case class Organisation(

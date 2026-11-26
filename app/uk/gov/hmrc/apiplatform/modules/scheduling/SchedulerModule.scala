@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.apiplatform.modules.scheduling
 
+import javax.inject.{Inject, Singleton}
+
 import com.google.inject.Provider
+
 import play.api.inject.Module
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.apiplatform.modules.test_only.scheduled.TestOrganisationsCleanupJob
-
-import javax.inject.{Inject, Singleton}
 
 class SchedulerModule extends Module {
 
@@ -33,7 +34,7 @@ class SchedulerModule extends Module {
 
 @Singleton
 class ScheduledJobsProvider @Inject() (
-                                        testOrganisationsCleanupJob:TestOrganisationsCleanupJob
-) extends Provider[ScheduledJobs] {
+    testOrganisationsCleanupJob: TestOrganisationsCleanupJob
+  ) extends Provider[ScheduledJobs] {
   override def get(): ScheduledJobs = ScheduledJobs(List(testOrganisationsCleanupJob))
 }
