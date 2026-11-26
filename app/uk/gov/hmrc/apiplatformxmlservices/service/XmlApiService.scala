@@ -32,7 +32,7 @@ case class InternalXmlApi(
     context: ApiContext,
     description: String,
     categories: Option[Seq[ApiCategory]] = None,
-    status: ApiStatus = ApiStatus.STABLE
+    status: ApiStatus = ApiStatus.Stable
   )
 
 object InternalXmlApi {
@@ -56,7 +56,7 @@ class XmlApiService @Inject() () {
   private def xmlApis: List[InternalXmlApi] =
     Json.parse(Source.fromInputStream(getClass.getResourceAsStream("/xml_apis.json")).mkString).as[List[InternalXmlApi]]
 
-  private def stableXmlApis: List[InternalXmlApi] = xmlApis.filterNot(_.status == ApiStatus.RETIRED)
+  private def stableXmlApis: List[InternalXmlApi] = xmlApis.filterNot(_.status == ApiStatus.Retired)
 
   def getUnfilteredApis(): List[XmlApi] = xmlApis.map(internalToXmlApi)
 

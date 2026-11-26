@@ -18,15 +18,16 @@ package uk.gov.hmrc.apiplatformxmlservices.models
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleServiceName
 
 case class Organisation(
     organisationId: XmlOrganisationId,
     vendorId: VendorId,
     name: OrganisationName,
     collaborators: List[Collaborator] = List.empty,
-    services: List[ServiceName] = List.empty
+    services: List[SimpleServiceName] = List.empty
   )
 
 object Organisation {
-  implicit val formatOrganisation: OFormat[Organisation] = Json.format[Organisation]
+  given formatOrganisation: OFormat[Organisation] = Json.format[Organisation]
 }

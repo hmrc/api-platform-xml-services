@@ -204,7 +204,7 @@ class OrganisationRepositoryISpec
 
       val results: List[Organisation] = await(repo.findByUserId(aCollaborator.userId))
 
-      results should contain only (List(org3, org5): _*)
+      results should contain only List(org3, org5)
     }
 
     "return no organisations for non-existent userId" in new Setup {
@@ -235,7 +235,7 @@ class OrganisationRepositoryISpec
     }
 
     "return organisations sorted in order Special Chars -> Numerics -> Strings" in new Setup {
-      val expectedResult = createUnsortedListOfOrganisations().sorted(caseInsensitiveOrdering)
+      val expectedResult = createUnsortedListOfOrganisations().sorted(using caseInsensitiveOrdering)
       val actualResult   = await(repo.findByOrganisationName(OrganisationName("")))
 
       actualResult shouldBe expectedResult
@@ -323,10 +323,9 @@ class OrganisationRepositoryISpec
       val result = await(repo.removeCollaboratorFromOrganisation(org3.organisationId, aCollaborator.userId))
 
       result match {
-        case UpdateOrganisationSuccessResult(organisation: Organisation) => {
+        case UpdateOrganisationSuccessResult(organisation: Organisation) =>
           organisation.organisationId shouldBe org3.organisationId
           organisation.collaborators shouldBe List(collaboratorTwo)
-        }
         case _                                                           => fail()
       }
     }
@@ -337,10 +336,9 @@ class OrganisationRepositoryISpec
       val result = await(repo.removeCollaboratorFromOrganisation(org3.organisationId, collaboratorThree.userId))
 
       result match {
-        case UpdateOrganisationSuccessResult(organisation: Organisation) => {
+        case UpdateOrganisationSuccessResult(organisation: Organisation) =>
           organisation.organisationId shouldBe org3.organisationId
           organisation.collaborators shouldBe List(aCollaborator, collaboratorTwo)
-        }
         case _                                                           => fail()
       }
     }
@@ -379,7 +377,7 @@ class OrganisationRepositoryISpec
       val updatedOrganisation = anOrganisation.copy(organisationId = XmlOrganisationId.random, name = OrganisationName("New organisation name"), vendorId = aVendorId)
       await(repo.createOrUpdate(updatedOrganisation)) match {
         case Right(a)           => fail()
-        case Left(e: Exception) => e.getMessage contains "E11000 duplicate key error"
+        case Left(e: Exception) => e.getMessage `contains` "E11000 duplicate key error"
       }
     }
 

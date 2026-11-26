@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformxmlservices.connectors
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
 
 import play.api.Logging
 import play.api.http.Status.{CREATED, OK}

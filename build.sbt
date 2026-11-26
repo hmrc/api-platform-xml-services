@@ -6,7 +6,7 @@ val appName = "api-platform-xml-services"
 Global / bloopAggregateSourceDependencies := true
 Global / bloopExportJarClassifiers := Some(Set("sources"))
 
-ThisBuild / scalaVersion := "2.13.18"
+ThisBuild / scalaVersion := "3.7.4"
 ThisBuild / majorVersion := 0
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 ThisBuild / semanticdbEnabled := true
@@ -33,10 +33,12 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(
     routesImport  ++= Seq(
-      "uk.gov.hmrc.apiplatformxmlservices.controllers.binders._",
-      "uk.gov.hmrc.apiplatformxmlservices.models._",
-      "uk.gov.hmrc.apiplatform.modules.common.domain.models._",
-      "uk.gov.hmrc.apiplatform.modules.apis.domain.models._"
+      "uk.gov.hmrc.apiplatformxmlservices.controllers.binders.*",
+      "uk.gov.hmrc.apiplatformxmlservices.models.*",
+      "uk.gov.hmrc.apiplatform.modules.common.domain.models.*",
+      "uk.gov.hmrc.apiplatform.modules.apis.domain.models.*",
+      "uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.*",
+      "uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given"
     )
   )
 

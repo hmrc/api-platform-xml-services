@@ -84,7 +84,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       ServiceName("vat-and-ec-sales-list"),
       ApiContext("/government/collections/vat-and-ec-sales-list-online-support-for-software-developers"),
       "The XML ECSL Declaration Service lets VAT‑registered traders and their agents submit EC Sales Lists (ECSL) directly through commercial or bespoke software. Since Brexit, VAT‑registered businesses that supply goods from Northern Ireland to VAT‑registered customers in the EU must tell HMRC about those supplies.",
-      Some(List(ApiCategory.CUSTOMS))
+      Some(List(ApiCategory.Customs))
     )
 
     val customs2 = XmlApi(
@@ -92,7 +92,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       ServiceName("import-control-system"),
       ApiContext("/government/collections/import-control-system-support-for-software-developers"),
       "Use this API to submit Entry Summary Declarations (ENS) to the Import Control System (ICS) for goods entering the EU or Northern Ireland. ICS carries out risk analysis before goods leave their country of departure. You can also use this API to get decisions on whether those goods are allowed to enter the EU or Northern Ireland.",
-      Some(List(ApiCategory.CUSTOMS))
+      Some(List(ApiCategory.Customs))
     )
 
     val paye1 = XmlApi(
@@ -100,7 +100,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       ServiceName("paye-online"),
       ApiContext("/government/collections/paye-online-support-for-software-developers"),
       "Use this content to understand the technical specifications you need when working with the PAYE Online service.",
-      Some(List(ApiCategory.PAYE))
+      Some(List(ApiCategory.Paye))
     )
 
     val paye2 = XmlApi(
@@ -108,15 +108,15 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
       ServiceName("real-time-information-online"),
       ApiContext("/government/collections/real-time-information-online-internet-submissions-support-for-software-developers"),
       "Use this content to understand the technical specifications you need when working with the Real Time Information (RTI) online service.",
-      Some(List(ApiCategory.PAYE))
+      Some(List(ApiCategory.Paye))
     )
 
     "return OrganisationUser with no services when user has no xml services in preferences" in new Setup {
 
       val interestNoXmlServices                               =
         List(
-          TaxRegimeInterests(regime = ApiCategory.CUSTOMS, services = Set(ServiceName("service-1"), ServiceName("service3"))),
-          TaxRegimeInterests(ApiCategory.VAT, Set(ServiceName("service-4"), ServiceName("service-6")))
+          TaxRegimeInterests(regime = ApiCategory.Customs, services = Set(ServiceName("service-1"), ServiceName("service3"))),
+          TaxRegimeInterests(ApiCategory.Vat, Set(ServiceName("service-4"), ServiceName("service-6")))
         )
       val emailPreferencesWithNoXmlServices: EmailPreferences = EmailPreferences(interestNoXmlServices, Set(EmailTopic.BUSINESS_AND_POLICY))
 
@@ -126,23 +126,23 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
 
     "return OrganisationUser with only xml Services when user has mix of some xml and non xml services in preferences" in new Setup {
       val interestWithSomeXmlServices                           = List(
-        TaxRegimeInterests(regime = ApiCategory.CUSTOMS, services = Set(ServiceName("service-1"), ServiceName("service3"), customs1.serviceName, customs2.serviceName)),
-        TaxRegimeInterests(ApiCategory.PAYE, Set(ServiceName("service-4"), ServiceName("service-6"), paye1.serviceName))
+        TaxRegimeInterests(regime = ApiCategory.Customs, services = Set(ServiceName("service-1"), ServiceName("service3"), customs1.serviceName, customs2.serviceName)),
+        TaxRegimeInterests(ApiCategory.Paye, Set(ServiceName("service-4"), ServiceName("service-6"), paye1.serviceName))
       )
       val emailPreferencesWithSomeXmlServices: EmailPreferences = EmailPreferences(interestWithSomeXmlServices, Set(EmailTopic.BUSINESS_AND_POLICY))
 
       val result: OrganisationUser = toOrganisationUser(anOrganisationId, response.copy(emailPreferences = emailPreferencesWithSomeXmlServices))
       result shouldBe anOrganisationUserNoServices.copy(xmlApis = List(customs1, customs2, paye1))
-      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (List(customs1, customs2, paye1): _*)
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only List(customs1, customs2, paye1)
     }
 
     "return OrganisationUser with all xml Services for a category when user has selected the entire category in preferences" in new Setup {
-      val interestedInEntireCategory                          = List(TaxRegimeInterests(ApiCategory.PAYE, Set.empty))
+      val interestedInEntireCategory                          = List(TaxRegimeInterests(ApiCategory.Paye, Set.empty))
       val emailPreferencesForEntireCategory: EmailPreferences = EmailPreferences(interestedInEntireCategory, Set(EmailTopic.BUSINESS_AND_POLICY))
 
       val result: OrganisationUser = toOrganisationUser(anOrganisationId, response.copy(emailPreferences = emailPreferencesForEntireCategory))
       result shouldBe anOrganisationUserNoServices.copy(xmlApis = List(paye1, paye2))
-      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only (List(paye1, paye2): _*)
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only List(paye1, paye2)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {

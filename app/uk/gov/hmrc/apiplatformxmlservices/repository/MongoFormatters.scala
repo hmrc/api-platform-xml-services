@@ -16,19 +16,22 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
-import play.api.libs.json._
+//import play.api.libs.json.*
+import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
-
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.{SimpleServiceName, SimpleUserId}
+import uk.gov.hmrc.apiplatformxmlservices.models.*
+import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given_Conversion_SimpleServiceName_ServiceName
+//import ServiceName.given_Format_ServiceName
 
 object MongoFormatters {
-  implicit val formatServiceName: Format[ServiceName]                                          = Json.valueFormat[ServiceName]
-  implicit val formatVendorId: Format[VendorId]                                                = Json.valueFormat[VendorId]
-  implicit val formatOrganisationName: Format[OrganisationName]                                = Json.valueFormat[OrganisationName]
-  implicit val formatOrganisationWithNameAndVendorId: OFormat[OrganisationWithNameAndVendorId] = Json.format[OrganisationWithNameAndVendorId]
-  implicit val organisationIdFormats: Format[XmlOrganisationId]                                = Json.valueFormat[XmlOrganisationId]
-  implicit val userIdFormats: Format[UserId]                                                   = Json.valueFormat[UserId]
-  implicit val collaboratorFormats: OFormat[Collaborator]                                      = Json.format[Collaborator]
-  implicit val organisationFormats: OFormat[Organisation]                                      = Json.format[Organisation]
+//  given formatServiceName: Format[ServiceName]                                          = Json.format[ServiceName]
+  given formatVendorId: Format[VendorId]                                                = Json.valueFormat[VendorId]
+  given formatOrganisationName: Format[OrganisationName]                                = Json.valueFormat[OrganisationName]
+  given formatOrganisationWithNameAndVendorId: OFormat[OrganisationWithNameAndVendorId] = Json.format[OrganisationWithNameAndVendorId]
+  given organisationIdFormats: Format[XmlOrganisationId]                                = Json.valueFormat[XmlOrganisationId]
+  given userIdFormats: Format[SimpleUserId]                                                   = Json.valueFormat[SimpleUserId]
+  given collaboratorFormats: OFormat[Collaborator]                                      = Json.format[Collaborator]
+  given organisationFormats: OFormat[Organisation]                                      = Json.format[Organisation]
 }

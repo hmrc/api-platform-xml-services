@@ -72,16 +72,16 @@ class XmlApiServiceSpec extends AsyncHmrcSpec {
   "getStableApisForCategory" should {
     "return xml apis containing the selected category" in new Setup {
 
-      val result       = inTest.getStableApisByCategory(ApiCategory.PAYE)
-      val expectedApis = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.PAYE))
+      val result       = inTest.getStableApisByCategory(ApiCategory.Paye)
+      val expectedApis = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.Paye))
 
       result.size shouldBe 2 // PAYE has two stable APIs and one retired API
-      result should contain only (expectedApis: _*)
+      result should contain only (expectedApis)
     }
 
     "return nothing if given a category with no xml apis" in new Setup {
 
-      val result = inTest.getStableApisByCategory(ApiCategory.VAT)
+      val result = inTest.getStableApisByCategory(ApiCategory.Vat)
       result shouldBe Nil
     }
   }
@@ -89,20 +89,20 @@ class XmlApiServiceSpec extends AsyncHmrcSpec {
   "getStableApisForCategories" should {
     "return correct xml apis for a list of categories" in new Setup {
 
-      val result = inTest.getStableApisForCategories(List(ApiCategory.PAYE, ApiCategory.OTHER))
+      val result = inTest.getStableApisForCategories(List(ApiCategory.Paye, ApiCategory.Other))
 
       val expectedApis = stableApis.filter { xmlApi =>
         val categories = xmlApi.categories.getOrElse(Seq.empty)
-        categories.contains(ApiCategory.PAYE) || categories.contains(ApiCategory.OTHER)
+        categories.contains(ApiCategory.Paye) || categories.contains(ApiCategory.Other)
       }
 
       result.size shouldBe 3 // PAYE has two stable APIs and one retired API, OTHER has one API
-      result should contain only (expectedApis: _*)
+      result should contain only (expectedApis)
     }
 
     "return empty list for unmatched category" in new Setup {
 
-      val result = inTest.getStableApisForCategories(List(ApiCategory.VAT))
+      val result = inTest.getStableApisForCategories(List(ApiCategory.Vat))
       result shouldBe Nil
     }
   }

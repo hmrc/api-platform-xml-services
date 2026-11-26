@@ -16,30 +16,30 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-
 import com.mongodb.client.model.ReturnDocument
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Indexes._
+import org.mongodb.scala.model.Filters.*
+import org.mongodb.scala.model.Indexes.*
 import org.mongodb.scala.model.Updates.{addToSet, pull, set, setOnInsert}
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, _}
-
+import org.mongodb.scala.model.*
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName.given_Format_ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
+import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given
+import uk.gov.hmrc.apiplatformxmlservices.models.*
+import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy.*
+import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters.{organisationFormats, *}
+import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository.MaxVendorId
+import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import uk.gov.hmrc.apiplatformxmlservices.models.OrganisationSortBy._
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.repository.MongoFormatters._
-import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository.MaxVendorId
-import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 object OrganisationRepository {
   case class MaxVendorId(maxVendorId: VendorId)
 
-  implicit val fmt: OFormat[MaxVendorId] = Json.format[MaxVendorId]
+  given fmt: OFormat[MaxVendorId] = Json.format[MaxVendorId]
 }
 
 @Singleton
@@ -58,7 +58,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       extraCodecs = Seq(
         Codecs.playFormatCodec(XmlOrganisationId.format),
         Codecs.playFormatCodec(VendorId.format),
-        Codecs.playFormatCodec(UserId.format),
+        Codecs.playFormatCodec(UserId.given_Format_UserId),
         Codecs.playFormatCodec(OrganisationRepository.fmt)
       )
     )
@@ -66,10 +66,10 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   override lazy val requiresTtlIndex: Boolean = false
 
   def findMaxVendorIdInRange(start: Long, end: Long): Future[Option[VendorId]] = {
-    import org.mongodb.scala.model.Aggregates.{filter, project, group}
-    import org.mongodb.scala.model.Filters.{and, lte, gte}
     import org.mongodb.scala.model.Accumulators.max
-    import org.mongodb.scala.model.Projections.{excludeId, include, fields}
+    import org.mongodb.scala.model.Aggregates.{filter, group, project}
+    import org.mongodb.scala.model.Filters.{and, gte, lte}
+    import org.mongodb.scala.model.Projections.{excludeId, fields, include}
 
     collection.aggregate[MaxVendorId](Seq(
       project(
@@ -101,7 +101,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       case _                       => vendorIdOrdering
     }
     collection.find().toFuture()
-      .map(_.toList.sorted(sorting))
+      .map(_.toList.sorted(using sorting))
   }
 
   def findByOrgId(organisationId: XmlOrganisationId): Future[Option[Organisation]] = {
@@ -111,7 +111,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   def findByUserId(userId: UserId): Future[List[Organisation]] = {
     collection.find(equal("collaborators.userId", userId))
       .toFuture()
-      .map(_.toList.sorted(caseInsensitiveOrgNameOrdering))
+      .map(_.toList.sorted(using caseInsensitiveOrgNameOrdering))
   }
 
   def findByVendorId(vendorId: VendorId): Future[Option[Organisation]] = {
@@ -121,7 +121,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   def findByOrganisationName(organisationName: OrganisationName): Future[List[Organisation]] = {
     collection.find(regex(fieldName = "name", pattern = organisationName.value, options = "ims"))
       .toFuture()
-      .map(_.toList.sorted(caseInsensitiveOrgNameOrdering))
+      .map(_.toList.sorted(using caseInsensitiveOrgNameOrdering))
   }
 
   def addCollaboratorToOrganisation(organisationId: XmlOrganisationId, collaborator: Collaborator): Future[Either[Exception, Organisation]] = {
@@ -150,7 +150,7 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
       .recover {
         case e: Exception =>
           logger.info("addCollaboratorByVendorId failed:", e)
-          Left(new Exception(s"Failed add collaborator to Organisation with vendorId ${vendorId} - ${e.getMessage}"))
+          Left(new Exception(s"Failed add collaborator to Organisation with vendorId $vendorId - ${e.getMessage}"))
       }
   }
 
@@ -168,6 +168,8 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
+//  import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given_Conversion_List_List
+//    import play.api.libs.json.Writes.{StringWrites as _, *}
     val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)), equal("vendorId", Codecs.toBson(organisation.vendorId)))
 
     val setOnInsertOperations = List(
@@ -176,16 +178,16 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
     )
 
     val setOnUpdate = List(
-      set("name", organisation.name.value.trim),
-      set("collaborators", Codecs.toBson(organisation.collaborators)),
-      set("services", Codecs.toBson(organisation.services))
-    )
+          set("name", organisation.name.value.trim),
+          set("collaborators", Codecs.toBson(organisation.collaborators)),
+          set("services", Codecs.toBson(organisation.services))
+        )
 
     val allOps = setOnInsertOperations ++ setOnUpdate
 
     collection.findOneAndUpdate(
       filter = query,
-      update = Updates.combine(allOps: _*),
+      update = Updates.combine(allOps*),
       options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
     ).toFuture()
       .map(x => Right(x))

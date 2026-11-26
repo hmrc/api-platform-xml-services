@@ -49,7 +49,7 @@ class OrganisationService @Inject() (
   }
 
   def create(request: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
-    vendorIdService.getNextVendorId().flatMap { vendorId: VendorId =>
+    vendorIdService.getNextVendorId().flatMap { (vendorId: VendorId) =>
       handleGetOrCreateUser(request.email, request.firstName, request.lastName).flatMap {
         case Right(user: UserResponse)            =>
           createOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))

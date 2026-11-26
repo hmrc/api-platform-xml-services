@@ -23,6 +23,6 @@ import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
 class TestOnlySchedulerModule extends AbstractModule with ApplicationLogger {
 
   override def configure(): Unit = {
-    bind(classOf[TestOnlyScheduler]).asEagerSingleton()
+//    bind(classOf[TestOnlyScheduler]).asEagerSingleton()
   }
 }

@@ -16,21 +16,20 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
-
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import play.api.libs.ws.WSBodyWritables.writeableOf_String
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.{MongoApp, ServerBaseISpec}
@@ -83,7 +82,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
   def callPostEndpoint(url: String, body: String): WSResponse =
     wsClient
       .url(url)
-      .withHttpHeaders(validHeaders: _*)
+      .withHttpHeaders(validHeaders*)
       .withFollowRedirects(false)
       .post(body)
       .futureValue
@@ -91,7 +90,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
   def callPutEndpoint(url: String, body: String): WSResponse =
     wsClient
       .url(url)
-      .withHttpHeaders(validHeaders: _*)
+      .withHttpHeaders(validHeaders*)
       .withFollowRedirects(false)
       .put(body)
       .futureValue
@@ -148,20 +147,20 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
   }
 
   "OrganisationController" when {
-
+    import play.api.libs.ws.WSBodyReadables.readableAsJson
     "GET /organisations/:organisationId" should {
 
       "respond with 200 and return Organisation" in new Setup {
         await(orgRepo.createOrUpdate(anOrganisation))
         val result = callGetEndpoint(s"$url/organisations/${organisationIdValue}")
         result.status mustBe OK
-        result.body mustBe Json.toJson(anOrganisation).toString
+        result.body `mustBe` Json.toJson(anOrganisation)
       }
 
       "respond with 404 when XmlOrganisationId not found" in new Setup {
-        val result = callGetEndpoint(s"$url/organisations/${organisationIdValue}")
+        val result = callGetEndpoint(s"$url/organisations/$organisationIdValue")
         result.status mustBe NOT_FOUND
-        result.body mustBe s"XML Organisation with organisationId ${organisationIdValue} not found."
+        result.body mustBe Json.toJson(s"XML Organisation with organisationId $organisationIdValue not found.")
       }
 
       "respond with 400 when invalid organisationId" in {
@@ -176,14 +175,14 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
         await(orgRepo.createOrUpdate(anOrganisation))
         val result = callGetEndpoint(s"$url/organisations?vendorId=$vendorIdValue&sortBy=ORGANISATION_NAME")
         result.status mustBe OK
-        result.body mustBe Json.toJson(List(anOrganisation)).toString
+        result.body mustBe Json.toJson(List(anOrganisation))
       }
 
       "respond 200 and return matches when valid userId provided" in new Setup {
         await(orgRepo.createOrUpdate(organisationWithCollaborators))
         val result = callGetEndpoint(s"$url/organisations?userId=$aUserId&sortBy=ORGANISATION_NAME")
         result.status mustBe OK
-        result.body mustBe Json.toJson(List(organisationWithCollaborators)).toString
+        result.body mustBe Json.toJson(List(organisationWithCollaborators))
       }
 
       "respond 400 invalid userId provided" in new Setup {
@@ -205,7 +204,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
         val result = callGetEndpoint(s"$url/organisations?organisationName=$anOrganisationName")
         result.status mustBe OK
-        result.body mustBe Json.toJson(List(anOrganisation)).toString
+        result.body mustBe Json.toJson(List(anOrganisation))/*.toString*/
       }
 
       "respond 200 and return matches when valid full organisation name provided" in new Setup {
@@ -214,7 +213,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
 
         val result = callGetEndpoint(s"$url/organisations?organisationName=${anOrganisationName.value}")
         result.status mustBe OK
-        result.body mustBe Json.toJson(List(anOrganisation)).toString
+        result.body mustBe Json.toJson(List(anOrganisation))/*.toString*/
       }
 
       "respond with 200 and return all Organisations when no vendorId is provided" in new Setup {
@@ -229,14 +228,14 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       "respond with 404 when VendorId not found" in new Setup {
         val result = callGetEndpoint(s"$url/organisations?vendorId=${vendorIdValue}")
         result.status mustBe NOT_FOUND
-        result.body mustBe s"XML Organisation with vendorId ${vendorIdValue} not found."
+        result.body mustBe Json.toJson(s"XML Organisation with vendorId ${vendorIdValue} not found.")
       }
 
       "respond 200 and empty list when OrganisationName not found" in new Setup {
         await(orgRepo.createOrUpdate(organisation2))
         val result = callGetEndpoint(s"$url/organisations?organisationName=unknown")
         result.status mustBe OK
-        result.body mustBe "[]"
+        result.body mustBe Json.toJson("[]")
       }
 
       "respond with 400 when invalid vendorId" in {
@@ -256,7 +255,7 @@ class OrganisationControllerISpec extends ServerBaseISpec with BeforeAndAfterEac
       "respond with 404 when XmlOrganisationId not found" in new Setup {
         val result = callDeleteEndpoint(s"$url/organisations/${organisationIdValue}")
         result.status mustBe NOT_FOUND
-        result.body mustBe s"XML Organisation with organisationId ${organisationIdValue} not found."
+        result.body mustBe Json.toJson(s"XML Organisation with organisationId $organisationIdValue not found.")
       }
     }
 
