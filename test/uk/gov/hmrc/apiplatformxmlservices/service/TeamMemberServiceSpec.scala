@@ -234,7 +234,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List(userResponse2))))
 
       val result = await(inTest.getOrganisationUserByOrganisationId(anOrganisationId))
-      result should contain only List(
+      result should contain theSameElementsAs List(
         OrganisationUser(anOrganisationId, Some(userResponse1.userId), userResponse1.email, userResponse1.firstName, userResponse1.lastName, xmlApis = Nil),
         OrganisationUser(anOrganisationId, Some(userResponse2.userId), userResponse2.email, userResponse2.firstName, userResponse2.lastName, xmlApis = Nil)
       )
@@ -247,7 +247,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
       when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
 
       val result = await(inTest.getOrganisationUserByOrganisationId(anOrganisationId))
-      result should contain only List(
+      result should contain theSameElementsAs List(
         OrganisationUser(anOrganisationId, None, anEmailAddress, "", "", xmlApis = Nil),
         OrganisationUser(anOrganisationId, None, emailTwo, "", "", xmlApis = Nil)
       )

@@ -76,7 +76,7 @@ class XmlApiServiceSpec extends AsyncHmrcSpec {
       val expectedApis = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.Paye))
 
       result.size shouldBe 2 // PAYE has two stable APIs and one retired API
-      result should contain only (expectedApis)
+      result should contain theSameElementsAs expectedApis
     }
 
     "return nothing if given a category with no xml apis" in new Setup {
@@ -97,7 +97,7 @@ class XmlApiServiceSpec extends AsyncHmrcSpec {
       }
 
       result.size shouldBe 3 // PAYE has two stable APIs and one retired API, OTHER has one API
-      result should contain only (expectedApis)
+      result should contain theSameElementsAs expectedApis
     }
 
     "return empty list for unmatched category" in new Setup {

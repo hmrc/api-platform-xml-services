@@ -133,7 +133,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
 
       val result: OrganisationUser = toOrganisationUser(anOrganisationId, response.copy(emailPreferences = emailPreferencesWithSomeXmlServices))
       result shouldBe anOrganisationUserNoServices.copy(xmlApis = List(customs1, customs2, paye1))
-      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only List(customs1, customs2, paye1)
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain theSameElementsAs List(customs1, customs2, paye1)
     }
 
     "return OrganisationUser with all xml Services for a category when user has selected the entire category in preferences" in new Setup {
@@ -142,7 +142,7 @@ class UserFunctionsSpec extends AsyncHmrcSpec with UserFunctions {
 
       val result: OrganisationUser = toOrganisationUser(anOrganisationId, response.copy(emailPreferences = emailPreferencesForEntireCategory))
       result shouldBe anOrganisationUserNoServices.copy(xmlApis = List(paye1, paye2))
-      xmlApiService.getStableApis().intersect(result.xmlApis) should contain only List(paye1, paye2)
+      xmlApiService.getStableApis().intersect(result.xmlApis) should contain theSameElementsAs List(paye1, paye2)
     }
 
     "return OrganisationUser with no Services when user has empty email preferences" in new Setup {
