@@ -116,7 +116,7 @@ class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with 
 
   "create" should {
     "return 200" in new Setup {
-      when(mockOrgService.create(any[CreateOrganisationRequest])(*[HeaderCarrier]))
+      when(mockOrgService.create(any[CreateOrganisationRequest])(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateOrganisationSuccessResult(organisation)))
 
       val result: Future[Result] = controller.create()(createRequest)
@@ -136,7 +136,7 @@ class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with 
     }
 
     "return 409" in new Setup {
-      when(mockOrgService.create(any[CreateOrganisationRequest])(*[HeaderCarrier]))
+      when(mockOrgService.create(any[CreateOrganisationRequest])(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateOrganisationFailedDuplicateIdResult("some Error Message")))
 
       val result: Future[Result] = controller.create()(createRequest)
@@ -145,7 +145,7 @@ class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with 
     }
 
     "return 400" in new Setup {
-      when(mockOrgService.create(any[CreateOrganisationRequest])(*[HeaderCarrier]))
+      when(mockOrgService.create(any[CreateOrganisationRequest])(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateOrganisationFailedResult("Failed")))
 
       val result: Future[Result] = controller.create()(createRequest)

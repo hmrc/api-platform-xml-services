@@ -151,7 +151,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
         Map.empty
-      )))(*[HeaderCarrier]))
+      )))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(
           createOrganisationRequest.email,
           createOrganisationRequest.firstName,
@@ -169,7 +169,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
       verify(mockUuidService).newUuid()
       verify(mockVendorIdService).getNextVendorId()
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(using *)
       verify(mockOrganisationRepo).createOrUpdate(organisationWithAddedCollaborator)
     }
 
@@ -183,7 +183,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
         Map.empty
-      )))(*[HeaderCarrier]))
+      )))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(
           createOrganisationRequest.email,
           createOrganisationRequest.firstName,
@@ -202,7 +202,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
       verify(mockUuidService).newUuid()
       verify(mockVendorIdService).getNextVendorId()
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(using *)
       verify(mockOrganisationRepo).createOrUpdate(organisationWithAddedCollaborator)
     }
 
@@ -214,7 +214,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
         Map.empty
-      )))(*[HeaderCarrier]))
+      )))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(
           createOrganisationRequest.email,
           createOrganisationRequest.firstName,
@@ -233,7 +233,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
 
       verify(mockUuidService).newUuid()
       verify(mockVendorIdService).getNextVendorId()
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(using *)
       verify(mockOrganisationRepo).createOrUpdate(organisationWithAddedCollaborator.copy(XmlOrganisationId(uuidGnerated)))
     }
 
@@ -244,7 +244,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
         createOrganisationRequest.firstName,
         createOrganisationRequest.lastName,
         Map.empty
-      )))(*[HeaderCarrier]))
+      )))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("error")))
 
       await(inTest.create(createOrganisationRequest)) match {
@@ -253,7 +253,7 @@ class OrganisationServiceSpec extends AnyWordSpec with Matchers with MockitoSuga
       }
 
       verify(mockVendorIdService).getNextVendorId()
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(using *)
       verifyZeroInteractions(mockOrganisationRepo)
     }
 
