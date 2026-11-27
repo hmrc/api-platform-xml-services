@@ -121,21 +121,21 @@ class OrganisationRepositoryISpec
 
   "findAll" should {
     "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by vendorId by default" in new Setup {
-      val expectedResult = createUnsortedListOfOrganisations().sorted(vendorIdOrdering)
+      val expectedResult = createUnsortedListOfOrganisations().sorted(using vendorIdOrdering)
       val actualResult   = await(repo.findAll(None))
 
       actualResult shouldBe expectedResult
     }
 
     "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by orgname by when requested" in new Setup {
-      val expectedResult = createUnsortedListOfOrganisations().sorted(caseInsensitiveOrdering)
+      val expectedResult = createUnsortedListOfOrganisations().sorted(using caseInsensitiveOrdering)
       val actualResult   = await(repo.findAll(Some(OrganisationSortBy.ORGANISATION_NAME)))
 
       actualResult shouldBe expectedResult
     }
 
     "return a List of all Organisations sorted in order Special Chars -> Numerics -> Strings. Sorted by vendorId when requested" in new Setup {
-      val expectedResult = createUnsortedListOfOrganisations().sorted(vendorIdOrdering)
+      val expectedResult = createUnsortedListOfOrganisations().sorted(using vendorIdOrdering)
       val actualResult   = await(repo.findAll(Some(OrganisationSortBy.VENDOR_ID)))
 
       actualResult shouldBe expectedResult
@@ -376,7 +376,7 @@ class OrganisationRepositoryISpec
 
       val updatedOrganisation = anOrganisation.copy(organisationId = XmlOrganisationId.random, name = OrganisationName("New organisation name"), vendorId = aVendorId)
       await(repo.createOrUpdate(updatedOrganisation)) match {
-        case Right(a)           => fail()
+        case Right(_)           => fail()
         case Left(e: Exception) => e.getMessage `contains` "E11000 duplicate key error"
       }
     }
