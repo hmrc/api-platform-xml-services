@@ -16,16 +16,13 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.repository
 
-//import play.api.libs.json.*
 import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 
 import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleUserId
 import uk.gov.hmrc.apiplatformxmlservices.models.*
-//import ServiceName.given_Format_ServiceName
 
 object MongoFormatters {
-//  given formatServiceName: Format[ServiceName]                                          = Json.format[ServiceName]
   given formatVendorId: Format[VendorId]                                                = Json.valueFormat[VendorId]
   given formatOrganisationName: Format[OrganisationName]                                = Json.valueFormat[OrganisationName]
   given formatOrganisationWithNameAndVendorId: OFormat[OrganisationWithNameAndVendorId] = Json.format[OrganisationWithNameAndVendorId]

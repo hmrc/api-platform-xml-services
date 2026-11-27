@@ -168,8 +168,6 @@ class OrganisationRepository @Inject() (mongo: MongoComponent)(implicit ec: Exec
   }
 
   def createOrUpdate(organisation: Organisation): Future[Either[Exception, Organisation]] = {
-//  import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given_Conversion_List_List
-//    import play.api.libs.json.Writes.{StringWrites as _, *}
     val query = and(equal("organisationId", Codecs.toBson(organisation.organisationId)), equal("vendorId", Codecs.toBson(organisation.vendorId)))
 
     val setOnInsertOperations = List(

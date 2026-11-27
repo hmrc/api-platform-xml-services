@@ -20,7 +20,7 @@ import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiCategory
@@ -63,10 +63,10 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
     val xmlApiService = new XmlApiService
 
-    val stableApis: List[XmlApi]     = xmlApiService.getStableApis()
-    val unfilteredApis: List[XmlApi] = xmlApiService.getUnfilteredApis()
-    val employmentIntermediariesJson = Json.toJson(unfilteredApis.filter(_.serviceName == "employment-intermediaries").head)
-    val charitiesOnlineJson          = Json.toJson(stableApis.filter(_.serviceName == "charities-online").head)
+    val stableApis: List[XmlApi]              = xmlApiService.getStableApis()
+    val unfilteredApis: List[XmlApi]          = xmlApiService.getUnfilteredApis()
+    val employmentIntermediariesJson: JsValue = Json.toJson(unfilteredApis.filter(_.serviceName == "employment-intermediaries").head)
+    val charitiesOnlineJson: JsValue          = Json.toJson(stableApis.filter(_.serviceName == "charities-online").head)
   }
 
   "ApiController" when {
@@ -78,7 +78,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
         val result: WSResponse = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
-        result.body mustBe Json.toJson(stableApis) /*.toString*/
+        result.body mustBe Json.toJson(stableApis)
       }
 
       "respond with 404 when invalid path" in {
@@ -94,14 +94,14 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
         val result: WSResponse         = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "PAYE"))
         result.status mustBe OK
         val expectedApis: List[XmlApi] = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.Paye))
-        result.body mustBe Json.toJson(expectedApis) /*.toString*/
+        result.body mustBe Json.toJson(expectedApis)
       }
 
       "respond with 200 and return nothing when category is not found" in new Setup {
         val result: WSResponse = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "VAT"))
         result.status mustBe OK
 
-        result.body mustBe Json.toJson(List.empty[XmlApi]) /*.toString*/
+        result.body mustBe Json.toJson(List.empty[XmlApi])
       }
 
       "respond with 400 when invalid category" in {

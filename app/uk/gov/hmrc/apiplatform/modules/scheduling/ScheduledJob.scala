@@ -22,7 +22,6 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ScheduledJob {
   def name: String
   def execute(using ec: ExecutionContext): Future[Result]
-//  def isRunning: Future[Boolean]
 
   case class Result(message: String)
 

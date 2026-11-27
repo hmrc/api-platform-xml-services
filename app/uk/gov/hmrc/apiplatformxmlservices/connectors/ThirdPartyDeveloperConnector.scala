@@ -36,7 +36,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult
 @Singleton
 class ThirdPartyDeveloperConnector @Inject() (http: HttpClientV2, config: Config)(using ec: ExecutionContext) extends Logging {
 
-  def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, CoreUserDetail]] = {
+  def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(using hc: HeaderCarrier): Future[Either[Throwable, CoreUserDetail]] = {
     http.post(url"${config.thirdPartyDeveloperUrl}/developers/user-id")
       .withBody(Json.toJson(getOrCreateUserIdRequest))
       .execute[Option[UserIdResponse]]
@@ -50,7 +50,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClientV2, config: Config
       }
   }
 
-  def getByEmail(emails: List[LaxEmailAddress])(implicit hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
+  def getByEmail(emails: List[LaxEmailAddress])(using hc: HeaderCarrier): Future[Either[Throwable, List[UserResponse]]] = {
     http.post(url"${config.thirdPartyDeveloperUrl}/developers/get-by-emails")
       .withBody(Json.toJson(emails))
       .execute[List[UserResponse]]
@@ -62,7 +62,7 @@ class ThirdPartyDeveloperConnector @Inject() (http: HttpClientV2, config: Config
       }
   }
 
-  def createVerifiedUser(request: CreateUserRequest)(implicit hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
+  def createVerifiedUser(request: CreateUserRequest)(using hc: HeaderCarrier): Future[CreateVerifiedUserResult] = {
     http.post(url"${config.thirdPartyDeveloperUrl}/import-user")
       .withBody(Json.toJson(request))
       .execute[HttpResponse]
