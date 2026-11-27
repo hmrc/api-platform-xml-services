@@ -27,5 +27,5 @@ case class XmlOrganisationId(value: ju.UUID) extends AnyVal {
 object XmlOrganisationId {
   def random: XmlOrganisationId = new XmlOrganisationId(ju.UUID.randomUUID())
 
-  implicit val format: Format[XmlOrganisationId] = Json.valueFormat[XmlOrganisationId]
+  given format: Format[XmlOrganisationId] = Json.valueFormat[XmlOrganisationId]
 }

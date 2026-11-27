@@ -34,7 +34,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.*
 import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserResult, CreatedUserResult, RetrievedUserResult}
 
 @Singleton
-class ThirdPartyDeveloperConnector @Inject() (http: HttpClientV2, config: Config)(implicit val ec: ExecutionContext) extends Logging {
+class ThirdPartyDeveloperConnector @Inject() (http: HttpClientV2, config: Config)(using ec: ExecutionContext) extends Logging {
 
   def getOrCreateUserId(getOrCreateUserIdRequest: GetOrCreateUserIdRequest)(implicit hc: HeaderCarrier): Future[Either[Throwable, CoreUserDetail]] = {
     http.post(url"${config.thirdPartyDeveloperUrl}/developers/user-id")

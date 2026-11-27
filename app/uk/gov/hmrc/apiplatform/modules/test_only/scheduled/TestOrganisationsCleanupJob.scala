@@ -44,7 +44,7 @@ class TestOrganisationsCleanupJob @Inject() (
     val clock: Clock,
     jobConfig: TestOrganisationsCleanupJob.Config,
     override val mongoLockRepository: MongoLockRepository
-  )(implicit val ec: ExecutionContext
+  )(using ec: ExecutionContext
   ) extends LockedScheduledJob with ClockNow with ApplicationLogger {
 
   override def name: String                 = "testOrganisationsCleanupJob"
@@ -64,7 +64,6 @@ class TestOrganisationsCleanupJob @Inject() (
       _            = logger.info(s"Scheduled job $name found ${idsToRemove.size} test organisations")
       _           <- Future.sequence(idsToRemove.map(deleteExpiredOrganisations))
     } yield Result("succeeded")).recoverWith {
-
       case e: Throwable => Future.successful(Result(s"RunningOfJobFailed for job $name due to ${e.getMessage}"))
     }
   }

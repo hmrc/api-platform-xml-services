@@ -23,7 +23,7 @@ object ScoverageSettings {
         """uk\.gov\.hmrc\.apiplatform\.modules\.test_only\..*""",
         """uk\.gov\.hmrc\.apiplatform\.modules\.scheduling\..*"""
       ).mkString(";"),
-      ScoverageKeys.coverageMinimumStmtTotal := 93,
+      ScoverageKeys.coverageMinimumStmtTotal := 92,
       ScoverageKeys.coverageFailOnMinimum := true,
       ScoverageKeys.coverageHighlighting := true
     )

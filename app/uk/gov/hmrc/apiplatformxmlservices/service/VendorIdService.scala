@@ -21,18 +21,17 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import uk.gov.hmrc.apiplatformxmlservices.models.VendorId
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
-import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService.Config
 
 @Singleton
-class VendorIdService @Inject() (organisationRepository: OrganisationRepository, config: Config)(implicit val ec: ExecutionContext) {
+class VendorIdService @Inject() (organisationRepository: OrganisationRepository)(using ec: ExecutionContext) {
 
   val ranges = List(
-    ((9000L, 9999L)),
-    ((2500L, 2999L)),
-    ((3200L, 3999L)),
-    ((4100L, 4999L)),
-    ((5200L, 5999L)),
-    ((6100L, 6999L))
+    (9000L, 9999L),
+    (2500L, 2999L),
+    (3200L, 3999L),
+    (4100L, 4999L),
+    (5200L, 5999L),
+    (6100L, 6999L)
   )
 
   def getNextVendorId(): Future[VendorId] = {

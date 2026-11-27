@@ -34,6 +34,6 @@ object OrganisationSortBy {
   import play.api.libs.json.Format
   import uk.gov.hmrc.apiplatform.modules.common.domain.services.SimpleEnumJsonFormatting
 
-  implicit val format: Format[OrganisationSortBy] = SimpleEnumJsonFormatting.createFormatFor[OrganisationSortBy]("Organisation sort by", apply, _.toString)
+  given format: Format[OrganisationSortBy] = SimpleEnumJsonFormatting.createFormatFor[OrganisationSortBy]("Organisation sort by", apply, _.toString)
 
 }

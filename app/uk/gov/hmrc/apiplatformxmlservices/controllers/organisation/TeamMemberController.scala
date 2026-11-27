@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.service.TeamMemberService
 
-class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
+class TeamMemberController @Inject() (teamMemberService: TeamMemberService, cc: ControllerComponents)(using ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
     with Logging {

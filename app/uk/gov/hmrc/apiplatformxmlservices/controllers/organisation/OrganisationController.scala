@@ -30,7 +30,7 @@ import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
 @Singleton
-class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
+class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(using ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
     with Logging {

@@ -20,11 +20,13 @@ import javax.inject.{Inject, Provider, Singleton}
 import scala.concurrent.duration.FiniteDuration
 import scala.deriving.Mirror
 
+import pureconfig.generic.ProductHint
 import pureconfig.generic.semiauto.deriveReader
-import pureconfig.{ConfigReader, ConfigSource}
+import pureconfig.{CamelCase, ConfigFieldMapping, ConfigReader, ConfigSource}
 
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.apiplatform.modules.test_only.scheduled
 import uk.gov.hmrc.apiplatform.modules.test_only.scheduled.TestOrganisationsCleanupJob
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -51,13 +53,13 @@ class TestOrganisationsCleanupJobConfigProvider @Inject() (val configuration: Co
 
   extension (c: ConfigReader.type)
     inline def derived[A: Mirror.Of, ProductHint, CoproductHint]: ConfigReader[A] = deriveReader[A]
-//  given fd:ValueReader[FiniteDuration] = ValueReader.generatedReader[FiniteDuration]
-//  given v:ValueReader[TestOrganisationsCleanupJob.Config] = ValueReader.generatedReader[TestOrganisationsCleanupJob.Config]
   given ConfigReader[TestOrganisationsCleanupJob.Config]                          = deriveReader
+
+  given testOrganisationsCleanupJobConfigProductHint: ProductHint[scheduled.TestOrganisationsCleanupJob.Config] =
+    ProductHint.apply[scheduled.TestOrganisationsCleanupJob.Config](fieldMapping = ConfigFieldMapping(CamelCase, CamelCase))
 
   override def get() = {
     val jobConfig =
-      //      configuration.underlying.as[TestOrganisationsCleanupJob.Config]("testOrganisationsCleanupJob")
       ConfigSource.fromConfig(configuration.underlying).at("testOrganisationsCleanupJob").loadOrThrow[TestOrganisationsCleanupJob.Config]
 
     TestOrganisationsCleanupJob.Config(jobConfig.initialDelay, jobConfig.interval, jobConfig.enabled, jobConfig.expiryDuration)

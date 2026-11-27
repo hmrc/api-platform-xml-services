@@ -22,5 +22,5 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, Us
 case class OrganisationUser(organisationId: XmlOrganisationId, userId: Option[UserId], email: LaxEmailAddress, firstName: String, lastName: String, xmlApis: List[XmlApi])
 
 object OrganisationUser {
-  implicit val formatOrganisationUser: OFormat[OrganisationUser] = Json.format[OrganisationUser]
+  given formatOrganisationUser: OFormat[OrganisationUser] = Json.format[OrganisationUser]
 }

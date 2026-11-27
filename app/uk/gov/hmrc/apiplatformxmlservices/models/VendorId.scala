@@ -21,5 +21,5 @@ import play.api.libs.json.{Format, Json}
 case class VendorId(value: Long) extends AnyVal
 
 object VendorId {
-  implicit val format: Format[VendorId] = Json.valueFormat[VendorId]
+  given format: Format[VendorId] = Json.valueFormat[VendorId]
 }

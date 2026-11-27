@@ -34,7 +34,7 @@ class TestOnlyOrganisationController @Inject() (
     organisationService: OrganisationService,
     cloneOrganisationService: CloneOrganisationService,
     cc: ControllerComponents
-  )(implicit val ec: ExecutionContext
+  )(using ec: ExecutionContext
   ) extends BackendController(cc)
     with WithJsonBody
     with Logging {
