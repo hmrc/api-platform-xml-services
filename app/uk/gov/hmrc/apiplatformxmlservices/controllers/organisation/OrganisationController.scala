@@ -48,7 +48,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       userId: Option[UserId] = None,
       sortBy: Option[OrganisationSortBy]
     ): Action[AnyContent] = Action.async {
-    request =>
+    _ =>
       (vendorId, organisationName, userId) match {
         case (Some(v: VendorId), None, None)               => handleFindOrganisationByVendorId(v)
         case (None, Some(orgName: OrganisationName), None) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))

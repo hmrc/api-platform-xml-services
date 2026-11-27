@@ -26,7 +26,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSBodyReadables.readableAsString
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
@@ -112,7 +112,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
       )
     }
 
-    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: LaxEmailAddress, firstName: String, lastName: String, status: Int) = {
+    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, status: Int) = {
       stubFor(
         post(urlEqualTo("/import-user"))
           .willReturn(
@@ -161,14 +161,14 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       "respond with 400 if third party developer connector returns an error" in new Setup {
         await(orgRepo.createOrUpdate(anOrganisation))
-        stubThirdPartyDeveloperConnectorWithBody(aUserId, anEmailAddress, aFirstName, aLastName, BAD_REQUEST)
+        stubThirdPartyDeveloperConnectorWithBody(aUserId, BAD_REQUEST)
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe BAD_REQUEST
       }
 
       "respond with 200 if organisationId exists" in new Setup {
         await(orgRepo.createOrUpdate(anOrganisation))
-        stubThirdPartyDeveloperConnectorWithBody(aUserId, anEmailAddress, aFirstName, aLastName, OK)
+        stubThirdPartyDeveloperConnectorWithBody(aUserId, OK)
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe OK
         result.body mustBe Json.toJson(organisationWithCollaborators).toString()
