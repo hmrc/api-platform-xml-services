@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models
 
-import java.{util => ju}
+import java.util as ju
 
 import play.api.libs.json.{Format, Json}
 
@@ -27,5 +27,5 @@ case class XmlOrganisationId(value: ju.UUID) extends AnyVal {
 object XmlOrganisationId {
   def random: XmlOrganisationId = new XmlOrganisationId(ju.UUID.randomUUID())
 
-  implicit val format: Format[XmlOrganisationId] = Json.valueFormat[XmlOrganisationId]
+  given format: Format[XmlOrganisationId] = Json.valueFormat[XmlOrganisationId]
 }

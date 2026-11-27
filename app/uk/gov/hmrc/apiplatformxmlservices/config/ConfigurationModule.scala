@@ -19,12 +19,10 @@ package uk.gov.hmrc.apiplatformxmlservices.config
 import com.google.inject.AbstractModule
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.service.VendorIdService
 
 class ConfigurationModule extends AbstractModule {
 
   override def configure(): Unit = {
-    bind(classOf[VendorIdService.Config]).toProvider(classOf[VendorIdServiceConfigProvider])
     bind(classOf[ThirdPartyDeveloperConnector.Config]).toProvider(classOf[ThirdPartyDeveloperConnectorProvider])
   }
 

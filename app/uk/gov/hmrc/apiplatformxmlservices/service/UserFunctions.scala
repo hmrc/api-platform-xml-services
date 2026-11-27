@@ -18,11 +18,11 @@ package uk.gov.hmrc.apiplatformxmlservices.service
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.LaxEmailAddress
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
+import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleServiceName
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.TaxRegimeInterests.hasAllApis
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{CreateUserRequest, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.models.{CreateVerifiedUserFailedResult, CreateVerifiedUserSuccessResult, GetOrCreateUserFailedResult, OrganisationUser, XmlOrganisationId}
@@ -47,9 +47,10 @@ trait UserFunctions {
   }
 
   def toOrganisationUser(organisationId: XmlOrganisationId, user: UserResponse): OrganisationUser = {
+    import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.Conversions.given_Conversion_SimpleServiceName_ServiceName
     val stableApis = xmlApiService.getStableApis()
 
-    val xmlServiceNames: Set[ServiceName] = stableApis.map(_.serviceName).toSet
+    val xmlServiceNames: Set[SimpleServiceName] = stableApis.map(_.serviceName).toSet
 
     val stableXmlApisThatUserSelectedSpecifically = for {
       filteredInterests <- user.emailPreferences.interests.filter(_.services.intersect(xmlServiceNames).nonEmpty)

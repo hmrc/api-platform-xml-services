@@ -21,9 +21,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 import org.bson.conversions.Bson
-import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.*
+import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model._
 
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsRepository.Data
@@ -37,13 +37,13 @@ import uk.gov.hmrc.apiplatformxmlservices.models.XmlOrganisationId
 object TestOrganisationsRepository {
   case class Data(id: XmlOrganisationId, createdOn: Instant = Instant.now)
 
-  implicit val formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
+  given formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-  implicit val format: Format[Data] = Json.format[Data]
+  given format: Format[Data] = Json.format[Data]
 }
 
 @Singleton
-class TestOrganisationsRepository @Inject() (mongo: MongoComponent, val metrics: Metrics)(implicit val ec: ExecutionContext)
+class TestOrganisationsRepository @Inject() (mongo: MongoComponent, val metrics: Metrics)(using ec: ExecutionContext)
     extends PlayMongoRepository[TestOrganisationsRepository.Data](
       collectionName = "testOrganisations",
       mongoComponent = mongo,

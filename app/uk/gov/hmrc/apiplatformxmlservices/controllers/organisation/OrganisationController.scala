@@ -26,11 +26,11 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
 @Singleton
-class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
+class OrganisationController @Inject() (organisationService: OrganisationService, cc: ControllerComponents)(using ec: ExecutionContext)
     extends BackendController(cc)
     with WithJsonBody
     with Logging {
@@ -48,7 +48,7 @@ class OrganisationController @Inject() (organisationService: OrganisationService
       userId: Option[UserId] = None,
       sortBy: Option[OrganisationSortBy]
     ): Action[AnyContent] = Action.async {
-    request =>
+    _ =>
       (vendorId, organisationName, userId) match {
         case (Some(v: VendorId), None, None)               => handleFindOrganisationByVendorId(v)
         case (None, Some(orgName: OrganisationName), None) => organisationService.findByOrganisationName(orgName).map(x => Ok(Json.toJson(x)))

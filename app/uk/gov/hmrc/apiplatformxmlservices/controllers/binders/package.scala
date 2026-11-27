@@ -136,7 +136,7 @@ package object binders {
       // this is needed to compile but is not used
       // $COVERAGE-OFF$
       override def unbind(key: String, serviceName: ServiceName): String = {
-        textBinder.unbind(key, serviceName.value)
+        textBinder.unbind(key, serviceName)
       }
       // $COVERAGE-ON$
     }

@@ -32,7 +32,7 @@ class VendorIdServiceSpec extends AsyncHmrcSpec {
     val mockOrganisationRepo: OrganisationRepository = mock[OrganisationRepository]
     val mockConfig: Config                           = mock[Config]
 
-    val inTest = new VendorIdService(mockOrganisationRepo, mockConfig)
+    val inTest = new VendorIdService(mockOrganisationRepo)
 
     val expectedStartingVendorIdValue = 9001
     when(mockConfig.startingVendorId).thenReturn(expectedStartingVendorIdValue)

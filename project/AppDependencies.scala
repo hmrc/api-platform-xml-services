@@ -6,7 +6,7 @@ import sbt._
 object AppDependencies {
 
   lazy val mongoVersion      = "2.14.0"
-  lazy val bootstrapVersion  = "10.8.0"
+  lazy val bootstrapVersion  = "10.9.0"
   val apiDomainVersion       = "1.8.0"
   val commonDomainVersion    = "1.4.0"
 
@@ -19,7 +19,7 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "api-platform-api-domain"    % apiDomainVersion,
     "uk.gov.hmrc"       %% "api-platform-common-domain" % commonDomainVersion,
     "org.typelevel"     %% "cats-core"                  % "2.13.0",
-    "com.iheart"        %% "ficus"                      % "1.5.2"
+    "com.github.pureconfig"       %% "pureconfig-generic-scala3"                  % "0.17.11"
   )
 
   lazy val test = Seq(

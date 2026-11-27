@@ -26,27 +26,27 @@ import uk.gov.hmrc.apiplatform.modules.test_only.services.CloneOrganisationServi
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
 @Singleton
 class TestOnlyOrganisationController @Inject() (
     organisationService: OrganisationService,
-    cloneOrgansationService: CloneOrganisationService,
+    cloneOrganisationService: CloneOrganisationService,
     cc: ControllerComponents
-  )(implicit val ec: ExecutionContext
+  )(using ec: ExecutionContext
   ) extends BackendController(cc)
     with WithJsonBody
     with Logging {
 
   def cloneOrg(organisationId: XmlOrganisationId): Action[AnyContent] = Action.async { _ =>
     organisationService.findByOrgId(organisationId) flatMap {
-      case Some(org: Organisation) =>
-        cloneOrgansationService.cloneOrg(organisationId).map {
+      case Some(_: Organisation) =>
+        cloneOrganisationService.cloneOrg(organisationId).map {
           case Left(_)    => InternalServerError("Failed to clone organisation")
           case Right(org) => Created(Json.toJson(org))
         }
-      case _                       => Future.successful(NotFound(s"XML Organisation with organisationId ${organisationId.value} not found."))
+      case _                     => Future.successful(NotFound(s"XML Organisation with organisationId ${organisationId.value} not found."))
     }
   }
 }

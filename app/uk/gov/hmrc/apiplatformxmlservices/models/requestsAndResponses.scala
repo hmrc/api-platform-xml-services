@@ -24,13 +24,13 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, Us
 case class CreateOrganisationRequest(organisationName: OrganisationName, email: LaxEmailAddress, firstName: String, lastName: String)
 
 object CreateOrganisationRequest {
-  implicit val formatCreateOrganisationRequest: OFormat[CreateOrganisationRequest] = Json.format[CreateOrganisationRequest]
+  given formatCreateOrganisationRequest: OFormat[CreateOrganisationRequest] = Json.format[CreateOrganisationRequest]
 }
 
 case class UpdateOrganisationDetailsRequest(organisationName: OrganisationName)
 
 object UpdateOrganisationDetailsRequest {
-  implicit val formatUpdateOrganisationDetailsRequest: OFormat[UpdateOrganisationDetailsRequest] = Json.format[UpdateOrganisationDetailsRequest]
+  given formatUpdateOrganisationDetailsRequest: OFormat[UpdateOrganisationDetailsRequest] = Json.format[UpdateOrganisationDetailsRequest]
 }
 
 /* User request responses */
@@ -38,29 +38,29 @@ object UpdateOrganisationDetailsRequest {
 case class AddCollaboratorRequest(email: LaxEmailAddress, firstName: String, lastName: String)
 
 object AddCollaboratorRequest {
-  implicit val formatAddCollaboratorRequest: OFormat[AddCollaboratorRequest] = Json.format[AddCollaboratorRequest]
+  given formatAddCollaboratorRequest: OFormat[AddCollaboratorRequest] = Json.format[AddCollaboratorRequest]
 }
 
 case class RemoveCollaboratorRequest(email: LaxEmailAddress, gatekeeperUserId: String)
 
 object RemoveCollaboratorRequest {
-  implicit val formatRemoveCollaboratorRequest: OFormat[RemoveCollaboratorRequest] = Json.format[RemoveCollaboratorRequest]
+  given formatRemoveCollaboratorRequest: OFormat[RemoveCollaboratorRequest] = Json.format[RemoveCollaboratorRequest]
 }
 
 case class RemoveAllCollaboratorsForUserIdRequest(userId: UserId, gatekeeperUserId: String)
 
 object RemoveAllCollaboratorsForUserIdRequest {
-  implicit val formatRemoveAllCollaboratorsForUserIdRequest: OFormat[RemoveAllCollaboratorsForUserIdRequest] = Json.format[RemoveAllCollaboratorsForUserIdRequest]
+  given formatRemoveAllCollaboratorsForUserIdRequest: OFormat[RemoveAllCollaboratorsForUserIdRequest] = Json.format[RemoveAllCollaboratorsForUserIdRequest]
 }
 
 case class ErrorResponseMessage(message: String)
 
 object ErrorResponseMessage {
-  implicit val formatErrorResponseMessage: OFormat[ErrorResponseMessage] = Json.format[ErrorResponseMessage]
+  given formatErrorResponseMessage: OFormat[ErrorResponseMessage] = Json.format[ErrorResponseMessage]
 }
 
 case class ErrorResponse(errors: List[ErrorResponseMessage])
 
 object ErrorResponse {
-  implicit val formatErrorResponse: OFormat[ErrorResponse] = Json.format[ErrorResponse]
+  given formatErrorResponse: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }

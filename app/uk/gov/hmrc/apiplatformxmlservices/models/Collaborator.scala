@@ -22,5 +22,5 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, Us
 case class Collaborator(userId: UserId, email: LaxEmailAddress)
 
 object Collaborator {
-  implicit val formatCollaborator: OFormat[Collaborator] = Json.format[Collaborator]
+  given formatCollaborator: OFormat[Collaborator] = Json.format[Collaborator]
 }

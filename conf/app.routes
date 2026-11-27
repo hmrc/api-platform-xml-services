@@ -3,7 +3,7 @@
 
 GET        /xml/apis                                uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getAll()
 GET        /xml/apis/filtered                       uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApisFiltered(categoryFilter: List[ApiCategory])
-GET        /xml/api                                 uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApiByServiceName(serviceName: ServiceName)
+GET        /xml/api                                 uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApiByServiceName(serviceName: SimpleServiceName)
 GET        /xml/api/:name                           uk.gov.hmrc.apiplatformxmlservices.controllers.ApiController.getApi(name: String)
 
 

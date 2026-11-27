@@ -27,7 +27,7 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.UserResponse
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
@@ -49,7 +49,7 @@ class OrganisationService @Inject() (
   }
 
   def create(request: CreateOrganisationRequest)(implicit hc: HeaderCarrier): Future[CreateOrganisationResult] = {
-    vendorIdService.getNextVendorId().flatMap { vendorId: VendorId =>
+    vendorIdService.getNextVendorId().flatMap { (vendorId: VendorId) =>
       handleGetOrCreateUser(request.email, request.firstName, request.lastName).flatMap {
         case Right(user: UserResponse)            =>
           createOrganisation(request.organisationName, vendorId, List(Collaborator(user.userId, request.email)))

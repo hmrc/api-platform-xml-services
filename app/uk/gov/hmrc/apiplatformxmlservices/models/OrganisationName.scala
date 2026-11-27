@@ -23,5 +23,5 @@ case class OrganisationName(value: String) extends AnyVal {
 }
 
 object OrganisationName {
-  implicit val formatOrganisationName: Format[OrganisationName] = Json.valueFormat[OrganisationName]
+  given formatOrganisationName: Format[OrganisationName] = Json.valueFormat[OrganisationName]
 }

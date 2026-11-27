@@ -20,7 +20,7 @@ import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiCategory
@@ -55,7 +55,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
     wsClient
       .url(url)
       .withFollowRedirects(false)
-      .withQueryStringParameters(queryParams: _*)
+      .withQueryStringParameters(queryParams*)
       .get()
       .futureValue
 
@@ -63,20 +63,22 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
 
     val xmlApiService = new XmlApiService
 
-    val stableApis: List[XmlApi]             = xmlApiService.getStableApis()
-    val unfilteredApis: List[XmlApi]         = xmlApiService.getUnfilteredApis()
-    val employmentIntermediariesJson: String = Json.toJson(unfilteredApis.filter(_.serviceName.value == "employment-intermediaries").head).toString
-    val charitiesOnlineJson: String          = Json.toJson(stableApis.filter(_.serviceName.value == "charities-online").head).toString
+    val stableApis: List[XmlApi]              = xmlApiService.getStableApis()
+    val unfilteredApis: List[XmlApi]          = xmlApiService.getUnfilteredApis()
+    val employmentIntermediariesJson: JsValue = Json.toJson(unfilteredApis.filter(_.serviceName == "employment-intermediaries").head)
+    val charitiesOnlineJson: JsValue          = Json.toJson(stableApis.filter(_.serviceName == "charities-online").head)
   }
 
   "ApiController" when {
+    import play.api.libs.ws.WSBodyReadables.readableAsJson
 
     "GET /xml/apis" should {
 
       "respond with 200 and return all stable Apis" in new Setup {
+
         val result: WSResponse = callGetEndpoint(s"$url/xml/apis")
         result.status mustBe OK
-        result.body mustBe Json.toJson(stableApis).toString
+        result.body mustBe Json.toJson(stableApis)
       }
 
       "respond with 404 when invalid path" in {
@@ -91,15 +93,15 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       "respond with 200 and return APIs for selected category" in new Setup {
         val result: WSResponse         = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "PAYE"))
         result.status mustBe OK
-        val expectedApis: List[XmlApi] = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.PAYE))
-        result.body mustBe Json.toJson(expectedApis).toString
+        val expectedApis: List[XmlApi] = stableApis.filter(_.categories.getOrElse(Seq.empty).contains(ApiCategory.Paye))
+        result.body mustBe Json.toJson(expectedApis)
       }
 
       "respond with 200 and return nothing when category is not found" in new Setup {
         val result: WSResponse = callGetEndpoint(s"$url/xml/apis/filtered", List("categoryFilter" -> "VAT"))
         result.status mustBe OK
 
-        result.body mustBe Json.toJson(List.empty[XmlApi]).toString
+        result.body mustBe Json.toJson(List.empty[XmlApi])
       }
 
       "respond with 400 when invalid category" in {
@@ -120,7 +122,7 @@ class ApiControllerISpec extends ServerBaseISpec with BeforeAndAfterEach {
       "respond with 200 and return the stable API" in new Setup {
         val result: WSResponse = callGetEndpoint(s"$url/xml/api/$stableApiName")
         result.status mustBe OK
-        result.body mustBe charitiesOnlineJson
+        result.body `mustBe` charitiesOnlineJson
       }
 
       "respond with 200 and return the retired API" in new Setup {

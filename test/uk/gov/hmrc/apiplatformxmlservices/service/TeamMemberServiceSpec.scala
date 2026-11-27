@@ -27,8 +27,8 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, UpstreamErrorRespon
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.connectors.ThirdPartyDeveloperConnector
-import uk.gov.hmrc.apiplatformxmlservices.models._
-import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
+import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.*
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 
 class TeamMemberServiceSpec extends AsyncHmrcSpec {
@@ -73,7 +73,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
     "return Left when Organisation exists but fails to get or create user" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateVerifiedUserFailedResult("some error")))
 
       await(inTest.addCollaborator(anOrganisationId, anEmailAddress, aFirstName, aLastName)) match {
@@ -82,7 +82,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(using *)
 
     }
 
@@ -90,7 +90,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
       val organisationWithUSer = anOrganisation.copy(collaborators = List(Collaborator(UserId(UUID.randomUUID()), anEmailAddress)))
       when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(organisationWithUSer)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
       await(inTest.addCollaborator(anOrganisationId, anEmailAddress, aFirstName, aLastName)) match {
@@ -104,7 +104,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
 
     "return Left when Organisation exists and get User is successful but update Org fails" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
       when(mockOrganisationRepo.addCollaboratorToOrganisation(*[XmlOrganisationId], *)).thenReturn(Future.successful(Left(new BadRequestException("Organisation does not exist"))))
@@ -115,14 +115,14 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(using *)
       verify(mockOrganisationRepo).addCollaboratorToOrganisation(*[XmlOrganisationId], *)
 
     }
 
     "return Right when collaborator successfully added to organisation" in new Setup {
       when(mockOrganisationRepo.findByOrgId(*[XmlOrganisationId])).thenReturn(Future.successful(Some(anOrganisation)))
-      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(*[HeaderCarrier]))
+      when(mockThirdPartyDeveloperConnector.createVerifiedUser(eqTo(CreateUserRequest(anEmailAddress, aFirstName, aLastName, Map.empty)))(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreatedUserResult(UserResponse(anEmailAddress, aFirstName, aLastName, verified = true, aUserId, EmailPreferences.noPreferences))))
 
       val organisationWithCollaborator = anOrganisation.copy(collaborators = List(aCollaborator))
@@ -134,7 +134,7 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
       }
 
       verify(mockOrganisationRepo).findByOrgId(*[XmlOrganisationId])
-      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(*)
+      verify(mockThirdPartyDeveloperConnector).createVerifiedUser(*[CreateUserRequest])(using *)
       verify(mockOrganisationRepo).addCollaboratorToOrganisation(*[XmlOrganisationId], *)
 
     }
@@ -230,27 +230,27 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
     "return converted Organisation Users when organisation exists and users are retrieved" in new Setup {
 
       when(mockOrganisationRepo.findByOrgId(eqTo(anOrganisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(*)).thenReturn(Future.successful(Right(List(userResponse1))))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List(userResponse2))))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(using *)).thenReturn(Future.successful(Right(List(userResponse1))))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(using *)).thenReturn(Future.successful(Right(List(userResponse2))))
 
       val result = await(inTest.getOrganisationUserByOrganisationId(anOrganisationId))
-      result should contain only (List(
+      result should contain theSameElementsAs List(
         OrganisationUser(anOrganisationId, Some(userResponse1.userId), userResponse1.email, userResponse1.firstName, userResponse1.lastName, xmlApis = Nil),
         OrganisationUser(anOrganisationId, Some(userResponse2.userId), userResponse2.email, userResponse2.firstName, userResponse2.lastName, xmlApis = Nil)
-      ): _*)
+      )
     }
 
     "return converted Organisation Users when organisation exists and no users are retrieved from TPD" in new Setup {
 
       when(mockOrganisationRepo.findByOrgId(eqTo(anOrganisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(*)).thenReturn(Future.successful(Right(List.empty)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(using *)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(using *)).thenReturn(Future.successful(Right(List.empty)))
 
       val result = await(inTest.getOrganisationUserByOrganisationId(anOrganisationId))
-      result should contain only (List(
+      result should contain theSameElementsAs List(
         OrganisationUser(anOrganisationId, None, anEmailAddress, "", "", xmlApis = Nil),
         OrganisationUser(anOrganisationId, None, emailTwo, "", "", xmlApis = Nil)
-      ): _*)
+      )
     }
 
     "return empty list when organisation not found" in new Setup {
@@ -263,8 +263,8 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
     "return empty list when no results returned from third party developer and no collaborators linked to organisation" in new Setup {
 
       when(mockOrganisationRepo.findByOrgId(eqTo(anOrganisationId))).thenReturn(Future.successful(Some(anOrganisation)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(*)).thenReturn(Future.successful(Right(List.empty)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(using *)).thenReturn(Future.successful(Right(List.empty)))
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(using *)).thenReturn(Future.successful(Right(List.empty)))
 
       await(inTest.getOrganisationUserByOrganisationId(anOrganisationId)) shouldBe Nil
 
@@ -273,12 +273,12 @@ class TeamMemberServiceSpec extends AsyncHmrcSpec {
     "return empty list when errors returned from third party developer" in new Setup {
 
       when(mockOrganisationRepo.findByOrgId(eqTo(anOrganisationId))).thenReturn(Future.successful(Some(organisationWithCollaborators)))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(*)).thenReturn(Future.successful(Left(UpstreamErrorResponse(
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(anEmailAddress)))(using *)).thenReturn(Future.successful(Left(UpstreamErrorResponse(
         "",
         INTERNAL_SERVER_ERROR,
         INTERNAL_SERVER_ERROR
       ))))
-      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(*)).thenReturn(Future.successful(Left(UpstreamErrorResponse(
+      when(mockThirdPartyDeveloperConnector.getByEmail(eqTo(List(emailTwo)))(using *)).thenReturn(Future.successful(Left(UpstreamErrorResponse(
         "",
         INTERNAL_SERVER_ERROR,
         INTERNAL_SERVER_ERROR

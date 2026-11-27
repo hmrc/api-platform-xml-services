@@ -17,18 +17,22 @@
 package uk.gov.hmrc.apiplatform.modules.test_only.config
 
 import javax.inject.{Inject, Provider, Singleton}
+import scala.concurrent.duration.FiniteDuration
+import scala.deriving.Mirror
 
-import net.ceedubs.ficus.Ficus._
-import net.ceedubs.ficus.readers.ArbitraryTypeReader._
+import pureconfig.generic.ProductHint
+import pureconfig.generic.semiauto.deriveReader
+import pureconfig.{CamelCase, ConfigFieldMapping, ConfigReader, ConfigSource}
 
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.apiplatform.modules.test_only.scheduled
 import uk.gov.hmrc.apiplatform.modules.test_only.scheduled.TestOrganisationsCleanupJob
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class ConfigurationModule extends Module {
 
-  override def bindings(environment: Environment, configuration: Configuration): List[Binding[_]] = {
+  override def bindings(environment: Environment, configuration: Configuration): List[Binding[?]] = {
     List(
       bind[TestOrganisationsCleanupJob.Config].toProvider[TestOrganisationsCleanupJobConfigProvider]
     )
@@ -47,8 +51,16 @@ class TestOrganisationsCleanupJobConfigProvider @Inject() (val configuration: Co
     extends ServicesConfig(configuration)
     with Provider[TestOrganisationsCleanupJob.Config] {
 
+  extension (c: ConfigReader.type)
+    inline def derived[A: Mirror.Of, ProductHint, CoproductHint]: ConfigReader[A] = deriveReader[A]
+  given ConfigReader[TestOrganisationsCleanupJob.Config]                          = deriveReader
+
+  given testOrganisationsCleanupJobConfigProductHint: ProductHint[scheduled.TestOrganisationsCleanupJob.Config] =
+    ProductHint.apply[scheduled.TestOrganisationsCleanupJob.Config](fieldMapping = ConfigFieldMapping(CamelCase, CamelCase))
+
   override def get() = {
-    val jobConfig = configuration.underlying.as[TestOrganisationsCleanupJob.Config]("testOrganisationsCleanupJob")
+    val jobConfig =
+      ConfigSource.fromConfig(configuration.underlying).at("testOrganisationsCleanupJob").loadOrThrow[TestOrganisationsCleanupJob.Config]
 
     TestOrganisationsCleanupJob.Config(jobConfig.initialDelay, jobConfig.interval, jobConfig.enabled, jobConfig.expiryDuration)
   }

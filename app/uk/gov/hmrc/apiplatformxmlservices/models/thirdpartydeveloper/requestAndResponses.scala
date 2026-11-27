@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper
 
-import play.api.libs.json._
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiCategory, ServiceName}
+import play.api.libs.json.*
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiCategory
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+
+import uk.gov.hmrc.apiplatformxmlservices.controllers.binders.RouteModels.SimpleServiceName
 case class GetOrCreateUserIdRequest(email: LaxEmailAddress)
 
 object GetOrCreateUserIdRequest {
@@ -35,7 +37,7 @@ object CoreUserDetail {
   implicit val format: OFormat[CoreUserDetail] = Json.format[CoreUserDetail]
 }
 
-case class CreateUserRequest(email: LaxEmailAddress, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[ServiceName]])
+case class CreateUserRequest(email: LaxEmailAddress, firstName: String, lastName: String, emailPreferences: Map[ApiCategory, List[SimpleServiceName]])
 
 object CreateUserRequest {
   implicit val keyReads: KeyReads[ApiCategory]   = key => JsSuccess(ApiCategory.unsafeApply(key))
@@ -43,7 +45,7 @@ object CreateUserRequest {
 
   implicit val formats: OFormat[CreateUserRequest] = Json.format[CreateUserRequest]
 }
-case class TaxRegimeInterests(regime: ApiCategory, services: Set[ServiceName])
+case class TaxRegimeInterests(regime: ApiCategory, services: Set[SimpleServiceName])
 
 object TaxRegimeInterests {
   implicit val format: OFormat[TaxRegimeInterests]                = Json.format[TaxRegimeInterests]
@@ -76,9 +78,9 @@ object EmailTopic {
   // $COVERAGE-ON$
 
   import play.api.libs.json.Format
-  import uk.gov.hmrc.apiplatform.modules.common.domain.services.SealedTraitJsonFormatting
+  import uk.gov.hmrc.apiplatform.modules.common.domain.services.SimpleEnumJsonFormatting
 
-  implicit val format: Format[EmailTopic] = SealedTraitJsonFormatting.createFormatFor[EmailTopic]("Email Topic", apply)
+  implicit val format: Format[EmailTopic] = SimpleEnumJsonFormatting.createFormatFor[EmailTopic]("Email Topic", apply, _.toString)
 }
 case class UserResponse(email: LaxEmailAddress, firstName: String, lastName: String, verified: Boolean = false, userId: UserId, emailPreferences: EmailPreferences)
 

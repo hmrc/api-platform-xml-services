@@ -24,13 +24,14 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
-import uk.gov.hmrc.apiplatform.modules.scheduling._
+import uk.gov.hmrc.apiplatform.modules.scheduling.*
 import uk.gov.hmrc.apiplatform.modules.test_only.repositories.TestOrganisationsRepository
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.lock.{LockRepository, LockService}
+import uk.gov.hmrc.mongo.lock.{LockRepository, LockService, MongoLockRepository}
 
 import uk.gov.hmrc.apiplatformxmlservices.models.XmlOrganisationId
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
+import uk.gov.hmrc.apiplatformxmlservices.util.ApplicationLogger
 
 object TestOrganisationsCleanupJob {
   case class Config(initialDelay: FiniteDuration, interval: FiniteDuration, enabled: Boolean, expiryDuration: FiniteDuration)
@@ -38,35 +39,32 @@ object TestOrganisationsCleanupJob {
 
 @Singleton
 class TestOrganisationsCleanupJob @Inject() (
-    cleanupLockService: TestOrganisationsCleanupJobLockService,
     orgRepo: OrganisationRepository,
     testOrgRepo: TestOrganisationsRepository,
     val clock: Clock,
-    jobConfig: TestOrganisationsCleanupJob.Config
-  )(implicit val ec: ExecutionContext
-  ) extends ScheduledMongoJob with ClockNow {
+    jobConfig: TestOrganisationsCleanupJob.Config,
+    override val mongoLockRepository: MongoLockRepository
+  )(using ec: ExecutionContext
+  ) extends LockedScheduledJob with ClockNow with ApplicationLogger {
 
   override def name: String                 = "testOrganisationsCleanupJob"
   override def interval: FiniteDuration     = jobConfig.interval
   override def initialDelay: FiniteDuration = jobConfig.initialDelay
-  override val isEnabled: Boolean           = jobConfig.enabled
-  override val lockService: LockService     = cleanupLockService
-  implicit val hc: HeaderCarrier            = HeaderCarrier()
+  override def enabled: Boolean             = jobConfig.enabled
+  given hc: HeaderCarrier                   = HeaderCarrier()
 
   logger.info("TestOrganisationsCleanupJob ready!!!")
 
-  override def runJob(implicit ec: ExecutionContext): Future[RunningOfJobSuccessful] = {
+  override def executeInLock(using ec: ExecutionContext): Future[Result] = {
     val timeBeforeWhichOrgIsConsideredExpired: Instant = instant.minus(jobConfig.expiryDuration.toMinutes, ChronoUnit.MINUTES)
     logger.info(s"Delete expired test organisations created earlier than $timeBeforeWhichOrgIsConsideredExpired ( ${jobConfig.expiryDuration.toMinutes} mins ago)")
 
-    val result: Future[RunningOfJobSuccessful.type] = for {
+    (for {
       idsToRemove <- testOrgRepo.findCreatedBefore(timeBeforeWhichOrgIsConsideredExpired)
       _            = logger.info(s"Scheduled job $name found ${idsToRemove.size} test organisations")
-      _           <- Future.sequence(idsToRemove.map(deleteExpiredOrganisations(_)))
-    } yield RunningOfJobSuccessful
-
-    result.recoverWith {
-      case e: Throwable => Future.failed(RunningOfJobFailed(name, e))
+      _           <- Future.sequence(idsToRemove.map(deleteExpiredOrganisations))
+    } yield Result("succeeded")).recoverWith {
+      case e: Throwable => Future.successful(Result(s"RunningOfJobFailed for job $name due to ${e.getMessage}"))
     }
   }
 
@@ -82,6 +80,7 @@ class TestOrganisationsCleanupJob @Inject() (
         ()
     }
   }
+
 }
 
 class TestOrganisationsCleanupJobLockService @Inject() (repository: LockRepository)

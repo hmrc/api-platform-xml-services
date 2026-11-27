@@ -22,7 +22,7 @@ import scala.concurrent.Future
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Result
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -30,7 +30,7 @@ import uk.gov.hmrc.apiplatformxmlservices.common.builder.OrganisationBuilder
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
 import uk.gov.hmrc.apiplatformxmlservices.common.utils.AsyncHmrcSpec
 import uk.gov.hmrc.apiplatformxmlservices.controllers.organisation.OrganisationController
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.CoreUserDetail
 import uk.gov.hmrc.apiplatformxmlservices.service.OrganisationService
 
@@ -116,7 +116,7 @@ class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with 
 
   "create" should {
     "return 200" in new Setup {
-      when(mockOrgService.create(any[CreateOrganisationRequest])(*[HeaderCarrier]))
+      when(mockOrgService.create(any[CreateOrganisationRequest])(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateOrganisationSuccessResult(organisation)))
 
       val result: Future[Result] = controller.create()(createRequest)
@@ -136,7 +136,7 @@ class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with 
     }
 
     "return 409" in new Setup {
-      when(mockOrgService.create(any[CreateOrganisationRequest])(*[HeaderCarrier]))
+      when(mockOrgService.create(any[CreateOrganisationRequest])(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateOrganisationFailedDuplicateIdResult("some Error Message")))
 
       val result: Future[Result] = controller.create()(createRequest)
@@ -145,7 +145,7 @@ class OrganisationControllerSpec extends AsyncHmrcSpec with CommonTestData with 
     }
 
     "return 400" in new Setup {
-      when(mockOrgService.create(any[CreateOrganisationRequest])(*[HeaderCarrier]))
+      when(mockOrgService.create(any[CreateOrganisationRequest])(using *[HeaderCarrier]))
         .thenReturn(Future.successful(CreateOrganisationFailedResult("Failed")))
 
       val result: Future[Result] = controller.create()(createRequest)

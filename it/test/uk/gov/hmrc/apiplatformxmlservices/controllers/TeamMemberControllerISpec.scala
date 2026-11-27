@@ -16,20 +16,21 @@
 
 package uk.gov.hmrc.apiplatformxmlservices.controllers
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.apache.pekko.stream.Materializer
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import play.api.libs.ws.WSBodyReadables.readableAsString
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
-import uk.gov.hmrc.apiplatform.modules.common.domain.models.{LaxEmailAddress, UserId}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.UserId
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import uk.gov.hmrc.apiplatformxmlservices.common.data.CommonTestData
-import uk.gov.hmrc.apiplatformxmlservices.models._
+import uk.gov.hmrc.apiplatformxmlservices.models.*
 import uk.gov.hmrc.apiplatformxmlservices.models.thirdpartydeveloper.{EmailPreferences, UserResponse}
 import uk.gov.hmrc.apiplatformxmlservices.repository.OrganisationRepository
 import uk.gov.hmrc.apiplatformxmlservices.support.{MongoApp, ServerBaseISpec}
@@ -66,9 +67,10 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
   val validHeaders = List(CONTENT_TYPE -> "application/json")
 
   def callPostEndpoint(url: String, body: String): WSResponse =
+    import play.api.libs.ws.WSBodyWritables.writeableOf_String
     wsClient
       .url(url)
-      .withHttpHeaders(validHeaders: _*)
+      .withHttpHeaders(validHeaders*)
       .withFollowRedirects(false)
       .post(body)
       .futureValue
@@ -110,7 +112,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
       )
     }
 
-    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, email: LaxEmailAddress, firstName: String, lastName: String, status: Int) = {
+    def stubThirdPartyDeveloperConnectorWithBody(userId: UserId, status: Int) = {
       stubFor(
         post(urlEqualTo("/import-user"))
           .willReturn(
@@ -159,14 +161,14 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       "respond with 400 if third party developer connector returns an error" in new Setup {
         await(orgRepo.createOrUpdate(anOrganisation))
-        stubThirdPartyDeveloperConnectorWithBody(aUserId, anEmailAddress, aFirstName, aLastName, BAD_REQUEST)
+        stubThirdPartyDeveloperConnectorWithBody(aUserId, BAD_REQUEST)
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe BAD_REQUEST
       }
 
       "respond with 200 if organisationId exists" in new Setup {
         await(orgRepo.createOrUpdate(anOrganisation))
-        stubThirdPartyDeveloperConnectorWithBody(aUserId, anEmailAddress, aFirstName, aLastName, OK)
+        stubThirdPartyDeveloperConnectorWithBody(aUserId, OK)
         val result = callPostEndpoint(s"$url/organisations/$anOrganisationId/add-collaborator", addCollaboratorRequestAsString)
         result.status mustBe OK
         result.body mustBe Json.toJson(organisationWithCollaborators).toString()
@@ -181,7 +183,7 @@ class TeamMemberControllerISpec extends ServerBaseISpec with BeforeAndAfterEach 
 
       val result = callPostEndpoint(s"$url/organisations/${organisationWithCollaborators.organisationId.value}/remove-collaborator", removeCollaboratorRequestAsString)
       result.status mustBe OK
-      result.body mustBe Json.toJson(anOrganisation).toString()
+      result.body mustBe Json.toJson(anOrganisation).toString
     }
 
     "respond with 404 if organisationId exists but collaborator is not associated" in new Setup {
