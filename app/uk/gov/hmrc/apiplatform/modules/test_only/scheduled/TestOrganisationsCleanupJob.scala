@@ -39,7 +39,6 @@ object TestOrganisationsCleanupJob {
 
 @Singleton
 class TestOrganisationsCleanupJob @Inject() (
-    cleanupLockService: TestOrganisationsCleanupJobLockService,
     orgRepo: OrganisationRepository,
     testOrgRepo: TestOrganisationsRepository,
     val clock: Clock,
@@ -52,7 +51,6 @@ class TestOrganisationsCleanupJob @Inject() (
   override def interval: FiniteDuration     = jobConfig.interval
   override def initialDelay: FiniteDuration = jobConfig.initialDelay
   override def enabled: Boolean             = jobConfig.enabled
-//  override val lockService: LockService     = cleanupLockService
   given hc: HeaderCarrier                   = HeaderCarrier()
 
   logger.info("TestOrganisationsCleanupJob ready!!!")
@@ -61,7 +59,6 @@ class TestOrganisationsCleanupJob @Inject() (
     val timeBeforeWhichOrgIsConsideredExpired: Instant = instant.minus(jobConfig.expiryDuration.toMinutes, ChronoUnit.MINUTES)
     logger.info(s"Delete expired test organisations created earlier than $timeBeforeWhichOrgIsConsideredExpired ( ${jobConfig.expiryDuration.toMinutes} mins ago)")
 
-    /*val result: Future[Result] = */
     (for {
       idsToRemove <- testOrgRepo.findCreatedBefore(timeBeforeWhichOrgIsConsideredExpired)
       _            = logger.info(s"Scheduled job $name found ${idsToRemove.size} test organisations")
@@ -70,9 +67,6 @@ class TestOrganisationsCleanupJob @Inject() (
 
       case e: Throwable => Future.successful(Result(s"RunningOfJobFailed for job $name due to ${e.getMessage}"))
     }
-
-    /* result.recoverWith {
-    }*/
   }
 
   private def deleteExpiredOrganisations(id: XmlOrganisationId): Future[Unit] = {
